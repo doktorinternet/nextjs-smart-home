@@ -1,6 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss/base";
+
+@import "tailwindcss/components";
+
+@import "tailwindcss/utilities";
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -8,22 +10,37 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
+    --bg-section: rgb(30, 36, 42);
+    /* #1e242a; */
   }
 }
 
+.grid-container:only-child .grid-item {
+  grid-area: 1 / 1 / -1 / -1;
+}
+
+.section {
+  /* border-radius: 10px; */
+  background-color: rgb(30, 36, 42);
+  /* same as --bg-section, required by safari 10.3 */
+  /* padding:10px */
+}
+
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
+  background-color: rgb(19, 22, 26);
+  color: rgb(255, 255, 255);
+  /* background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
 }
 
 @layer utilities {
