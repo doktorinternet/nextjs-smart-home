@@ -10,7 +10,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1>This is / which doesn't have any info yet. You should be automatically redirected to /dashboard</h1>
+      <h1>This is / which doesn&apos;t have any info yet. You should be automatically redirected to /dashboard</h1>
     </div>
   )
 }
