@@ -25,6 +25,13 @@
   grid-area: 1 / 1 / -1 / -1;
 }
 
+/* Sad to have to do this, but can't find grid-gap anywhere in tailwind.. */
+.grid-container {
+  grid-gap: 12px;
+}
+
+/* *+* { some cool css on every but the first element ever } */
+
 .section {
   /* border-radius: 10px; */
   background-color: rgb(30, 36, 42);

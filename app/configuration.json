@@ -1,0 +1,9 @@
+{
+  "Grid":{
+    "Padding": 12
+  },
+  "Screen-dep":{
+    "Height-dep": 920,
+    "Width-dep": 768
+  }
+}

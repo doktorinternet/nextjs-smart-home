@@ -6,6 +6,48 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    'col-span-1',
+    'col-span-2',
+    'col-span-3',
+    'col-span-4',
+    'col-span-5',
+    'col-span-6',
+    'col-span-7',
+    'col-span-8',
+    'row-span-1',
+    'row-span-2',
+    'row-span-3',
+    'row-span-4',
+    'row-span-5',
+    'row-span-6',
+    'row-span-7',
+    'row-span-8',
+    'grid-cols-1',
+    'grid-cols-2',
+    'grid-cols-3',
+    'grid-cols-4',
+    'grid-cols-5',
+    'grid-cols-6',
+    'grid-cols-7',
+    'grid-cols-8',
+    'grid-cols-9',
+    'grid-rows-1',
+    'grid-rows-2',
+    'grid-rows-3',
+    'grid-rows-4',
+    'grid-rows-5',
+    'grid-rows-6',
+    'grid-rows-7',
+    'grid-rows-8',
+    'grid-rows-9',
+    'gap-8',
+    'gap-10',
+    'gap-12',
+    {
+      pattern: /p-.+/,
+    }
+  ],
   theme: {
     extend: {
       screens: {
@@ -32,8 +74,10 @@ const config: Config = {
       },
       borderRadius: {
         md: '10px'
-      }
+      },
+      
     }
+    // todo safelist col span grid cols etc
   },
   plugins: []
 };

@@ -1,4 +1,5 @@
 export const cancelTouchEvents = () => {
+  console.log("Cancel touch events");
   const el = document?.querySelector("body");
   el?.addEventListener("touchstart", cancelTouchEvent, { passive: false });
   el?.addEventListener("touchend",  cancelTouchEvent, { passive: false });
@@ -8,5 +9,5 @@ export const cancelTouchEvents = () => {
 
 const cancelTouchEvent = (event:any) => {
   event.preventDefault();
-  console.log("cancelled touch event " + JSON.stringify(event));
+  // console.log("cancelled touch event " + JSON.stringify(event));
 }
