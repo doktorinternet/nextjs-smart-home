@@ -8,7 +8,7 @@ interface ContextProps {
 }
 
 export const GridContext = createContext<ContextProps>({
-  totalColumns: 2,
+  totalColumns: 4,
   totalRows: 4,
 });
 
@@ -17,7 +17,7 @@ interface Props {
 }
 
 const GridProvider: FC<Props> = ({ children }) => {
-  const [totalColumns] = useState<number>(2);
+  const [totalColumns] = useState<number>(4);
   const [totalRows] = useState<number>(4);
 
   const getClassNames = () => {

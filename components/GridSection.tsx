@@ -3,8 +3,8 @@ import { GridContext } from "./providers/GridProvider"
 import conf from '@/app/configuration.json'
 
 export default function GridSection({
-  xPartitions = 1/2,
-  yPartitions = 1/2,
+  xPartitions = 1/4,
+  yPartitions = 1/4,
   children,
   className
 }: {

@@ -9,5 +9,9 @@ export const cancelTouchEvents = () => {
 
 const cancelTouchEvent = (event:any) => {
   event.preventDefault();
-  // console.log("cancelled touch event " + JSON.stringify(event));
+  console.log("cancelled touch event " + JSON.stringify(event));
 }
+
+export const fetcher = (...args) => fetch(...args).then(res => res.json());
+
+export const getAsJson = (res: Response) =>{ return res.json() }
