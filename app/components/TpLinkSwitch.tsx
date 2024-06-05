@@ -1,4 +1,4 @@
-import { getAsJson } from "@/code/Util";
+import { getAsJson } from "@/app/util/util";
 import { FormEvent,  useEffect, useState } from "react"
 
 export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, deviceIp: string }) {
@@ -64,7 +64,7 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
     console.log(JSON.stringify(apiData));
   }, [apiData]);
 
-  const onsubmit = (e) =>{
+  const onsubmit = (e: { preventDefault: () => void; }) =>{
     e.preventDefault();
     alert("hej");
   }

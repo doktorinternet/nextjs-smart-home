@@ -12,6 +12,6 @@ const cancelTouchEvent = (event:any) => {
   console.log("cancelled touch event " + JSON.stringify(event));
 }
 
-export const fetcher = (...args) => fetch(...args).then(res => res.json());
+// export const fetcher = (...args: any[]) => fetch(...args).then(res => res.json());
 
 export const getAsJson = (res: Response) =>{ return res.json() }

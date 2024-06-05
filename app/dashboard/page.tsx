@@ -1,10 +1,10 @@
 'use client';
-import TimeTable from "@/components/TimeTable";
-import GridSection from "@/components/GridSection";
+import TimeTable from "@/app/components/TimeTable";
+import GridSection from "@/app/components/GridSection";
 import { useEffect } from "react";
-import { cancelTouchEvents } from "@/code/Util";
-import GridProvider from "@/components/providers/GridProvider";
-import TpLinkSwitch from "@/components/TpLinkSwitch";
+import { cancelTouchEvents } from "@/app/util/util";
+import GridProvider from "@/app/components/providers/GridProvider";
+import TpLinkSwitch from "@/app/components/TpLinkSwitch";
 
 // `app/dashboard/page.tsx` is the UI for the `/dashboard` URL
 export default function Page() {
@@ -27,8 +27,7 @@ export default function Page() {
         {/* - weather forecast https://opendata.smhi.se/apidocs/ */}
         {/* - jailbreak pad */}
         {/* - get better pad */}
-        {/* - sync to-dolist? */}
-
+ 
         <GridSection
           xPartitions={1}
           yPartitions={1}

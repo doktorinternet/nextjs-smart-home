@@ -1,22 +1,20 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { postApi } from "../api/Util";
-
-export const kasaApiUrl = 'http://server01:8080';
-export const localUrl = 'http://localhost:3000';
-
+'use server'
+import { postApi } from "../api/common";
+import { NextRequest, NextResponse } from "next/server";
+import { kasaApiUrl } from "../constants";
 
 export async function postKasaDeviceOn(
   ip: string,
-  req: NextApiRequest,
-  res: NextApiResponse
-  ) {
+  req: Request,
+  res: Response
+  ): Promise<NextResponse> {
     return postApi(`${kasaApiUrl}/${ip}/off`, req,res);
 }
 
 export async function postKasaDeviceOff(
   ip: string,
-  req: NextApiRequest,
-  res: NextApiResponse
-  ) {
+  req: Request,
+  res: Response
+  ): Promise<NextResponse> {
     return postApi(`${kasaApiUrl}/${ip}/on`, req,res);
 }

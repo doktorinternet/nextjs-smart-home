@@ -1,7 +1,7 @@
 'use server'
-import { kasaApiUrl } from "@/app/actions/kasa";
-import { getAsJson } from "@/code/Util";
+import { getAsJson } from "@/app/util/util";
 import { NextResponse } from "next/server";
+import { kasaApiUrl } from "../constants";
 
 export const getInfo =  async () => {
   const jsonWrap = fetch('/api/smart/switch/info')
