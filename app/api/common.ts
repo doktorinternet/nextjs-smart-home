@@ -21,5 +21,5 @@ export async function postApi(
     }
   }
   console.log("returning null")
-  return NextResponse.json({error: 'Sometihng went wrong'}, {status: 500});
+  return NextResponse.json({error: 'Something went wrong'}, {status: 500});
 }

@@ -5,12 +5,15 @@ import { useEffect } from "react";
 import { cancelTouchEvents } from "@/app/util/util";
 import GridProvider from "@/app/components/providers/GridProvider";
 import TpLinkSwitch from "@/app/components/TpLinkSwitch";
+import WebPlayer from "../components/WebPlayer";
+import CustomTimeTable from "../components/TimeTable/CustomTimeTable";
+import TimeString from "../components/TimeString";
 
 // `app/dashboard/page.tsx` is the UI for the `/dashboard` URL
 export default function Page() {
 
   useEffect(() => {
-    cancelTouchEvents();
+    // cancelTouchEvents( );
   });
 
   const getModules = () => {
@@ -27,12 +30,16 @@ export default function Page() {
         {/* - weather forecast https://opendata.smhi.se/apidocs/ */}
         {/* - jailbreak pad */}
         {/* - get better pad */}
- 
+
+        <GridSection xPartitions={1/4}
+        yPartitions={1/4}>
+          <TimeString seconds shouldUpdate/>
+        </GridSection>
         <GridSection
           xPartitions={1}
-          yPartitions={1}
+          // yPartitions={1/4}
         >
-          <TimeTable />
+          <CustomTimeTable/>
         </GridSection>
 
         {/* <GridSection
@@ -63,9 +70,10 @@ export default function Page() {
 
         {/* performance issues and wonky css on safari 10.3.4 */}
         {/* crashes on chrome */}
-        {/* <GridSection yPartitions={1 / 4} xPartitions={1}>
-        <WebPlayer />
-      </GridSection> */}
+        <GridSection xPartitions={1} // yPartitions={1/8}
+          >
+          <WebPlayer />
+        </GridSection>
       </GridProvider>
 
     </>);

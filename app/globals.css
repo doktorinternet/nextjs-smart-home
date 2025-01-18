@@ -8,17 +8,44 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --body-text: rgb(255, 255, 255);
+  --departures-card-size: 170px;
+  --white-semi-trans: rgba(255,255,255,.5)
 }
 
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
-    --bg-section: rgb(30, 36, 42);
-    /* #1e242a; */
+    --bg-section: rgba(59, 59, 59, 0.75);
   }
+}
+
+@media (min-width: 360px) {
+  :root{
+    --grid-col-repeat: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 542px) {
+  :root{
+    --grid-col-repeat: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 730px) {
+  :root{
+    --grid-col-repeat: repeat(4, 1fr);
+  }
+}
+
+.cut-text { 
+  text-overflow: ellipsis;
+  overflow: hidden; 
+  /* width: 160px;  */
+  height: 1.2em; 
+  white-space: nowrap;
 }
 
 .grid-container:only-child .grid-item {
@@ -28,26 +55,44 @@
 /* Sad to have to do this, but can't find grid-gap anywhere in tailwind.. */
 .grid-container {
   grid-gap: 12px;
+  grid-template-rows: auto 1fr;
 }
 
 /* *+* { some cool css on every but the first element ever } */
 
 .section {
   /* border-radius: 10px; */
-  background-color: rgb(30, 36, 42);
-  /* same as --bg-section, required by safari 10.3 */
-  /* padding:10px */
+  background-color: var(--bg-section);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.departures {
+  display: grid;
+  gap: 12px;
+  /* grid-template-columns: var(--grid-col-repeat); */
+}
+
+.tram-line {
+  padding: .5em;
+  border-radius: 12px;
+  /* width: var(--departures-card-size); */
+  height: calc(var(--departures-card-size)*.75);
+
+  h2 {
+    color: var(--white-semi-trans)
+  }
 }
 
 body {
-  background-color: rgb(19, 22, 26);
-  color: rgb(255, 255, 255);
-  /* background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb)); */
+  color: var(--body-text);
+  background: linear-gradient(293deg,
+      rgba(19, 31, 66, 1) 0%,
+      rgba(106, 67, 87, 0.8827906162464986) 37%,
+      rgba(201, 119, 110, 0.8435749299719888) 71%,
+      rgba(117, 94, 103, 1) 100%);
 }
 
 @layer utilities {

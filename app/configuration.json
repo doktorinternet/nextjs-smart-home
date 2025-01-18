@@ -5,5 +5,8 @@
   "Screen-dep":{
     "Height-dep": 920,
     "Width-dep": 768
+  },
+  "Style":{
+    "Transparency": "75"
   }
 }

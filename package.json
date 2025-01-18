@@ -9,19 +9,27 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@nextui-org/switch": "^2.0.30",
     "@nextui-org/system": "^2.2.1",
     "@nextui-org/theme": "^2.2.5",
     "framer-motion": "^11.2.10",
-    "next": "14.2.3",
+    "jose": "^5.9.2",
+    "next": "^14.2.13",
     "react": "^18",
     "react-dom": "^18",
+    "react-fontawesome": "^1.7.1",
     "swr": "^2.2.5"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/react-fontawesome": "^1.6.8",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

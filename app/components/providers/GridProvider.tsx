@@ -30,7 +30,8 @@ const GridProvider: FC<Props> = ({ children }) => {
     gap-${conf.Grid.Padding}
     place-content-stretch
     grid-cols-${totalColumns}
-    grid-rows-${totalRows}
+    grid
+
     `
   }
 
