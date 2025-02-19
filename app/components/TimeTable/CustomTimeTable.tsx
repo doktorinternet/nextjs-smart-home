@@ -5,6 +5,7 @@ import { LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
 
 export default function CustomTimeTable() {
   const [data, setData] = useState<LineDepartures[]>([]);
+  const [initialLoaded, setInitialLoaded]=  useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -16,24 +17,25 @@ export default function CustomTimeTable() {
       setData(mapAndMergeByLine(data.results));
     
       // setData(data.results);
-      setLoading(false);
+      if(!initialLoaded) setInitialLoaded(true);
     } catch (error) {
       console.error('Error fetching data:', error);
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchData();
+    let interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className={'time-table grow'} onClick={fetchData}>
 
-      {loading ? <div className="items-center">Loading...</div> : null}
+      {initialLoaded ? null : <div className="items-center">Loading...</div>}
 
       <div className="departures">
-        { data?.map((line: LineDepartures) => (
+        {data?.map((line: LineDepartures) => (
           <Line key={Math.random()} departuresPerLine={line} />
         ))}
       </div>
