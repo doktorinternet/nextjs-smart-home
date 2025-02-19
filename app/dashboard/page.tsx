@@ -31,10 +31,6 @@ export default function Page() {
         {/* - jailbreak pad */}
         {/* - get better pad */}
 
-        <GridSection xPartitions={1/4}
-        yPartitions={1/4}>
-          <TimeString seconds shouldUpdate/>
-        </GridSection>
         <GridSection
           xPartitions={1}
           // yPartitions={1/4}
@@ -75,6 +71,11 @@ export default function Page() {
           <WebPlayer />
         </GridSection>
       </GridProvider>
+
+      <GridSection xPartitions={1/4}
+        yPartitions={1/4}>
+          <TimeString seconds shouldUpdate/>
+        </GridSection>
 
     </>);
   }
