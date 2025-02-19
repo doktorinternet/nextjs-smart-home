@@ -88,11 +88,15 @@
 
 body {
   color: var(--body-text);
-  background: linear-gradient(293deg,
+  
+  
+  background:linear-gradient(293deg, #131f42, rgba(106, 67, 87, .883) 37%, #131f42 71%); 
+  /*
+   linear-gradient(293deg,
       rgba(19, 31, 66, 1) 0%,
       rgba(106, 67, 87, 0.8827906162464986) 37%,
       rgba(201, 119, 110, 0.8435749299719888) 71%,
-      rgba(117, 94, 103, 1) 100%);
+      rgba(117, 94, 103, 1) 100%); */
 }
 
 @layer utilities {
