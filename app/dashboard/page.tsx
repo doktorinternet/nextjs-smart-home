@@ -66,16 +66,17 @@ export default function Page() {
 
         {/* performance issues and wonky css on safari 10.3.4 */}
         {/* crashes on chrome */}
-        <GridSection xPartitions={1} // yPartitions={1/8}
+        {/* straight up doesn't load currently.. */}
+        {/* <GridSection xPartitions={1} // yPartitions={1/8}
           >
           <WebPlayer />
         </GridSection>
-      </GridProvider>
+      </GridProvider> */}
 
-      <GridSection xPartitions={1/4}
+      {/* <GridSection xPartitions={1/4}
         yPartitions={1/4}>
           <TimeString seconds shouldUpdate/>
-        </GridSection>
+        </GridSection> */}
 
     </>);
   }
