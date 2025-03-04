@@ -1,8 +1,9 @@
 import conf from '@/app/configuration.json'
 import TimeString from '../TimeString';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { LineDepartures } from './LineDepartures.type';
+import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { LineDepartures, DestinationDirections, Direction, AppJourney } from './LineDepartures.type';
+import { useEffect } from 'react';
 
 export default function Line({
   departuresPerLine
@@ -16,8 +17,44 @@ export default function Line({
     const mins = Math.floor((
       Date.parse(leavingAt)-(new Date().getTime())
     )/1000/60);
-    return mins <= 0 ? 'nu' : `om ${mins} min`; 
+    return mins <= 0 ? 'inom en minut' : `om ${mins} min`; 
   }
+
+  const createDirectionSegments = (departures: LineDepartures, direction: Direction) => {
+    const journeys = new Array<React.JSX.Element>;
+
+    departures.journeys.sort(byTime)
+
+    for (const journey of departures.journeys) {
+      if (journey.direction === direction) journeys.push(
+        <div className='flex flex-row'>
+          <div className='pl-2'>{journey.destination}</div>
+          <div className='flex pl-2'>
+            <div>{`${inMinutesFromNow(journey.departureTime)}`}</div>
+            <div className='pl-4'>vid</div>
+            <div className='pl-4'>
+              <TimeString timestamp={journey.departureTime} seconds={false} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className='flex flex-col'>
+        { direction === Direction.Townwards ? 
+        <FontAwesomeIcon icon={faArrowUp} /> :
+        <FontAwesomeIcon icon={faArrowDown} />}
+      {journeys}
+    </div> 
+    )
+  }
+
+  const byTime = (a: AppJourney, b: AppJourney)=> {
+    return Date.parse(a.departureTime) - Date.parse(b.departureTime);
+  }
+
+  //useEffect(()=>console.log(departuresPerLine))
 
   return (
     <div 
@@ -28,24 +65,14 @@ export default function Line({
       }}>
 
       <h2 className='font-sans text-8xl'>{departuresPerLine.line.shortName}</h2>
-      <div
-      className={'flex flex-col justify-center w-full pl-2'}>
-        {departuresPerLine.journeys.map(journey=>(
-          <div key={Math.random()} className='flex w-full items-center justify-between leading-none text-large'>
-            <div className='flex justify-self-end'>
-              <FontAwesomeIcon icon={faArrowRight} />
-              <div className='cut-text pl-2'>{journey.directionDetails.shortDirection}</div> 
-            </div>
-            <div className='flex justify-self-end pl-2'>
-              <div>{`${inMinutesFromNow(journey.estimatedOtherwisePlannedTime)}`}</div>
-              <div className='pl-4'>vid</div>
-              <div className='pl-4'>
-                <TimeString timestamp={journey.estimatedOtherwisePlannedTime} seconds={false}/>
-
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className={'flex flex-row justify-center h-full w-full pl-2'}>
+        {
+          createDirectionSegments(departuresPerLine, Direction.Townwards)
+        }
+        <div className="h-full"></div>
+        {
+          createDirectionSegments(departuresPerLine, Direction.Outwards)
+        }
       </div>
     </div>
   );

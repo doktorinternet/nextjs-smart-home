@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import conf from '@/app/configuration.json'
 import Line from "./Line";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
@@ -25,7 +26,8 @@ export default function CustomTimeTable() {
   };
 
   useEffect(() => {
-    let interval = setInterval(fetchData, 5000);
+    fetchData();
+    let interval = setInterval(fetchData, conf.API["Departures-interval"]);
     return () => clearInterval(interval);
   }, []);
 
