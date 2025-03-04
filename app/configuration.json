@@ -8,5 +8,8 @@
   },
   "Style":{
     "Transparency": "75"
+  },
+  "API": {
+    "Departures-interval":10000
   }
 }
