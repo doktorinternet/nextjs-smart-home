@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 
 type PrinterStatus = {
@@ -36,6 +36,10 @@ function PrinterCard() {
   const [printer, setPrinter] = useState<PrinterStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [pin, setPin] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
+  const [controlBusy, setControlBusy] = useState(false)
+  const [controlMessage, setControlMessage] = useState<string | null>(null)
 
   useEffect(() => {
     let current = true
@@ -71,6 +75,75 @@ function PrinterCard() {
   const fileName = job?.details?.file?.display || job?.details?.file?.name
   const disconnected = connection.toLowerCase() === 'closed' || connection.toLowerCase() === 'offline'
   const remaining = displayDuration(job?.progress?.printTimeLeft)
+  const canPause = !disconnected && jobState === 'Printing'
+  const canResume = !disconnected && jobState === 'Paused'
+  const canCancel = canPause || canResume
+
+  async function unlockControls(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (controlBusy || !pin) return
+    setControlBusy(true)
+    setControlMessage(null)
+    try {
+      const response = await fetch('/api/control-auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      })
+      setPin('')
+      if (!response.ok) {
+        setControlMessage(response.status === 401 ? 'That PIN was not accepted.' : 'Controls could not be unlocked. Try again later.')
+        return
+      }
+      setUnlocked(true)
+      setControlMessage('Printer controls unlocked.')
+    } catch {
+      setPin('')
+      setControlMessage('Controls could not be unlocked. Check your connection and try again.')
+    } finally {
+      setControlBusy(false)
+    }
+  }
+
+  async function runPrinterCommand(command: 'pause' | 'resume' | 'cancel') {
+    if (controlBusy) return
+    if (command === 'cancel' && !window.confirm('Cancel the current print? This cannot be undone.')) return
+    setControlBusy(true)
+    setControlMessage(null)
+    try {
+      const response = await fetch('/api/printer/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command }),
+      })
+      if (response.status === 401) {
+        setUnlocked(false)
+        setControlMessage('Your control session expired. Unlock controls again.')
+      } else if (!response.ok) {
+        setControlMessage('The printer command failed. Check the printer status and try again.')
+      } else {
+        setControlMessage(command === 'cancel' ? 'Cancel command sent.' : `${command === 'pause' ? 'Pause' : 'Resume'} command sent.`)
+      }
+    } catch {
+      setControlMessage('The printer could not be reached. Check its status and try again.')
+    } finally {
+      setControlBusy(false)
+    }
+  }
+
+  async function lockControls() {
+    setControlBusy(true)
+    try {
+      const response = await fetch('/api/control-auth/logout', { method: 'POST' })
+      if (!response.ok) throw new Error('Logout failed')
+      setControlMessage('Printer controls locked.')
+    } catch {
+      setControlMessage('Controls are hidden, but the server session may remain active for 15 minutes. Check your connection.')
+    } finally {
+      setUnlocked(false)
+      setControlBusy(false)
+    }
+  }
 
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="printer-heading">
@@ -115,6 +188,36 @@ function PrinterCard() {
           )}
         </div>
       )}
+
+      <div className="dashboard-printer-controls">
+        {!unlocked ? (
+          <form className="dashboard-control-unlock" onSubmit={unlockControls}>
+            <label htmlFor="printer-control-pin">Unlock printer controls</label>
+            <div className="dashboard-control-unlock-row">
+              <input
+                id="printer-control-pin"
+                type="password"
+                value={pin}
+                onChange={(event) => setPin(event.target.value)}
+                autoComplete="off"
+                aria-describedby="printer-control-message"
+                disabled={controlBusy}
+              />
+              <button type="submit" disabled={controlBusy || !pin}>{controlBusy ? 'Unlocking…' : 'Unlock'}</button>
+            </div>
+          </form>
+        ) : (
+          <div className="dashboard-control-actions">
+            <div className="dashboard-control-actions-row">
+              <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>Pause</button>
+              <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>Resume</button>
+              <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>Cancel print</button>
+            </div>
+            <button className="dashboard-control-lock" type="button" onClick={() => void lockControls()} disabled={controlBusy}>Lock controls</button>
+          </div>
+        )}
+        <p id="printer-control-message" className="dashboard-control-message" role="status" aria-live="polite">{controlMessage || 'Controls stay locked until you enter your PIN.'}</p>
+      </div>
     </section>
   )
 }

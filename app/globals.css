@@ -344,6 +344,92 @@ body {
   margin-top: 28px;
 }
 
+.dashboard-printer-controls {
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+.dashboard-control-unlock,
+.dashboard-control-actions { display: grid; gap: 10px; }
+
+.dashboard-control-unlock label {
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.dashboard-control-unlock-row,
+.dashboard-control-actions-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.dashboard-control-unlock input {
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  outline: none;
+  color: #f2f3f6;
+  background: rgba(255, 255, 255, .06);
+  font: inherit;
+}
+
+.dashboard-control-unlock input:focus-visible,
+.dashboard-control-actions button:focus-visible {
+  outline: 2px solid #f4bd84;
+  outline-offset: 2px;
+}
+
+.dashboard-control-unlock button,
+.dashboard-control-actions button {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(244, 189, 132, .35);
+  border-radius: 12px;
+  color: #f8e4d0;
+  background: rgba(244, 189, 132, .12);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dashboard-control-actions-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.dashboard-control-actions button.is-danger {
+  border-color: rgba(239, 131, 131, .28);
+  color: #f2aaaa;
+  background: rgba(239, 131, 131, .09);
+}
+
+.dashboard-control-actions button.dashboard-control-lock {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 12px;
+  border-color: rgba(255, 255, 255, .14);
+  color: #c5cad4;
+  background: transparent;
+  font-size: 12px;
+}
+
+.dashboard-control-unlock button:disabled,
+.dashboard-control-actions button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.dashboard-control-message {
+  min-height: 18px;
+  margin: 0;
+  color: #9da5b5;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .dashboard-printer-job {
   display: grid;
   min-width: 0;
