@@ -4,10 +4,25 @@ import {
   OctoPrintError,
   sendOctoPrintCommand,
 } from '@/app/lib/octoprint';
+import {
+  ControlAuthConfigError,
+  isControlSessionValid,
+} from '@/app/lib/control-auth';
 
 const commands = new Set<OctoPrintCommand>(['pause', 'resume', 'cancel']);
 
 export async function POST(request: NextRequest) {
+  try {
+    if (!(await isControlSessionValid(request))) {
+      return NextResponse.json({ error: 'Control authentication required' }, { status: 401 });
+    }
+  } catch (error) {
+    if (error instanceof ControlAuthConfigError) {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
+    return NextResponse.json({ error: 'Unable to verify control session' }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
