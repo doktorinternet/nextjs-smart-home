@@ -1,86 +1,98 @@
-'use client';
-import TimeTable from "@/app/components/TimeTable";
-import GridSection from "@/app/components/GridSection";
-import { useEffect } from "react";
-import { cancelTouchEvents } from "@/app/util/util";
-import GridProvider from "@/app/components/providers/GridProvider";
-import TpLinkSwitch from "@/app/components/TpLinkSwitch";
-import WebPlayer from "../components/WebPlayer";
-import CustomTimeTable from "../components/TimeTable/CustomTimeTable";
-import TimeString from "../components/TimeString";
+'use client'
 
-// `app/dashboard/page.tsx` is the UI for the `/dashboard` URL
-export default function Page() {
+import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 
-  useEffect(() => {
-    // cancelTouchEvents( );
-  });
+type ModuleCardProps = {
+  eyebrow: string
+  title: string
+  description: string
+  icon: string
+}
 
-  const getModules = () => {
-
-    return (<>
-
-      <GridProvider>
-
-        {/* todo ideas */}
-        {/* - can basically only display external content for now, not really any interactivity. limited by old ass ipad */}
-        {/* - get CI up and running..? */}
-        {/* - wall mount https://www.thingiverse.com/thing:2845043 */}
-        {/* - cabling */}
-        {/* - weather forecast https://opendata.smhi.se/apidocs/ */}
-        {/* - jailbreak pad */}
-        {/* - get better pad */}
-
-        <GridSection
-          xPartitions={1}
-          // yPartitions={1/4}
-        >
-          <CustomTimeTable/>
-        </GridSection>
-
-        {/* <GridSection
-          xPartitions={1 / 4}
-          yPartitions={3 / 4}
-        >
-          <div className="flex   justify-center items-center">
-            test thin long
-          </div>
-        </GridSection> */}
-
-        {/* <GridSection
-          xPartitions={1}
-          yPartitions={1 / 4}
-        >
-          <div className="flex justify-center items-center">
-            test thin flat
-          </div>
-        </GridSection> */}
-
-
-
-        {/* ugh, event handlers don't work well for the ipad in react... */}
-        {/* <GridSection>
-        <TpLinkSwitch deviceIp={'192.168.1.73'} />
-      </GridSection> */}
-
-
-        {/* performance issues and wonky css on safari 10.3.4 */}
-        {/* crashes on chrome */}
-        {/* straight up doesn't load currently.. */}
-       {/*<GridSection xPartitions={1} // yPartitions={1/8}
-          >
-          <WebPlayer />
-        </GridSection>*/}
-      </GridProvider>
-      {/* <GridSection xPartitions={1/4}
-        yPartitions={1/4}>
-          <TimeString seconds shouldUpdate/>
-        </GridSection> */}
-
-    </>);
-  }
-
+function ModuleCard({ eyebrow, title, description, icon }: ModuleCardProps) {
   return (
-    getModules()
+    <section className="dashboard-module" aria-label={title}>
+      <div className="dashboard-module-heading">
+        <span className="dashboard-module-icon" aria-hidden="true">{icon}</span>
+        <div>
+          <p className="dashboard-eyebrow">{eyebrow}</p>
+          <h2>{title}</h2>
+        </div>
+      </div>
+      <div className="dashboard-module-empty">
+        <span className="dashboard-empty-mark" aria-hidden="true">＋</span>
+        <p>{description}</p>
+      </div>
+    </section>
+  )
+}
+
+export default function Page() {
+  return (
+    <main className="dashboard-shell">
+      <div className="dashboard-frame">
+        <header className="dashboard-header">
+          <div className="dashboard-brand">
+            <span className="dashboard-brand-mark" aria-hidden="true">H</span>
+            <div>
+              <p className="dashboard-eyebrow">Home overview</p>
+              <h1>Good to be home<span>.</span></h1>
+            </div>
+          </div>
+          <div className="dashboard-header-note">
+            <span>Your home, at a glance</span>
+          </div>
+        </header>
+
+        <div className="dashboard-grid">
+          <section className="dashboard-module dashboard-transit" aria-labelledby="transit-heading">
+            <div className="dashboard-module-heading">
+              <span className="dashboard-module-icon" aria-hidden="true">↗</span>
+              <div>
+                <p className="dashboard-eyebrow">Getting around</p>
+                <h2 id="transit-heading">Tram departures</h2>
+              </div>
+              <span className="dashboard-source">Västtrafik</span>
+            </div>
+            <div className="dashboard-transit-content">
+              <CustomTimeTable />
+            </div>
+          </section>
+
+          <div className="dashboard-side-stack">
+            <ModuleCard
+              eyebrow="At home"
+              title="Air quality"
+              description="Air sensor not connected yet"
+              icon="◌"
+            />
+            <ModuleCard
+              eyebrow="Workshop"
+              title="3D printer"
+              description="Printer status will appear here"
+              icon="▱"
+            />
+          </div>
+
+          <ModuleCard
+            eyebrow="Now playing"
+            title="Music & speakers"
+            description="Connect Spotify or Chromecast to see playback"
+            icon="♫"
+          />
+          <ModuleCard
+            eyebrow="Connection"
+            title="Network speed"
+            description="Speed history is not connected yet"
+            icon="⌁"
+          />
+        </div>
+
+        <footer className="dashboard-footer">
+          <span>Smart Home</span>
+          <span>Room to add more</span>
+        </footer>
+      </div>
+    </main>
   )
 }
