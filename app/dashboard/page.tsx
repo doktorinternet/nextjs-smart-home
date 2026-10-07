@@ -1,6 +1,206 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
+
+type PrinterStatus = {
+  connection?: { state?: string }
+  job?: {
+    state?: string
+    details?: { file?: { name?: string; display?: string } | null } | null
+    progress?: { completion?: number | null; printTimeLeft?: number | null } | null
+  }
+}
+
+type SpeedSample = {
+  timestamp: string
+  runStatus: 'Completed' | 'Failed'
+  downloadMbps: number | null
+  uploadMbps: number | null
+}
+
+type SpeedHistory = { status?: string; error?: string; results?: SpeedSample[] }
+
+function displayDuration(seconds: number | null | undefined) {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.floor(seconds % 60)
+  return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`
+}
+
+function formatSpeed(value: number | null | undefined) {
+  return value == null || !Number.isFinite(value) ? '—' : `${value.toFixed(1)} Mbps`
+}
+
+function PrinterCard() {
+  const [printer, setPrinter] = useState<PrinterStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let current = true
+    const load = async () => {
+      try {
+        const response = await fetch('/api/printer/status', { cache: 'no-store' })
+        const result = await response.json()
+        if (!response.ok) throw new Error(result.error || 'Printer status is unavailable')
+        if (current) {
+          setPrinter(result)
+          setError(null)
+        }
+      } catch (reason) {
+        if (current) setError(reason instanceof Error ? reason.message : 'Printer status is unavailable')
+      } finally {
+        if (current) setLoading(false)
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(load, 15_000)
+    return () => {
+      current = false
+      window.clearInterval(interval)
+    }
+  }, [])
+
+  const connection = printer?.connection?.state ?? 'Unknown'
+  const job = printer?.job
+  const jobState = job?.state ?? 'Unknown'
+  const progress = job?.progress?.completion
+  const hasProgress = typeof progress === 'number' && Number.isFinite(progress)
+  const fileName = job?.details?.file?.display || job?.details?.file?.name
+  const disconnected = connection.toLowerCase() === 'closed' || connection.toLowerCase() === 'offline'
+  const remaining = displayDuration(job?.progress?.printTimeLeft)
+
+  return (
+    <section className="dashboard-module dashboard-live-card" aria-labelledby="printer-heading">
+      <div className="dashboard-module-heading">
+        <span className="dashboard-module-icon" aria-hidden="true">▱</span>
+        <div>
+          <p className="dashboard-eyebrow">Workshop</p>
+          <h2 id="printer-heading">3D printer</h2>
+        </div>
+        {!loading && !error && (
+          <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
+            <span aria-hidden="true" />{disconnected ? 'Offline' : connection}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="dashboard-live-message" role="status">Loading printer status…</p>
+      ) : error ? (
+        <p className="dashboard-live-message is-error" role="status">{error}</p>
+      ) : disconnected ? (
+        <p className="dashboard-live-message">Printer is offline. Check its connection to OctoPrint.</p>
+      ) : (
+        <div className="dashboard-printer-content" aria-live="polite">
+          <div className="dashboard-printer-job">
+            <span className="dashboard-live-label">Current job</span>
+            <strong>{fileName || (jobState === 'Operational' ? 'No active print' : jobState)}</strong>
+            <span className="dashboard-job-state">{jobState}</span>
+          </div>
+          {hasProgress ? (
+            <div className="dashboard-progress-wrap">
+              <div className="dashboard-progress-label">
+                <span>Progress</span><strong>{Math.round(progress)}%</strong>
+              </div>
+              <div className="dashboard-progress-track" role="progressbar" aria-label="Print progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0, Math.min(100, progress))}>
+                <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+              </div>
+              {remaining && <span className="dashboard-remaining">About {remaining} remaining</span>}
+            </div>
+          ) : (
+            <p className="dashboard-printer-idle">{jobState === 'Operational' ? 'Ready for a print' : 'Progress is not available for this job.'}</p>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function SpeedCard() {
+  const [history, setHistory] = useState<SpeedHistory | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let current = true
+    const load = async () => {
+      try {
+        const response = await fetch('/api/speed-history?limit=30', { cache: 'no-store' })
+        const result: SpeedHistory = await response.json()
+        if (!response.ok || result.status !== 'available') throw new Error(result.error || 'Speed history is unavailable')
+        if (current) {
+          setHistory(result)
+          setError(null)
+        }
+      } catch (reason) {
+        if (current) setError(reason instanceof Error ? reason.message : 'Speed history is unavailable')
+      } finally {
+        if (current) setLoading(false)
+      }
+    }
+
+    void load()
+    const interval = window.setInterval(load, 60_000)
+    return () => {
+      current = false
+      window.clearInterval(interval)
+    }
+  }, [])
+
+  const samples = (history?.results ?? [])
+    .filter((sample) => sample.runStatus === 'Completed' && (sample.downloadMbps != null || sample.uploadMbps != null))
+    .slice(0, 8)
+    .reverse()
+  const latest = samples[samples.length - 1]
+  const values = samples.flatMap((sample) => [sample.downloadMbps, sample.uploadMbps]).filter((value): value is number => value != null)
+  const max = Math.max(1, ...values)
+  const chartPoints = (key: 'downloadMbps' | 'uploadMbps') => samples
+    .map((sample, index) => sample[key] == null ? null : `${samples.length < 2 ? 150 : 12 + (index * 276) / (samples.length - 1)},${88 - (sample[key]! / max) * 76}`)
+    .filter((point): point is string => point != null)
+    .join(' ')
+
+  return (
+    <section className="dashboard-module dashboard-live-card dashboard-speed-card" aria-labelledby="speed-heading">
+      <div className="dashboard-module-heading">
+        <span className="dashboard-module-icon" aria-hidden="true">⌁</span>
+        <div>
+          <p className="dashboard-eyebrow">Connection</p>
+          <h2 id="speed-heading">Network speed</h2>
+        </div>
+        {latest && <span className="dashboard-speed-time">Latest test</span>}
+      </div>
+
+      {loading ? (
+        <p className="dashboard-live-message" role="status">Loading speed history…</p>
+      ) : error ? (
+        <p className="dashboard-live-message is-error" role="status">{error}</p>
+      ) : !latest ? (
+        <p className="dashboard-live-message">No completed speed tests are recorded yet.</p>
+      ) : (
+        <div className="dashboard-speed-content">
+          <div className="dashboard-speed-values" aria-live="polite">
+            <div><span className="dashboard-speed-dot is-download" /><span className="dashboard-live-label">Download</span><strong>{formatSpeed(latest.downloadMbps)}</strong></div>
+            <div><span className="dashboard-speed-dot is-upload" /><span className="dashboard-live-label">Upload</span><strong>{formatSpeed(latest.uploadMbps)}</strong></div>
+          </div>
+          <div className="dashboard-speed-chart-wrap">
+            <svg className="dashboard-speed-chart" viewBox="0 0 300 100" role="img" aria-label={`Recent speed history, download ${formatSpeed(latest.downloadMbps)}, upload ${formatSpeed(latest.uploadMbps)}`}>
+              <line x1="8" y1="88" x2="292" y2="88" />
+              {chartPoints('downloadMbps') && <polyline className="is-download" points={chartPoints('downloadMbps')} />}
+              {chartPoints('uploadMbps') && <polyline className="is-upload" points={chartPoints('uploadMbps')} />}
+              {samples.length === 1 && samples[0].downloadMbps != null && <circle className="is-download" cx="150" cy={88 - (samples[0].downloadMbps / max) * 76} r="3.5" />}
+              {samples.length === 1 && samples[0].uploadMbps != null && <circle className="is-upload" cx="150" cy={88 - (samples[0].uploadMbps / max) * 76} r="3.5" />}
+            </svg>
+            <div className="dashboard-speed-chart-labels"><span>Older</span><span>Recent</span></div>
+          </div>
+          <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString()}</p>
+        </div>
+      )}
+    </section>
+  )
+}
 
 type ModuleCardProps = {
   eyebrow: string
@@ -66,12 +266,7 @@ export default function Page() {
               description="Air sensor not connected yet"
               icon="◌"
             />
-            <ModuleCard
-              eyebrow="Workshop"
-              title="3D printer"
-              description="Printer status will appear here"
-              icon="▱"
-            />
+            <PrinterCard />
           </div>
 
           <ModuleCard
@@ -80,12 +275,7 @@ export default function Page() {
             description="Connect Spotify or Chromecast to see playback"
             icon="♫"
           />
-          <ModuleCard
-            eyebrow="Connection"
-            title="Network speed"
-            description="Speed history is not connected yet"
-            icon="⌁"
-          />
+          <SpeedCard />
         </div>
 
         <footer className="dashboard-footer">
