@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
 
 type SpotifyDevice = {
   id: string
@@ -75,17 +76,19 @@ function durationLabel(milliseconds: number | null) {
 }
 
 export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPanelProps) {
+  const autoFetch = useAutoFetch('dashboard.autoFetch.spotify')
   const [playback, setPlayback] = useState<SpotifyPlayback | null>(null)
   const [devices, setDevices] = useState<SpotifyDevice[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
   const [volume, setVolume] = useState(50)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
 
   const refresh = useCallback(async () => {
+    setLoading(true)
     try {
       const [playbackResponse, devicesResponse] = await Promise.all([
         fetch('/api/spotify/player/playback', { cache: 'no-store' }),
@@ -113,11 +116,11 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
   }, [selectedDeviceId])
 
   useEffect(() => {
-    setLoading(true)
+    if (!autoFetch.ready || !autoFetch.enabled) return
     void refresh()
     const interval = window.setInterval(() => void refresh(), 15_000)
     return () => window.clearInterval(interval)
-  }, [refresh, refreshToken])
+  }, [autoFetch.ready, autoFetch.enabled, refresh, refreshToken])
 
   async function sendCommand(path: 'pause' | 'resume' | 'previous' | 'next' | 'transfer' | 'volume', payload: Record<string, unknown> = {}) {
     if (!unlocked || busy) return
@@ -161,10 +164,11 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
           <p className="dashboard-eyebrow">Music</p>
           <h2 id="spotify-heading">Spotify</h2>
         </div>
+        <AutoFetchSwitch label="Spotify" {...autoFetch} onChange={autoFetch.setEnabled} />
         <button
           className="dashboard-control-lock"
           type="button"
-          onClick={() => { setLoading(true); setRefreshToken((value) => value + 1) }}
+          onClick={() => void refresh()}
           disabled={loading}
           aria-label="Refresh Spotify player"
           style={{ marginLeft: 'auto', minHeight: 40, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', fontSize: 12, cursor: 'pointer' }}
@@ -172,7 +176,7 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
       </div>
 
       <p className="dashboard-live-message" role="status" aria-live="polite">
-        {loading ? 'Loading Spotify player…' : error ? error : !playback?.item ? 'Nothing is playing right now.' : null}
+        {loading ? 'Loading Spotify player…' : error ? error : autoFetch.ready && !autoFetch.enabled && !playback ? 'Automatic updates are off. Refresh to load Spotify.' : !playback?.item ? 'Nothing is playing right now.' : null}
       </p>
       {!loading && !error && track && (
         <div style={{ display: 'grid', gridTemplateColumns: image ? '72px minmax(0, 1fr)' : '1fr', gap: 14, alignItems: 'center', marginTop: 12 }}>

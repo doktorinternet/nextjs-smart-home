@@ -212,9 +212,46 @@ body {
 }
 
 .dashboard-module-heading {
+  display: flex;
+  flex-wrap: wrap;
   min-height: 46px;
   gap: 14px;
 }
+
+.dashboard-auto-fetch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: #aeb6c6;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dashboard-auto-fetch input {
+  width: 34px;
+  height: 18px;
+  margin: 0;
+  accent-color: #8bc9a2;
+  cursor: pointer;
+}
+
+.dashboard-auto-fetch input:focus-visible {
+  outline: 2px solid #f4bd84;
+  outline-offset: 3px;
+}
+
+.dashboard-auto-fetch input:disabled { cursor: wait; opacity: .55; }
+
+.dashboard-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dashboard-panel-actions-end { justify-content: flex-end; margin-top: 10px; }
 
 .dashboard-module-icon {
   display: grid;

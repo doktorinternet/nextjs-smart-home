@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
 
 type CastDevice = {
   id: string
@@ -25,50 +26,46 @@ function isCastDevice(value: unknown): value is CastDevice {
 }
 
 export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps) {
+  const autoFetch = useAutoFetch('dashboard.autoFetch.cast');
   const [devices, setDevices] = useState<CastDevice[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busyDevice, setBusyDevice] = useState<string | null>(null)
   const [volume, setVolume] = useState(35)
   const [message, setMessage] = useState<string | null>(null)
-  const [refreshToken, setRefreshToken] = useState(0)
+
+  const loadDevices = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/cast/devices', { cache: 'no-store' })
+      const result: unknown = await response.json()
+      if (!response.ok) {
+        const detail = typeof result === 'object' && result !== null && 'error' in result
+          ? (result as { error?: unknown }).error
+          : null
+        throw new Error(typeof detail === 'string' ? detail : 'Cast devices are unavailable')
+      }
+      const list = typeof result === 'object' && result !== null && 'devices' in result
+        ? (result as { devices?: unknown }).devices
+        : null
+      if (!Array.isArray(list) || !list.every(isCastDevice)) {
+        throw new Error('Cast bridge returned an invalid device list')
+      }
+      setDevices(list)
+      setError(null)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Cast devices are unavailable')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    let current = true
-    const loadDevices = async () => {
-      try {
-        const response = await fetch('/api/cast/devices', { cache: 'no-store' })
-        const result: unknown = await response.json()
-        if (!response.ok) {
-          const detail = typeof result === 'object' && result !== null && 'error' in result
-            ? (result as { error?: unknown }).error
-            : null
-          throw new Error(typeof detail === 'string' ? detail : 'Cast devices are unavailable')
-        }
-        const list = typeof result === 'object' && result !== null && 'devices' in result
-          ? (result as { devices?: unknown }).devices
-          : null
-        if (!Array.isArray(list) || !list.every(isCastDevice)) {
-          throw new Error('Cast bridge returned an invalid device list')
-        }
-        if (current) {
-          setDevices(list)
-          setError(null)
-        }
-      } catch (reason) {
-        if (current) setError(reason instanceof Error ? reason.message : 'Cast devices are unavailable')
-      } finally {
-        if (current) setLoading(false)
-      }
-    }
-
+    if (!autoFetch.ready || !autoFetch.enabled) return
     void loadDevices()
     const interval = window.setInterval(loadDevices, 15_000)
-    return () => {
-      current = false
-      window.clearInterval(interval)
-    }
-  }, [refreshToken])
+    return () => window.clearInterval(interval)
+  }, [autoFetch.ready, autoFetch.enabled, loadDevices])
 
   async function sendCommand(device: CastDevice, command: 'play' | 'pause' | 'stop' | 'volume') {
     if (!unlocked || busyDevice) return
@@ -108,10 +105,11 @@ export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps
           <p className="dashboard-eyebrow">Now playing</p>
           <h2 id="cast-heading">Cast speakers</h2>
         </div>
+        <AutoFetchSwitch label="Cast speakers" {...autoFetch} onChange={autoFetch.setEnabled} />
         <button
           className="dashboard-control-lock"
           type="button"
-          onClick={() => { setLoading(true); setRefreshToken((value) => value + 1) }}
+          onClick={() => void loadDevices()}
           disabled={loading}
           aria-label="Refresh Cast speakers"
           style={{ marginLeft: 'auto', minHeight: 40, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', fontSize: 12, cursor: 'pointer' }}
@@ -120,6 +118,8 @@ export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps
 
       {loading ? (
         <p className="dashboard-live-message" role="status">Looking for Cast speakers…</p>
+      ) : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
+        <p className="dashboard-live-message" role="status">Automatic updates are off. Refresh to find Cast speakers.</p>
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}. Check that the local Cast bridge is running.</p>
       ) : devices.length === 0 ? (

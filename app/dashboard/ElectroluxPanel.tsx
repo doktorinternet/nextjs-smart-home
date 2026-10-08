@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch';
 
 type Status = { appliance: string; updatedAt: string; metrics: Array<{ label: string; value: string }> };
 
@@ -15,11 +16,13 @@ function isStatus(value: unknown): value is Status {
 }
 
 export default function ElectroluxPanel() {
+  const autoFetch = useAutoFetch('dashboard.autoFetch.electrolux');
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await fetch('/api/electrolux/status', { cache: 'no-store' });
       const result: unknown = await response.json();
@@ -40,10 +43,11 @@ export default function ElectroluxPanel() {
   }, []);
 
   useEffect(() => {
+    if (!autoFetch.ready || !autoFetch.enabled) return;
     void refresh();
     const interval = window.setInterval(() => void refresh(), 60_000);
     return () => window.clearInterval(interval);
-  }, [refresh]);
+  }, [autoFetch.ready, autoFetch.enabled, refresh]);
 
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="air-quality-heading">
@@ -53,10 +57,15 @@ export default function ElectroluxPanel() {
           <p className="dashboard-eyebrow">At home</p>
           <h2 id="air-quality-heading">Air quality</h2>
         </div>
+        <AutoFetchSwitch label="Electrolux purifier" {...autoFetch} onChange={autoFetch.setEnabled} />
         <span className="dashboard-source">Pure A9</span>
+      </div>
+      <div className="dashboard-panel-actions dashboard-panel-actions-end">
+        <button className="dashboard-control-lock" type="button" onClick={() => void refresh()} disabled={loading} aria-label="Refresh Electrolux purifier status">Refresh</button>
       </div>
       <div className="dashboard-live-content" aria-live="polite">
         {loading && !status ? <p>Connecting to air purifier…</p> : null}
+        {autoFetch.ready && !autoFetch.enabled && !loading && !status ? <p>Automatic updates are off. Refresh to load purifier status.</p> : null}
         {error && !status ? <p>{error}</p> : null}
         {status ? (
           <>

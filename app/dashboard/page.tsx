@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
 import SpotifyPanel from './SpotifyPanel'
 import ElectroluxPanel from './ElectroluxPanel'
+import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -36,38 +37,35 @@ function formatSpeed(value: number | null | undefined) {
 }
 
 function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlockedChange: (unlocked: boolean) => void }) {
+  const autoFetch = useAutoFetch('dashboard.autoFetch.printer')
   const [printer, setPrinter] = useState<PrinterStatus | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pin, setPin] = useState('')
   const [controlBusy, setControlBusy] = useState(false)
   const [controlMessage, setControlMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    let current = true
-    const load = async () => {
-      try {
-        const response = await fetch('/api/printer/status', { cache: 'no-store' })
-        const result = await response.json()
-        if (!response.ok) throw new Error(result.error || 'Printer status is unavailable')
-        if (current) {
-          setPrinter(result)
-          setError(null)
-        }
-      } catch (reason) {
-        if (current) setError(reason instanceof Error ? reason.message : 'Printer status is unavailable')
-      } finally {
-        if (current) setLoading(false)
-      }
-    }
-
-    void load()
-    const interval = window.setInterval(load, 15_000)
-    return () => {
-      current = false
-      window.clearInterval(interval)
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/printer/status', { cache: 'no-store' })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Printer status is unavailable')
+      setPrinter(result)
+      setError(null)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Printer status is unavailable')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!autoFetch.ready || !autoFetch.enabled) return
+    void load()
+    const interval = window.setInterval(() => void load(), 15_000)
+    return () => window.clearInterval(interval)
+  }, [autoFetch.ready, autoFetch.enabled, load])
 
   const connection = printer?.connection?.state ?? 'Unknown'
   const job = printer?.job
@@ -155,6 +153,7 @@ function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlo
           <p className="dashboard-eyebrow">Workshop</p>
           <h2 id="printer-heading">3D printer</h2>
         </div>
+        <AutoFetchSwitch label="printer" {...autoFetch} onChange={autoFetch.setEnabled} />
         {!loading && !error && (
           <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
             <span aria-hidden="true" />{disconnected ? 'Offline' : connection}
@@ -166,6 +165,8 @@ function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlo
         <p className="dashboard-live-message" role="status">Loading printer status…</p>
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
+      ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
+        <p className="dashboard-live-message" role="status">Automatic updates are off. Refresh to load printer status.</p>
       ) : disconnected ? (
         <p className="dashboard-live-message">Printer is offline. Check its connection to OctoPrint.</p>
       ) : (
@@ -192,6 +193,7 @@ function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlo
       )}
 
       <div className="dashboard-printer-controls">
+        <button className="dashboard-control-lock" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh printer status">Refresh</button>
         {!unlocked ? (
           <form className="dashboard-control-unlock" onSubmit={unlockControls}>
             <label htmlFor="printer-control-pin">Unlock printer controls</label>
@@ -225,35 +227,32 @@ function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlo
 }
 
 function SpeedCard() {
+  const autoFetch = useAutoFetch('dashboard.autoFetch.networkSpeed')
   const [history, setHistory] = useState<SpeedHistory | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let current = true
-    const load = async () => {
-      try {
-        const response = await fetch('/api/speed-history?limit=30', { cache: 'no-store' })
-        const result: SpeedHistory = await response.json()
-        if (!response.ok || result.status !== 'available') throw new Error(result.error || 'Speed history is unavailable')
-        if (current) {
-          setHistory(result)
-          setError(null)
-        }
-      } catch (reason) {
-        if (current) setError(reason instanceof Error ? reason.message : 'Speed history is unavailable')
-      } finally {
-        if (current) setLoading(false)
-      }
-    }
-
-    void load()
-    const interval = window.setInterval(load, 60_000)
-    return () => {
-      current = false
-      window.clearInterval(interval)
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/speed-history?limit=30', { cache: 'no-store' })
+      const result: SpeedHistory = await response.json()
+      if (!response.ok || result.status !== 'available') throw new Error(result.error || 'Speed history is unavailable')
+      setHistory(result)
+      setError(null)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Speed history is unavailable')
+    } finally {
+      setLoading(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!autoFetch.ready || !autoFetch.enabled) return
+    void load()
+    const interval = window.setInterval(() => void load(), 60_000)
+    return () => window.clearInterval(interval)
+  }, [autoFetch.ready, autoFetch.enabled, load])
 
   const samples = (history?.results ?? [])
     .filter((sample) => sample.runStatus === 'Completed' && (sample.downloadMbps != null || sample.uploadMbps != null))
@@ -275,6 +274,8 @@ function SpeedCard() {
           <p className="dashboard-eyebrow">Connection</p>
           <h2 id="speed-heading">Network speed</h2>
         </div>
+        <AutoFetchSwitch label="network speed" {...autoFetch} onChange={autoFetch.setEnabled} />
+        <button className="dashboard-control-lock" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh network speed history">Refresh</button>
         {latest && <span className="dashboard-speed-time">Latest test</span>}
       </div>
 
@@ -282,6 +283,8 @@ function SpeedCard() {
         <p className="dashboard-live-message" role="status">Loading speed history…</p>
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
+      ) : autoFetch.ready && !autoFetch.enabled && !history ? (
+        <p className="dashboard-live-message" role="status">Automatic updates are off. Refresh to load speed history.</p>
       ) : !latest ? (
         <p className="dashboard-live-message">No completed speed tests are recorded yet.</p>
       ) : (

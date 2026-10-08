@@ -3,6 +3,7 @@ import conf from "@/app/configuration.json";
 import Line from "./Line";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
+import { AutoFetchSwitch, useAutoFetch } from "@/app/dashboard/useAutoFetch";
 
 type DeparturesPayload = {
   results: DepartureApiResponse[];
@@ -33,9 +34,10 @@ function isDeparturesPayload(value: unknown): value is DeparturesPayload {
 }
 
 export default function CustomTimeTable() {
+  const autoFetch = useAutoFetch("dashboard.autoFetch.tramDepartures");
   const [data, setData] = useState<LineDepartures[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestInFlight = useRef(false);
 
@@ -72,22 +74,27 @@ export default function CustomTimeTable() {
   }, []);
 
   useEffect(() => {
+    if (!autoFetch.ready || !autoFetch.enabled) return;
     void fetchData();
     const interval = setInterval(() => void fetchData(), conf.API["Departures-interval"]);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [autoFetch.ready, autoFetch.enabled, fetchData]);
 
   return (
     <div className="time-table grow" aria-busy={loading}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div role="status" aria-live="polite">
-          {!hasLoaded && loading && "Loading departures…"}
+          {autoFetch.ready && autoFetch.enabled && !hasLoaded && loading && "Loading departures…"}
           {hasLoaded && loading && "Refreshing departures…"}
+          {autoFetch.ready && !autoFetch.enabled && !loading && "Automatic updates are off."}
           {error && <span role="alert">{error}</span>}
         </div>
-        <button type="button" onClick={() => void fetchData()} disabled={loading}>
-          {loading ? "Refreshing…" : error ? "Try again" : "Refresh departures"}
-        </button>
+        <div className="dashboard-panel-actions">
+          <AutoFetchSwitch label="tram departures" {...autoFetch} onChange={autoFetch.setEnabled} />
+          <button type="button" onClick={() => void fetchData()} disabled={loading}>
+            {loading ? "Refreshing…" : error ? "Try again" : "Refresh departures"}
+          </button>
+        </div>
       </div>
 
       <div className="departures">
