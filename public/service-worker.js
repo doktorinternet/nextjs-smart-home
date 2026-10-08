@@ -1,6 +1,6 @@
-const CACHE_NAME = "smart-home-kiosk-shell-v1"
+const CACHE_NAME = "smart-home-kiosk-shell-v2"
 const OFFLINE_URL = "/offline.html"
-const SHELL_ASSETS = [OFFLINE_URL, "/icon-192.svg", "/icon-512.svg", "/apple-touch-icon.svg"]
+const SHELL_ASSETS = [OFFLINE_URL, "/icon-192.png", "/icon-512.png", "/icon-512-maskable.png", "/apple-touch-icon.png"]
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
