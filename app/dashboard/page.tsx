@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
+import SpotifyPanel from './SpotifyPanel'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -375,6 +376,7 @@ export default function Page() {
           </div>
 
           <CastPanel unlocked={controlsUnlocked} onSessionExpired={() => setControlsUnlocked(false)} />
+          <SpotifyPanel unlocked={controlsUnlocked} onSessionExpired={() => setControlsUnlocked(false)} />
           <SpeedCard />
         </div>
 
