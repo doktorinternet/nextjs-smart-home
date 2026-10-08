@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
+import CastPanel from './CastPanel'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -32,12 +33,11 @@ function formatSpeed(value: number | null | undefined) {
   return value == null || !Number.isFinite(value) ? '—' : `${value.toFixed(1)} Mbps`
 }
 
-function PrinterCard() {
+function PrinterCard({ unlocked, onUnlockedChange }: { unlocked: boolean; onUnlockedChange: (unlocked: boolean) => void }) {
   const [printer, setPrinter] = useState<PrinterStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pin, setPin] = useState('')
-  const [unlocked, setUnlocked] = useState(false)
   const [controlBusy, setControlBusy] = useState(false)
   const [controlMessage, setControlMessage] = useState<string | null>(null)
 
@@ -95,7 +95,7 @@ function PrinterCard() {
         setControlMessage(response.status === 401 ? 'That PIN was not accepted.' : 'Controls could not be unlocked. Try again later.')
         return
       }
-      setUnlocked(true)
+      onUnlockedChange(true)
       setControlMessage('Printer controls unlocked.')
     } catch {
       setPin('')
@@ -117,7 +117,7 @@ function PrinterCard() {
         body: JSON.stringify({ command }),
       })
       if (response.status === 401) {
-        setUnlocked(false)
+        onUnlockedChange(false)
         setControlMessage('Your control session expired. Unlock controls again.')
       } else if (!response.ok) {
         setControlMessage('The printer command failed. Check the printer status and try again.')
@@ -140,7 +140,7 @@ function PrinterCard() {
     } catch {
       setControlMessage('Controls are hidden, but the server session may remain active for 15 minutes. Check your connection.')
     } finally {
-      setUnlocked(false)
+      onUnlockedChange(false)
       setControlBusy(false)
     }
   }
@@ -331,6 +331,8 @@ function ModuleCard({ eyebrow, title, description, icon }: ModuleCardProps) {
 }
 
 export default function Page() {
+  const [controlsUnlocked, setControlsUnlocked] = useState(false)
+
   return (
     <main className="dashboard-shell">
       <div className="dashboard-frame">
@@ -369,15 +371,10 @@ export default function Page() {
               description="Air sensor not connected yet"
               icon="◌"
             />
-            <PrinterCard />
+            <PrinterCard unlocked={controlsUnlocked} onUnlockedChange={setControlsUnlocked} />
           </div>
 
-          <ModuleCard
-            eyebrow="Now playing"
-            title="Music & speakers"
-            description="Connect Spotify or Chromecast to see playback"
-            icon="♫"
-          />
+          <CastPanel unlocked={controlsUnlocked} onSessionExpired={() => setControlsUnlocked(false)} />
           <SpeedCard />
         </div>
 
