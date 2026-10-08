@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
 import SpotifyPanel from './SpotifyPanel'
+import ElectroluxPanel from './ElectroluxPanel'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -366,12 +367,7 @@ export default function Page() {
           </section>
 
           <div className="dashboard-side-stack">
-            <ModuleCard
-              eyebrow="At home"
-              title="Air quality"
-              description="Air sensor not connected yet"
-              icon="◌"
-            />
+            <ElectroluxPanel />
             <PrinterCard unlocked={controlsUnlocked} onUnlockedChange={setControlsUnlocked} />
           </div>
 

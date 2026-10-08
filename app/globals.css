@@ -296,6 +296,27 @@ body {
   flex-direction: column;
 }
 
+.dashboard-live-content {
+  flex: 1;
+  margin-top: 20px;
+  color: #c5cad4;
+  font-size: 14px;
+}
+
+.dashboard-device-name { margin: 0 0 12px; color: var(--dashboard-ink); font-weight: 600; }
+
+.air-quality-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.air-quality-metrics div { padding: 10px; border-radius: 12px; background: rgba(10, 14, 23, .34); }
+.air-quality-metrics dt { color: #aeb5c2; font-size: 11px; }
+.air-quality-metrics dd { margin: 4px 0 0; color: var(--dashboard-ink); font-size: 16px; font-weight: 600; }
+.dashboard-live-note { margin: 10px 0 0; color: #98a2b3; font-size: 11px; }
+
 .dashboard-live-status,
 .dashboard-speed-time {
   display: inline-flex;
