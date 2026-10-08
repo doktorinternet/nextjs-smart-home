@@ -20,6 +20,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Network speed history
+
+The read-only `GET /api/speed-history` endpoint reads the CSV produced by `checkNetwork.ps1` from the server filesystem. Configure `SPEED_HISTORY_CSV_PATH` with the absolute path to a copy or mounted share of `speedtest-results.csv` that the `server01` process can read. The local `F:\scripts\speedtester\log\speedtest-results.csv` path works only if that path exists on the server. The endpoint returns up to 30 newest rows by default; `?limit=100` raises the limit to 100. The CSV is never accessed by the browser.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
