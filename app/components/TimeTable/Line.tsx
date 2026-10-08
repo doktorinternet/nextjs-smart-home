@@ -27,7 +27,7 @@ export default function Line({
 
     for (const journey of departures.journeys) {
       if (journey.direction === direction) journeys.push(
-        <div className='flex flex-row'>
+        <div key={Math.random()} className='flex flex-row'>
           <div className='pl-2'>{journey.destination}</div>
           <div className='flex pl-2'>
             <div>{`${inMinutesFromNow(journey.departureTime)}`}</div>
@@ -41,7 +41,7 @@ export default function Line({
     }
 
     return (
-      <div className='flex flex-col'>
+      <div key={Math.random()} className='flex flex-col'>
         { direction === Direction.Townwards ? 
         <FontAwesomeIcon icon={faArrowUp} /> :
         <FontAwesomeIcon icon={faArrowDown} />}
@@ -67,11 +67,11 @@ export default function Line({
       <h2 className='font-sans text-8xl'>{departuresPerLine.line.shortName}</h2>
       <div className={'flex flex-row justify-center h-full w-full pl-2'}>
         {
-          createDirectionSegments(departuresPerLine, Direction.Townwards)
+          createDirectionSegments(departuresPerLine, Direction.Townwards) ?? <div>nothing here</div>
         }
         <div className="h-full"></div>
         {
-          createDirectionSegments(departuresPerLine, Direction.Outwards)
+          createDirectionSegments(departuresPerLine, Direction.Outwards) ?? <div>nothing here</div>
         }
       </div>
     </div>
