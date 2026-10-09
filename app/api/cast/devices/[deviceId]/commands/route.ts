@@ -5,10 +5,6 @@ import {
   parseCastCommand,
   sendCastCommand,
 } from '@/app/lib/cast-bridge';
-import {
-  ControlAuthConfigError,
-  isControlSessionValid,
-} from '@/app/lib/control-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,17 +12,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { deviceId: string } },
 ) {
-  try {
-    if (!(await isControlSessionValid(request))) {
-      return NextResponse.json({ error: 'Control authentication required' }, { status: 401 });
-    }
-  } catch (error) {
-    if (error instanceof ControlAuthConfigError) {
-      return NextResponse.json({ error: error.message }, { status: 503 });
-    }
-    return NextResponse.json({ error: 'Unable to verify control session' }, { status: 401 });
-  }
-
   if (!isCastDeviceId(params.deviceId)) {
     return NextResponse.json({ error: 'Invalid Cast device id' }, { status: 400 });
   }

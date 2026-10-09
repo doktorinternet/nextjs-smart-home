@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { NextResponse } from 'next/server';
 import { parseSpeedHistoryCsv } from '@/app/lib/speed-history';
+import conf from '@/app/configuration.json';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,7 +18,7 @@ function unavailable(message: string, status: number) {
 }
 
 export async function GET(request: Request) {
-  const csvPath = process.env.SPEED_HISTORY_CSV_PATH;
+  const csvPath = conf.API["Speed-history-path"];
   if (!csvPath) {
     return unavailable('Speed history is not configured', 503);
   }
@@ -45,7 +46,8 @@ export async function GET(request: Request) {
       { status: 'available', results: results.slice(0, limit) },
       { headers: { 'Cache-Control': 'no-store' } },
     );
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse speed history CSV', error);
     return unavailable('Speed history data is invalid', 502);
   }
 }

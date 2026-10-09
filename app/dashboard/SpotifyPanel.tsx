@@ -26,11 +26,6 @@ type SpotifyPlayback = {
   device: SpotifyDevice | null
 }
 
-type SpotifyPanelProps = {
-  unlocked: boolean
-  onSessionExpired: () => void
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -75,7 +70,7 @@ function durationLabel(milliseconds: number | null) {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
-export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPanelProps) {
+export default function SpotifyPanel() {
   const autoFetch = useAutoFetch('dashboard.autoFetch.spotify')
   const [playback, setPlayback] = useState<SpotifyPlayback | null>(null)
   const [devices, setDevices] = useState<SpotifyDevice[]>([])
@@ -123,7 +118,7 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
   }, [autoFetch.ready, autoFetch.enabled, refresh, refreshToken])
 
   async function sendCommand(path: 'pause' | 'resume' | 'previous' | 'next' | 'transfer' | 'volume', payload: Record<string, unknown> = {}) {
-    if (!unlocked || busy) return
+    if (busy) return
     setBusy(true)
     setMessage(null)
     try {
@@ -132,10 +127,7 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (response.status === 401) {
-        onSessionExpired()
-        setMessage('Your control session expired. Unlock controls again with your PIN.')
-      } else if (!response.ok) {
+      if (!response.ok) {
         const result: unknown = await response.json().catch(() => null)
         setMessage(responseError(result, `Spotify could not ${path} playback.`))
       } else {
@@ -154,7 +146,7 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
   const image = track?.album?.images?.[0]?.url
   const artistNames = track?.artists?.map((artist) => artist.name).join(', ')
   const progress = durationLabel(playback?.progress_ms ?? null)
-  const controlsDisabled = !unlocked || busy
+  const controlsDisabled = busy
 
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="spotify-heading">
@@ -223,7 +215,7 @@ export default function SpotifyPanel({ unlocked, onSessionExpired }: SpotifyPane
         <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}>Connect or reauthorize Spotify</a>
       </div>
       <p className="dashboard-control-message" role="status" aria-live="polite">
-        {message || (unlocked ? 'Playback controls are unlocked.' : 'Playback changes require controls to be unlocked with your PIN in the 3D printer panel.')}
+        {message}
       </p>
     </section>
   )

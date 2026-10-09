@@ -10,11 +10,6 @@ type CastDevice = {
   type: string | null
 }
 
-type CastPanelProps = {
-  unlocked: boolean
-  onSessionExpired: () => void
-}
-
 function isCastDevice(value: unknown): value is CastDevice {
   if (typeof value !== 'object' || value === null) return false
   const device = value as Record<string, unknown>
@@ -25,7 +20,7 @@ function isCastDevice(value: unknown): value is CastDevice {
     && (typeof device.type === 'string' || device.type === null)
 }
 
-export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps) {
+export default function CastPanel() {
   const autoFetch = useAutoFetch('dashboard.autoFetch.cast');
   const [devices, setDevices] = useState<CastDevice[]>([])
   const [loading, setLoading] = useState(false)
@@ -68,7 +63,7 @@ export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps
   }, [autoFetch.ready, autoFetch.enabled, loadDevices])
 
   async function sendCommand(device: CastDevice, command: 'play' | 'pause' | 'stop' | 'volume') {
-    if (!unlocked || busyDevice) return
+    if (busyDevice) return
     setBusyDevice(device.id)
     setMessage(null)
     const payload = command === 'volume' ? { command, level: volume / 100 } : { command }
@@ -78,10 +73,7 @@ export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      if (response.status === 401) {
-        onSessionExpired()
-        setMessage('Your control session expired. Unlock controls again with your PIN.')
-      } else if (!response.ok) {
+      if (!response.ok) {
         const result = await response.json().catch(() => null)
         const detail = typeof result === 'object' && result !== null && 'error' in result
           ? (result as { error?: unknown }).error
@@ -134,24 +126,24 @@ export default function CastPanel({ unlocked, onSessionExpired }: CastPanelProps
               </div>
               <div className="dashboard-control-actions-row">
                 {(['play', 'pause', 'stop'] as const).map((command) => (
-                  <button key={command} type="button" onClick={() => void sendCommand(device, command)} disabled={!unlocked || busyDevice !== null}>
+                  <button key={command} type="button" onClick={() => void sendCommand(device, command)} disabled={busyDevice !== null}>
                     {busyDevice === device.id ? 'Sending…' : command[0].toUpperCase() + command.slice(1)}
                   </button>
                 ))}
               </div>
               <label className="dashboard-live-label" htmlFor={`cast-volume-${device.id}`} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
                 <span>Volume</span><span>{volume}%</span>
-                <input id={`cast-volume-${device.id}`} type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={!unlocked || busyDevice !== null} aria-label={`Volume for ${device.name}`} style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
+                <input id={`cast-volume-${device.id}`} type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={busyDevice !== null} aria-label={`Volume for ${device.name}`} style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
               </label>
               <div className="dashboard-control-actions-row" style={{ gridTemplateColumns: '1fr' }}>
-                <button type="button" onClick={() => void sendCommand(device, 'volume')} disabled={!unlocked || busyDevice !== null}>Set volume</button>
+                <button type="button" onClick={() => void sendCommand(device, 'volume')} disabled={busyDevice !== null}>Set volume</button>
               </div>
             </article>
           ))}
         </div>
       )}
       <p className="dashboard-control-message" role="status" aria-live="polite">
-        {message || (unlocked ? 'Speaker controls are unlocked.' : 'Unlock controls with your PIN in the 3D printer panel to control speakers.')}
+        {message}
       </p>
     </section>
   )

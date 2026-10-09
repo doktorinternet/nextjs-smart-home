@@ -1,10 +1,6 @@
 import 'server-only';
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  ControlAuthConfigError,
-  isControlSessionValid,
-} from '@/app/lib/control-auth';
 import { SpotifyAuthConfigError } from '@/app/lib/spotify-auth';
 import { SpotifyPlayerError } from '@/app/lib/spotify-player';
 
@@ -21,7 +17,7 @@ function errorResponse(error: unknown): NextResponse {
   if (error instanceof InvalidPlayerRequestError) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400, headers: noStore });
   }
-  if (error instanceof ControlAuthConfigError || error instanceof SpotifyAuthConfigError) {
+  if (error instanceof SpotifyAuthConfigError) {
     return NextResponse.json({ error: error.message }, { status: 503, headers: noStore });
   }
   if (error instanceof SpotifyPlayerError) {
@@ -45,21 +41,6 @@ export async function runPlayerControl(
   request: NextRequest,
   action: () => Promise<void>,
 ): Promise<NextResponse> {
-  try {
-    if (!(await isControlSessionValid(request))) {
-      return NextResponse.json({ error: 'Control authentication required' }, {
-        status: 401,
-        headers: noStore,
-      });
-    }
-  } catch (error) {
-    if (error instanceof ControlAuthConfigError) return errorResponse(error);
-    return NextResponse.json({ error: 'Unable to verify control session' }, {
-      status: 401,
-      headers: noStore,
-    });
-  }
-
   try {
     await action();
     return new NextResponse(null, { status: 204, headers: noStore });

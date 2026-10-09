@@ -102,7 +102,7 @@ function parseCsvRows(csv: string): string[][] {
         field += character;
       }
     } else if (character === '"') {
-      if (field.length !== 0) throw new Error('CSV contains invalid quoting');
+      if (field.length !== 0) throw new Error(`CSV contains invalid quoting at row index ${index}`);
       quoted = true;
     } else if (character === ',') {
       row.push(field);
