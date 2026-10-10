@@ -1,0 +1,10 @@
+{
+  "connection": { "current": { "state": "Operational" } },
+  "job": { "state": "Printing" },
+  "printer": {
+    "temperature": {
+      "tool0": { "actual": 207.5, "target": 210 },
+      "bed": { "actual": 59.25, "target": 60 }
+    }
+  }
+}

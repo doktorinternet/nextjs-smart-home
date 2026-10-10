@@ -418,8 +418,6 @@ export default function Page() {
         <div className="dashboard-layout-stage" aria-live="off">{selectedLayout}</div>
 
         <footer className="dashboard-footer">
-          <span>{copy.dashboard.smartHome}</span>
-          <span>{copy.dashboard.moreSpace}</span>
         </footer>
       </div>
     </main>

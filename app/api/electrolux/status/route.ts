@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ElectroluxApiError, ElectroluxConfigError, getElectroluxStatus } from '@/app/lib/electrolux';
+import { saveTelemetryRecords } from '@/app/lib/telemetry';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -8,7 +9,10 @@ const noStore = { 'Cache-Control': 'no-store' };
 
 export async function GET() {
   try {
-    return NextResponse.json(await getElectroluxStatus(), { headers: noStore });
+    const status = await getElectroluxStatus();
+    saveTelemetryRecords(status.readings);
+    const { sourceId: _sourceId, readings: _readings, ...publicStatus } = status;
+    return NextResponse.json(publicStatus, { headers: noStore });
   } catch (error) {
     if (error instanceof ElectroluxConfigError) {
       return NextResponse.json({ error: error.message }, { status: 503, headers: noStore });

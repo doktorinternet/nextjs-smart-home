@@ -15,6 +15,7 @@
 
 # production
 /build
+/data/telemetry.sqlite*
 
 # misc
 .DS_Store

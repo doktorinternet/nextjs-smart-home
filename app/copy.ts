@@ -22,8 +22,6 @@ export const copy = {
     travel: 'Resor',
     departures: 'Kollektivtrafik',
     transit: 'Kollektivtrafik',
-    smartHome: 'Smart Home',
-    moreSpace: 'Utrymme för mer',
     emptyHome: 'Startsidan saknar innehåll och du skickas vidare till översikten.',
   },
   refresh: {
