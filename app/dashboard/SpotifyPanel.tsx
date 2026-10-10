@@ -1,7 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBackward, faForward, faMusic, faPause, faPlay, faRightLeft, faVolumeHigh } from '@fortawesome/free-solid-svg-icons'
+import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 
 type SpotifyDevice = {
   id: string
@@ -188,21 +190,19 @@ export default function SpotifyPanel() {
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="spotify-heading">
       <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true">♫</span>
+        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
         <div>
           <p className="dashboard-eyebrow">Music</p>
           <h2 id="spotify-heading">Spotify</h2>
         </div>
-        <div className="dashboard-header-controls">
-          <AutoFetchSwitch label="Spotify" {...autoFetch} onChange={autoFetch.setEnabled} />
-        <button
-          className="dashboard-header-refresh"
-          type="button"
-          onClick={() => void refresh()}
-          disabled={loading}
-          aria-label="Refresh Spotify player"
-        >Refresh</button>
-        </div>
+        <AutoRefreshControl
+          label="Spotify"
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => void refresh()}
+          refreshLabel="Refresh Spotify player"
+          refreshing={loading}
+        />
       </div>
 
       <p className="dashboard-live-message" role="status" aria-live="polite">
@@ -226,14 +226,14 @@ export default function SpotifyPanel() {
             {devices.map((device) => <option key={device.id} value={device.id}>{device.name}{device.is_active ? ' · Active' : ''}</option>)}
           </select>
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void sendCommand('transfer', { deviceId: selectedDeviceId, play: Boolean(playback?.is_playing) })} disabled={controlsDisabled || !selectedDeviceId || selectedDeviceId === playback?.device?.id}>Transfer playback</button>
+            <button type="button" onClick={() => void sendCommand('transfer', { deviceId: selectedDeviceId, play: Boolean(playback?.is_playing) })} disabled={controlsDisabled || !selectedDeviceId || selectedDeviceId === playback?.device?.id}><FontAwesomeIcon icon={faRightLeft} aria-hidden="true" /> Transfer playback</button>
           </div>
           <label className="dashboard-live-label" htmlFor="spotify-volume" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
             <span>Volume{selectedDevice ? ` · ${selectedDevice.name}` : ''}</span><span>{volume}%</span>
             <input id="spotify-volume" type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={volumeDisabled} aria-label="Spotify volume" style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
           </label>
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={volumeDisabled}>Set volume</button>
+            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={volumeDisabled}><FontAwesomeIcon icon={faVolumeHigh} aria-hidden="true" /> Set volume</button>
           </div>
           {selectedDevice?.supports_volume === false && <p className="dashboard-live-message">Spotify does not support remote volume control for this device. Change volume on the device itself.</p>}
         </div>
@@ -242,16 +242,16 @@ export default function SpotifyPanel() {
       {!loading && !error && devices.length === 0 && <p className="dashboard-live-message">No Spotify Connect devices are available. Open Spotify on a device and refresh.</p>}
 
       <div className="dashboard-control-actions-row" style={{ marginTop: 18 }}>
-        <button type="button" onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_prev === true}>Previous</button>
+        <button type="button" onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_prev === true}><FontAwesomeIcon icon={faBackward} aria-hidden="true" /> Previous</button>
         {playback?.is_playing ? (
-          <button type="button" onClick={() => void sendCommand('pause', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || disallowedActions.pausing === true}>Pause</button>
+          <button type="button" onClick={() => void sendCommand('pause', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || disallowedActions.pausing === true}><FontAwesomeIcon icon={faPause} aria-hidden="true" /> Pause</button>
         ) : (
-          <button type="button" onClick={() => void sendCommand('resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.resuming === true}>Resume</button>
+          <button type="button" onClick={() => void sendCommand('resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.resuming === true}><FontAwesomeIcon icon={faPlay} aria-hidden="true" /> Resume</button>
         )}
-        <button type="button" onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_next === true}>Next</button>
+        <button type="button" onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_next === true}><FontAwesomeIcon icon={faForward} aria-hidden="true" /> Next</button>
       </div>
       <div className="dashboard-control-actions-row" style={{ marginTop: 10, gridTemplateColumns: '1fr' }}>
-        <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}>Connect or reauthorize Spotify</a>
+        <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}><FontAwesomeIcon icon={faMusic} aria-hidden="true" /> Connect or reauthorize Spotify</a>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: 10, alignItems: 'center', marginTop: 12 }}>
         <button type="button" onClick={() => void testProfile()} disabled={profileBusy}>

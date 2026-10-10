@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
+import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 
 type CastDevice = {
   id: string
@@ -97,16 +97,14 @@ export default function CastPanel() {
           <p className="dashboard-eyebrow">Now playing</p>
           <h2 id="cast-heading">Cast speakers</h2>
         </div>
-        <div className="dashboard-header-controls">
-          <AutoFetchSwitch label="Cast speakers" {...autoFetch} onChange={autoFetch.setEnabled} />
-        <button
-          className="dashboard-header-refresh"
-          type="button"
-          onClick={() => void loadDevices()}
-          disabled={loading}
-          aria-label="Refresh Cast speakers"
-        >Refresh</button>
-        </div>
+        <AutoRefreshControl
+          label="Cast speakers"
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => void loadDevices()}
+          refreshLabel="Refresh Cast speakers"
+          refreshing={loading}
+        />
       </div>
 
       {loading ? (

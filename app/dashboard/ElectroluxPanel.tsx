@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch';
+import { AutoRefreshControl, useAutoFetch } from './useAutoFetch';
 
 type Status = { appliance: string; updatedAt: string; metrics: Array<{ label: string; value: string }> };
 
@@ -58,10 +58,14 @@ export default function ElectroluxPanel() {
           <h2 id="air-quality-heading">Air quality</h2>
         </div>
         <span className="dashboard-source">Pure A9</span>
-        <div className="dashboard-header-controls">
-          <AutoFetchSwitch label="Electrolux purifier" {...autoFetch} onChange={autoFetch.setEnabled} />
-          <button className="dashboard-header-refresh" type="button" onClick={() => void refresh()} disabled={loading} aria-label="Refresh Electrolux purifier status">Refresh</button>
-        </div>
+        <AutoRefreshControl
+          label="Electrolux purifier"
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => void refresh()}
+          refreshLabel="Refresh Electrolux purifier status"
+          refreshing={loading}
+        />
       </div>
       <div className="dashboard-live-content" aria-live="polite">
         {loading && !status ? <p>Connecting to air purifier…</p> : null}

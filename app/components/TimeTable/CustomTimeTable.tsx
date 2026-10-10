@@ -173,9 +173,6 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
     <div className="time-table grow" aria-busy={loading}>
       <div className="flex items-center justify-between gap-3">
         <div role="status" aria-live="polite">
-          {autoFetch.ready && autoFetch.enabled && !hasLoaded && loading && "Loading departures…"}
-          {hasLoaded && loading && "Refreshing departures…"}
-          {autoFetch.ready && !autoFetch.enabled && !loading && "Automatic updates are off."}
           {error && <span role="alert">{error}</span>}
         </div>
       </div>

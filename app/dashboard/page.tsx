@@ -5,7 +5,7 @@ import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
 import SpotifyPanel from './SpotifyPanel'
 import ElectroluxPanel from './ElectroluxPanel'
-import { AutoFetchSwitch, useAutoFetch } from './useAutoFetch'
+import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -114,10 +114,14 @@ function PrinterCard() {
             <span aria-hidden="true" />{disconnected ? 'Offline' : connection}
           </span>
         )}
-        <div className="dashboard-header-controls">
-          <AutoFetchSwitch label="printer" {...autoFetch} onChange={autoFetch.setEnabled} />
-          <button className="dashboard-header-refresh" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh printer status">Refresh</button>
-        </div>
+        <AutoRefreshControl
+          label="printer"
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => void load()}
+          refreshLabel="Refresh printer status"
+          refreshing={loading}
+        />
       </div>
 
       {loading ? (
@@ -214,10 +218,14 @@ function SpeedCard() {
           <h2 id="speed-heading">Network speed</h2>
         </div>
         {latest && <span className="dashboard-speed-time">Latest test</span>}
-        <div className="dashboard-header-controls">
-          <AutoFetchSwitch label="network speed" {...autoFetch} onChange={autoFetch.setEnabled} />
-          <button className="dashboard-header-refresh" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh network speed history">Refresh</button>
-        </div>
+        <AutoRefreshControl
+          label="network speed"
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => void load()}
+          refreshLabel="Refresh network speed history"
+          refreshing={loading}
+        />
       </div>
 
       {loading ? (
@@ -308,18 +316,16 @@ export default function Page() {
                 <h2 id="transit-heading">Tram departures</h2>
               </div>
               <span className="dashboard-source">Västtrafik</span>
-              <div className="dashboard-header-controls">
-                <AutoFetchSwitch label="tram departures" {...transitAutoFetch} onChange={transitAutoFetch.setEnabled} />
-                <button
-                  className="dashboard-header-refresh"
-                  type="button"
-                  onClick={() => refreshDepartures?.()}
-                  disabled={transitFetchState.loading || !refreshDepartures}
-                  aria-label="Refresh tram departures"
-                >
-                  {transitFetchState.loading ? 'Refreshing…' : transitFetchState.error ? 'Try again' : 'Refresh'}
-                </button>
-              </div>
+              <AutoRefreshControl
+                label="tram departures"
+                {...transitAutoFetch}
+                onChange={transitAutoFetch.setEnabled}
+                onRefresh={() => refreshDepartures?.()}
+                refreshLabel="Refresh tram departures"
+                refreshing={transitFetchState.loading}
+                refreshError={Boolean(transitFetchState.error)}
+                refreshDisabled={!refreshDepartures}
+              />
             </div>
             <div className="dashboard-transit-content">
               <CustomTimeTable
