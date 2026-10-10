@@ -16,6 +16,7 @@ export async function GET() {
     if (error instanceof ElectroluxApiError) {
       return NextResponse.json({ error: error.message }, { status: error.status, headers: noStore });
     }
+    console.error('Unexpected Electrolux status error', error);
     return NextResponse.json({ error: 'Electrolux service is unavailable' }, { status: 502, headers: noStore });
   }
 }

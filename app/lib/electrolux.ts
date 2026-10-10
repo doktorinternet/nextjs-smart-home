@@ -98,7 +98,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function requestLabel(path: string): string {
+  if (path === '/api/v1/token/refresh') return 'token refresh';
+  if (path === '/api/v1/appliances') return 'appliance discovery';
+  return 'appliance state request';
+}
+
+function providerErrorMessage(value: unknown, secrets: string[]): string | undefined {
+  if (!isRecord(value)) return undefined;
+  const providerError = value.error;
+  const message = typeof value.error_description === 'string' ? value.error_description
+    : typeof value.message === 'string' ? value.message
+      : typeof providerError === 'string' ? providerError
+        : isRecord(providerError) && typeof providerError.message === 'string' ? providerError.message
+          : undefined;
+  if (!message) return undefined;
+
+  let safeMessage = message.replace(/[\r\n\t]+/g, ' ').replace(/\bBearer\s+\S+/gi, 'Bearer [redacted]');
+  for (const secret of secrets) {
+    if (secret.length >= 8) safeMessage = safeMessage.split(secret).join('[redacted]');
+  }
+  return safeMessage.slice(0, 200);
+}
+
 async function request(path: string, config: Config, accessToken?: string, init?: RequestInit): Promise<unknown> {
+  const label = requestLabel(path);
   let response: Response;
   try {
     response = await fetch(`${apiBase}${path}`, {
@@ -113,9 +137,23 @@ async function request(path: string, config: Config, accessToken?: string, init?
       signal: AbortSignal.timeout(10_000),
     });
   } catch {
-    throw new ElectroluxApiError();
+    throw new ElectroluxApiError(`Electrolux ${label} failed due to a network or timeout error`);
   }
-  if (!response.ok) throw new ElectroluxApiError();
+  if (!response.ok) {
+    let message: string | undefined;
+    try {
+      const body: unknown = await response.json();
+      const requestBody: unknown = typeof init?.body === 'string' ? JSON.parse(init.body) : null;
+      const requestSecrets = isRecord(requestBody)
+        ? Object.values(requestBody).filter((value): value is string => typeof value === 'string')
+        : [];
+      message = providerErrorMessage(body, [config.apiKey, accessToken ?? '', ...requestSecrets]);
+    } catch {
+      // Some unsuccessful Electrolux responses have no JSON body.
+    }
+    const detail = message ? `: ${message}` : '';
+    throw new ElectroluxApiError(`Electrolux ${label} returned HTTP ${response.status}${detail}`, response.status === 429 ? 429 : 502);
+  }
   try {
     return await response.json();
   } catch {

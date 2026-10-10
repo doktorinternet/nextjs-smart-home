@@ -17,6 +17,12 @@ function isStatus(value: unknown): value is Status {
       && typeof (metric as Record<string, unknown>).value === 'string');
 }
 
+function apiErrorMessage(value: unknown): string | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const error = (value as Record<string, unknown>).error;
+  return typeof error === 'string' && error.trim() ? error : null;
+}
+
 export default function ElectroluxPanel() {
   const autoFetch = useAutoFetch('dashboard.autoFetch.electrolux');
   const [status, setStatus] = useState<Status | null>(null);
@@ -27,15 +33,19 @@ export default function ElectroluxPanel() {
     setLoading(true);
     try {
       const response = await fetch('/api/electrolux/status', { cache: 'no-store' });
-      const result: unknown = await response.json();
+      const result: unknown = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error('Det gick inte att hämta luftkvalitetsdata.');
+        setError(apiErrorMessage(result) ?? `Electrolux-tjänsten svarade med HTTP ${response.status}.`);
+        return;
       }
-      if (!isStatus(result)) throw new Error('Electrolux returnerade ogiltig statusinformation.');
+      if (!isStatus(result)) {
+        setError('Electrolux returnerade ogiltig statusinformation.');
+        return;
+      }
       setStatus(result);
       setError(null);
-    } catch (reason) {
-      setError('Det gick inte att hämta luftkvalitetsdata.');
+    } catch {
+      setError('Det gick inte att nå den lokala Electrolux-tjänsten.');
     } finally {
       setLoading(false);
     }
@@ -79,7 +89,7 @@ export default function ElectroluxPanel() {
                 ))}
               </dl>
             ) : <p>Ansluten, men inga mätvärden kunde hämtas.</p>}
-            {error ? <p className="dashboard-live-note">Uppdateringen misslyckades. Visar de senaste mätvärdena.</p> : null}
+            {error ? <p className="dashboard-live-note">Uppdateringen misslyckades: {error} Visar de senaste mätvärdena.</p> : null}
             <p className="dashboard-live-note">Uppdaterad {new Date(status.updatedAt).toLocaleTimeString('sv-SE')}</p>
           </>
         ) : null}
