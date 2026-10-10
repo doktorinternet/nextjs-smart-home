@@ -108,7 +108,7 @@ export function createSpotifyAuthorizationRequest() {
     client_id: config.clientId,
     response_type: 'code',
     redirect_uri: config.redirectUri,
-    scope: 'user-read-playback-state user-modify-playback-state',
+    scope: 'user-read-playback-state user-modify-playback-state playlist-read-private user-library-read',
     state,
   }).toString();
   return { url: url.toString(), signedState };

@@ -7,7 +7,7 @@ import {
 } from '@/app/lib/spotify-auth';
 
 const spotifyApiBase = 'https://api.spotify.com/v1';
-type PlayerEndpoint = '/me' | '/me/player' | '/me/player/devices' | '/me/player/pause' | '/me/player/play' | '/me/player/next' | '/me/player/previous' | '/me/player/volume';
+type PlayerEndpoint = '/me' | '/me/player' | '/me/player/devices' | '/me/player/pause' | '/me/player/play' | '/me/player/next' | '/me/player/previous' | '/me/player/volume' | '/me/player/shuffle' | '/me/player/repeat' | '/me/player/seek' | '/me/playlists' | '/me/episodes' | '/me/audiobooks';
 type PlayerMethod = 'GET' | 'PUT' | 'POST';
 
 export class SpotifyPlayerError extends Error {
@@ -143,4 +143,62 @@ export async function setSpotifyVolume(volumePercent: number, deviceId?: string)
   await spotifyRequest('/me/player/volume', 'PUT', {
     query: { volume_percent: String(volumePercent), device_id: deviceId },
   });
+}
+
+export async function setSpotifyShuffle(state: boolean, deviceId?: string): Promise<void> {
+  await spotifyRequest('/me/player/shuffle', 'PUT', {
+    query: { state: String(state), device_id: deviceId },
+  });
+}
+
+export async function setSpotifyRepeat(state: 'off' | 'context' | 'track', deviceId?: string): Promise<void> {
+  await spotifyRequest('/me/player/repeat', 'PUT', {
+    query: { state, device_id: deviceId },
+  });
+}
+
+export async function seekSpotifyPlayback(positionMs: number, deviceId?: string): Promise<void> {
+  await spotifyRequest('/me/player/seek', 'PUT', {
+    query: { position_ms: String(positionMs), device_id: deviceId },
+  });
+}
+
+export async function startSpotifyPlayback(options: {
+  deviceId?: string;
+  contextUri?: string;
+  uri?: string;
+}): Promise<void> {
+  await spotifyRequest('/me/player/play', 'PUT', {
+    query: { device_id: options.deviceId },
+    body: options.contextUri
+      ? { context_uri: options.contextUri }
+      : { uris: options.uri ? [options.uri] : [] },
+  });
+}
+
+export async function getSpotifySavedPlaylists(): Promise<unknown | null> {
+  return spotifyRequest('/me/playlists', 'GET', { query: { limit: '30' } });
+}
+
+async function getSavedItems(endpoint: '/me/episodes' | '/me/audiobooks') {
+  try {
+    const response = await spotifyRequest(endpoint, 'GET', { query: { limit: '20' } });
+    if (typeof response !== 'object' || response === null || !('items' in response) || !Array.isArray(response.items)) {
+      return { available: true, items: [] };
+    }
+    return { available: true, items: response.items };
+  } catch (error) {
+    if (error instanceof SpotifyPlayerError && (error.status === 403 || error.status === 404)) {
+      return { available: false, items: [] };
+    }
+    throw error;
+  }
+}
+
+export async function getSpotifySavedSpokenContent() {
+  const [episodes, audiobooks] = await Promise.all([
+    getSavedItems('/me/episodes'),
+    getSavedItems('/me/audiobooks'),
+  ]);
+  return { episodes, audiobooks };
 }
