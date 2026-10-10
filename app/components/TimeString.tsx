@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { locale } from "@/app/copy";
 
 
 export default function TimeString({
@@ -22,7 +23,7 @@ export default function TimeString({
   }, [shouldUpdate])
 
   const refreshTime = (timestamp?: string) => {
-    let tmp = new Date(timestamp ? Date.parse(timestamp) : new Date()).toLocaleTimeString("sv-SE", { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
+    let tmp = new Date(timestamp ? Date.parse(timestamp) : new Date()).toLocaleTimeString(locale, { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
     if (!seconds) {
       setDate(tmp.replace(":00", ""));
     } else {

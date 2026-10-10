@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWind } from '@fortawesome/free-solid-svg-icons';
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch';
+import { copy, formatCopy, locale } from '@/app/copy';
 
 type Status = { appliance: string; updatedAt: string; metrics: Array<{ label: string; value: string }> };
 
@@ -15,12 +16,6 @@ function isStatus(value: unknown): value is Status {
     && status.metrics.every((metric) => typeof metric === 'object' && metric !== null
       && typeof (metric as Record<string, unknown>).label === 'string'
       && typeof (metric as Record<string, unknown>).value === 'string');
-}
-
-function apiErrorMessage(value: unknown): string | null {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
-  const error = (value as Record<string, unknown>).error;
-  return typeof error === 'string' && error.trim() ? error : null;
 }
 
 export default function ElectroluxPanel() {
@@ -35,17 +30,17 @@ export default function ElectroluxPanel() {
       const response = await fetch('/api/electrolux/status', { cache: 'no-store' });
       const result: unknown = await response.json().catch(() => null);
       if (!response.ok) {
-        setError(apiErrorMessage(result) ?? `Electrolux-tjänsten svarade med HTTP ${response.status}.`);
+        setError(formatCopy(copy.electrolux.httpError, { status: response.status }));
         return;
       }
       if (!isStatus(result)) {
-        setError('Electrolux returnerade ogiltig statusinformation.');
+        setError(copy.electrolux.invalidStatus);
         return;
       }
       setStatus(result);
       setError(null);
     } catch {
-      setError('Det gick inte att nå den lokala Electrolux-tjänsten.');
+      setError(copy.electrolux.unreachable);
     } finally {
       setLoading(false);
     }
@@ -63,21 +58,21 @@ export default function ElectroluxPanel() {
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faWind} /></span>
         <div>
-          <p className="dashboard-eyebrow">Inomhus</p>
-          <h2 id="air-quality-heading">Luftkvalitet</h2>
+          <p className="dashboard-eyebrow">{copy.electrolux.eyebrow}</p>
+          <h2 id="air-quality-heading">{copy.electrolux.title}</h2>
         </div>
         <span className="dashboard-source">Pure A9</span>
         <AutoRefreshControl
-          label="Electrolux-luftrenare"
+          label={copy.electrolux.label}
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void refresh()}
-          refreshLabel="Uppdatera status för Electrolux-luftrenaren"
+          refreshLabel={copy.electrolux.refresh}
           refreshing={loading}
         />
       </div>
       <div className="dashboard-live-content" aria-live="polite">
-        {loading && !status ? <p>Ansluter till luftrenaren…</p> : null}
+        {loading && !status ? <p>{copy.electrolux.connecting}</p> : null}
         {error && !status ? <p>{error}</p> : null}
         {status ? (
           <>
@@ -88,9 +83,9 @@ export default function ElectroluxPanel() {
                   <div key={metric.label}><dt>{metric.label}</dt><dd>{metric.value}</dd></div>
                 ))}
               </dl>
-            ) : <p>Ansluten, men inga mätvärden kunde hämtas.</p>}
-            {error ? <p className="dashboard-live-note">Uppdateringen misslyckades: {error} Visar de senaste mätvärdena.</p> : null}
-            <p className="dashboard-live-note">Uppdaterad {new Date(status.updatedAt).toLocaleTimeString('sv-SE')}</p>
+            ) : <p>{copy.electrolux.noMetrics}</p>}
+            {error ? <p className="dashboard-live-note">{formatCopy(copy.electrolux.updateFailed, { error })}</p> : null}
+            <p className="dashboard-live-note">{formatCopy(copy.electrolux.updated, { time: new Date(status.updatedAt).toLocaleTimeString(locale) })}</p>
           </>
         ) : null}
       </div>

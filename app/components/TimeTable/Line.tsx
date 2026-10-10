@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { LineDepartures, DestinationDirections, Direction, AppJourney } from './LineDepartures.type';
 import { useEffect } from 'react';
+import { copy, formatCopy } from '@/app/copy';
 
 export default function Line({
   departuresPerLine
@@ -17,7 +18,7 @@ export default function Line({
     const mins = Math.floor((
       Date.parse(leavingAt)-(new Date().getTime())
     )/1000/60);
-    return mins <= 0 ? 'inom en minut' : `om ${mins} min`; 
+    return mins <= 0 ? copy.transit.legacyInMinute : formatCopy(copy.transit.legacyInMinutes, { minutes: mins });
   }
 
   const createDirectionSegments = (departures: LineDepartures, direction: Direction) => {
@@ -31,7 +32,7 @@ export default function Line({
           <div className='pl-2'>{journey.destination}</div>
           <div className='flex pl-2'>
             <div>{`${inMinutesFromNow(journey.departureTime)}`}</div>
-            <div className='pl-4'>kl.</div>
+            <div className='pl-4'>{copy.transit.clockAbbreviation}</div>
             <div className='pl-4'>
               <TimeString timestamp={journey.departureTime} seconds={false} />
             </div>
@@ -67,11 +68,11 @@ export default function Line({
       <h2 className='font-sans text-8xl'>{departuresPerLine.line.shortName}</h2>
       <div className={'flex flex-row justify-center h-full w-full pl-2'}>
         {
-          createDirectionSegments(departuresPerLine, Direction.Townwards) ?? <div>Inga avgångar</div>
+          createDirectionSegments(departuresPerLine, Direction.Townwards) ?? <div>{copy.transit.noDeparturesShort}</div>
         }
         <div className="h-full"></div>
         {
-          createDirectionSegments(departuresPerLine, Direction.Outwards) ?? <div>Inga avgångar</div>
+          createDirectionSegments(departuresPerLine, Direction.Outwards) ?? <div>{copy.transit.noDeparturesShort}</div>
         }
       </div>
     </div>

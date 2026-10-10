@@ -1,14 +1,15 @@
 import "./globals.css"
 import type { Metadata, Viewport } from "next"
 import PwaRegister from "./pwa-register"
+import { copy, language } from "./copy"
 
 export const metadata: Metadata = {
-  title: "Smart Home Kiosk",
-  description: "En kontrollpanel för smarta hem.",
-  applicationName: "Smart Home Kiosk",
+  title: copy.metadata.title,
+  description: copy.metadata.description,
+  applicationName: copy.metadata.applicationName,
   appleWebApp: {
     capable: true,
-    title: "Hemkontroll",
+    title: copy.metadata.homeScreenTitle,
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -33,7 +34,7 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="sv" className="h-full w-full flex">
+    <html lang={language} className="h-full w-full flex">
       <body className="flex grow h-full">
         <PwaRegister />
         {/* <div className="navbar flex flex-col gap-2 bg-gray-900 h-full">

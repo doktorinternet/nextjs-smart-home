@@ -9,6 +9,7 @@ import CastPanel from './CastPanel'
 import SpotifyPanel from './SpotifyPanel'
 import ElectroluxPanel from './ElectroluxPanel'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
+import { copy, formatCopy, locale } from '@/app/copy'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -32,7 +33,9 @@ function displayDuration(seconds: number | null | undefined) {
   if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = Math.floor(seconds % 60)
-  return minutes > 0 ? `${minutes} min ${remainingSeconds} s` : `${remainingSeconds} s`
+  return minutes > 0
+    ? formatCopy(copy.printer.minutesAndSeconds, { minutes, seconds: remainingSeconds })
+    : formatCopy(copy.printer.seconds, { seconds: remainingSeconds })
 }
 
 function formatSpeed(value: number | null | undefined) {
@@ -41,12 +44,12 @@ function formatSpeed(value: number | null | undefined) {
 
 function printerStateLabel(state: string) {
   const labels: Record<string, string> = {
-    Operational: 'Redo',
-    Printing: 'Skriver ut',
-    Paused: 'Pausad',
-    Offline: 'Offline',
-    Closed: 'Frånkopplad',
-    Unknown: 'Okänd',
+    Operational: copy.printer.states.Operational,
+    Printing: copy.printer.states.Printing,
+    Paused: copy.printer.states.Paused,
+    Offline: copy.printer.states.Offline,
+    Closed: copy.printer.states.Closed,
+    Unknown: copy.printer.states.Unknown,
   }
   return labels[state] ?? state
 }
@@ -64,11 +67,11 @@ function PrinterCard() {
     try {
       const response = await fetch('/api/printer/status', { cache: 'no-store' })
       const result = await response.json()
-      if (!response.ok) throw new Error('Det gick inte att hämta skrivarstatus.')
+      if (!response.ok) throw new Error(copy.printer.loadError)
       setPrinter(result)
       setError(null)
     } catch (reason) {
-      setError('Det gick inte att hämta skrivarstatus.')
+      setError(copy.printer.loadError)
     } finally {
       setLoading(false)
     }
@@ -95,7 +98,7 @@ function PrinterCard() {
 
   async function runPrinterCommand(command: 'pause' | 'resume' | 'cancel') {
     if (controlBusy) return
-    if (command === 'cancel' && !window.confirm('Avbryta den pågående utskriften? Det går inte att ångra.')) return
+    if (command === 'cancel' && !window.confirm(copy.printer.confirmCancel)) return
     setControlBusy(true)
     setControlMessage(null)
     try {
@@ -105,12 +108,14 @@ function PrinterCard() {
         body: JSON.stringify({ command }),
       })
       if (!response.ok) {
-        setControlMessage('Skrivarkommandot misslyckades. Kontrollera skrivarstatusen och försök igen.')
+        setControlMessage(copy.printer.commandFailed)
       } else {
-        setControlMessage(command === 'cancel' ? 'Kommandot för att avbryta skickades.' : `Kommandot för att ${command === 'pause' ? 'pausa' : 'återuppta'} skickades.`)
+        setControlMessage(command === 'cancel'
+          ? copy.printer.cancelSent
+          : formatCopy(copy.printer.commandSent, { action: copy.printer.commandActions[command] }))
       }
     } catch {
-      setControlMessage('Det gick inte att nå skrivaren. Kontrollera statusen och försök igen.')
+      setControlMessage(copy.printer.unreachable)
     } finally {
       setControlBusy(false)
     }
@@ -121,51 +126,51 @@ function PrinterCard() {
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faPrint} /></span>
         <div>
-          <p className="dashboard-eyebrow">Verkstad</p>
-          <h2 id="printer-heading">3D-skrivare</h2>
+          <p className="dashboard-eyebrow">{copy.printer.eyebrow}</p>
+          <h2 id="printer-heading">{copy.printer.title}</h2>
         </div>
         {!loading && !error && (
           <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
-            <span aria-hidden="true" />{disconnected ? 'Frånkopplad' : printerStateLabel(connection)}
+            <span aria-hidden="true" />{disconnected ? copy.printer.disconnected : printerStateLabel(connection)}
           </span>
         )}
         <AutoRefreshControl
-          label="skrivare"
+          label={copy.printer.label}
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void load()}
-          refreshLabel="Uppdatera skrivarstatus"
+          refreshLabel={copy.printer.refresh}
           refreshing={loading}
         />
       </div>
 
       {loading ? (
-        <p className="dashboard-live-message" role="status">Hämtar skrivarstatus…</p>
+        <p className="dashboard-live-message" role="status">{copy.printer.loading}</p>
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
         null
       ) : disconnected ? (
-        <p className="dashboard-live-message">Skrivaren är frånkopplad. Kontrollera anslutningen till OctoPrint.</p>
+        <p className="dashboard-live-message">{copy.printer.disconnectedHelp}</p>
       ) : (
         <div className="dashboard-printer-content" aria-live="polite">
           <div className="dashboard-printer-job">
-            <span className="dashboard-live-label">Pågående jobb</span>
-            <strong>{fileName || (jobState === 'Operational' ? 'Ingen aktiv utskrift' : printerStateLabel(jobState))}</strong>
+            <span className="dashboard-live-label">{copy.printer.activeJob}</span>
+            <strong>{fileName || (jobState === 'Operational' ? copy.printer.noActivePrint : printerStateLabel(jobState))}</strong>
             <span className="dashboard-job-state">{printerStateLabel(jobState)}</span>
           </div>
           {hasProgress ? (
             <div className="dashboard-progress-wrap">
               <div className="dashboard-progress-label">
-                <span>Förlopp</span><strong>{Math.round(progress)}%</strong>
+                <span>{copy.printer.progress}</span><strong>{Math.round(progress)}%</strong>
               </div>
-              <div className="dashboard-progress-track" role="progressbar" aria-label="Utskriftsförlopp" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0, Math.min(100, progress))}>
+              <div className="dashboard-progress-track" role="progressbar" aria-label={copy.printer.progressAria} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0, Math.min(100, progress))}>
                 <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
               </div>
-              {remaining && <span className="dashboard-remaining">Cirka {remaining} återstår</span>}
+              {remaining && <span className="dashboard-remaining">{formatCopy(copy.printer.remaining, { duration: remaining })}</span>}
             </div>
           ) : (
-            <p className="dashboard-printer-idle">{jobState === 'Operational' ? 'Redo för utskrift' : 'Förloppet är inte tillgängligt för det här jobbet.'}</p>
+            <p className="dashboard-printer-idle">{jobState === 'Operational' ? copy.printer.ready : copy.printer.progressUnavailable}</p>
           )}
         </div>
       )}
@@ -173,9 +178,9 @@ function PrinterCard() {
       <div className="dashboard-printer-controls">
         <div className="dashboard-control-actions">
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>Pausa</button>
-            <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>Återuppta</button>
-            <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>Avbryt utskrift</button>
+            <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>{copy.printer.pause}</button>
+            <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>{copy.printer.resume}</button>
+            <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</button>
           </div>
         </div>
         <p className="dashboard-control-message" role="status" aria-live="polite">{controlMessage}</p>
@@ -195,11 +200,11 @@ function SpeedCard() {
     try {
       const response = await fetch('/api/speed-history?limit=30', { cache: 'no-store' })
       const result: SpeedHistory = await response.json()
-      if (!response.ok || result.status !== 'available') throw new Error('Det gick inte att hämta hastighetshistoriken.')
+      if (!response.ok || result.status !== 'available') throw new Error(copy.speed.loadError)
       setHistory(result)
       setError(null)
     } catch (reason) {
-      setError('Det gick inte att hämta hastighetshistoriken.')
+      setError(copy.speed.loadError)
     } finally {
       setLoading(false)
     }
@@ -229,45 +234,45 @@ function SpeedCard() {
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faGauge} /></span>
         <div>
-          <p className="dashboard-eyebrow">Anslutning</p>
-          <h2 id="speed-heading">Nätverkshastighet</h2>
+          <p className="dashboard-eyebrow">{copy.speed.eyebrow}</p>
+          <h2 id="speed-heading">{copy.speed.title}</h2>
         </div>
-        {latest && <span className="dashboard-speed-time">Senaste testet</span>}
+        {latest && <span className="dashboard-speed-time">{copy.speed.latest}</span>}
         <AutoRefreshControl
-          label="nätverkshastighet"
+          label={copy.speed.label}
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void load()}
-          refreshLabel="Uppdatera hastighetshistorik"
+          refreshLabel={copy.speed.refresh}
           refreshing={loading}
         />
       </div>
 
       {loading ? (
-        <p className="dashboard-live-message" role="status">Hämtar hastighetshistorik…</p>
+        <p className="dashboard-live-message" role="status">{copy.speed.loading}</p>
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !history ? (
         null
       ) : !latest ? (
-        <p className="dashboard-live-message">Inga slutförda hastighetstester har registrerats ännu.</p>
+        <p className="dashboard-live-message">{copy.speed.empty}</p>
       ) : (
         <div className="dashboard-speed-content">
           <div className="dashboard-speed-values" aria-live="polite">
-            <div><span className="dashboard-speed-dot is-download" /><span className="dashboard-live-label">Nedladdning</span><strong>{formatSpeed(latest.downloadMbps)}</strong></div>
-            <div><span className="dashboard-speed-dot is-upload" /><span className="dashboard-live-label">Uppladdning</span><strong>{formatSpeed(latest.uploadMbps)}</strong></div>
+            <div><span className="dashboard-speed-dot is-download" /><span className="dashboard-live-label">{copy.speed.download}</span><strong>{formatSpeed(latest.downloadMbps)}</strong></div>
+            <div><span className="dashboard-speed-dot is-upload" /><span className="dashboard-live-label">{copy.speed.upload}</span><strong>{formatSpeed(latest.uploadMbps)}</strong></div>
           </div>
           <div className="dashboard-speed-chart-wrap">
-            <svg className="dashboard-speed-chart" viewBox="0 0 300 100" role="img" aria-label={`Senaste hastighetshistoriken, nedladdning ${formatSpeed(latest.downloadMbps)}, uppladdning ${formatSpeed(latest.uploadMbps)}`}>
+            <svg className="dashboard-speed-chart" viewBox="0 0 300 100" role="img" aria-label={formatCopy(copy.speed.chartAria, { download: formatSpeed(latest.downloadMbps), upload: formatSpeed(latest.uploadMbps) })}>
               <line x1="8" y1="88" x2="292" y2="88" />
               {chartPoints('downloadMbps') && <polyline className="is-download" points={chartPoints('downloadMbps')} />}
               {chartPoints('uploadMbps') && <polyline className="is-upload" points={chartPoints('uploadMbps')} />}
               {samples.length === 1 && samples[0].downloadMbps != null && <circle className="is-download" cx="150" cy={88 - (samples[0].downloadMbps / max) * 76} r="3.5" />}
               {samples.length === 1 && samples[0].uploadMbps != null && <circle className="is-upload" cx="150" cy={88 - (samples[0].uploadMbps / max) * 76} r="3.5" />}
             </svg>
-            <div className="dashboard-speed-chart-labels"><span>Äldre</span><span>Nyare</span></div>
+            <div className="dashboard-speed-chart-labels"><span>{copy.speed.older}</span><span>{copy.speed.newer}</span></div>
           </div>
-          <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString('sv-SE')}</p>
+          <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString(locale)}</p>
         </div>
       )}
     </section>
@@ -313,8 +318,7 @@ export default function Page() {
           <div className="dashboard-brand">
             <span className="dashboard-brand-mark" aria-hidden="true">H</span>
             <div>
-              {/* <p className="dashboard-eyebrow">Skönt att vara hemma<span>.</span></p> */}
-              <h1>Hemöversikt</h1>
+              <h1>{copy.dashboard.title}</h1>
             </div>
           </div>
           <div>
@@ -326,16 +330,16 @@ export default function Page() {
             <div className="dashboard-module-heading">
               <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faTrain} /></span>
               <div>
-                <p className="dashboard-eyebrow">Resor</p>
-                <h2 id="transit-heading">Spårvagnsavgångar</h2>
+                <p className="dashboard-eyebrow">{copy.dashboard.travel}</p>
+                <h2 id="transit-heading">{copy.dashboard.departures}</h2>
               </div>
               <span className="dashboard-source">Västtrafik</span>
               <AutoRefreshControl
-                label="Kollektivtrafik"
+                label={copy.dashboard.transit}
                 {...transitAutoFetch}
                 onChange={transitAutoFetch.setEnabled}
                 onRefresh={() => refreshDepartures?.()}
-                refreshLabel="Uppdatera kollektivtrafik"
+                refreshLabel={copy.transit.refresh}
                 refreshing={transitFetchState.loading}
                 refreshError={Boolean(transitFetchState.error)}
                 refreshDisabled={!refreshDepartures}
@@ -361,8 +365,8 @@ export default function Page() {
         </div>
 
         <footer className="dashboard-footer">
-          <span>Smart Home</span>
-          <span>Utrymme för mer</span>
+          <span>{copy.dashboard.smartHome}</span>
+          <span>{copy.dashboard.moreSpace}</span>
         </footer>
       </div>
     </main>

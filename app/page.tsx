@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
 import { redirect } from "next/navigation"
+import { copy } from "./copy"
 
 export const metadata: Metadata = {
-  title: 'Smart Home',
+  title: copy.metadata.applicationName,
 }
 export default function Page() {
 
@@ -10,7 +11,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1>Startsidan saknar innehåll och du skickas vidare till översikten.</h1>
+      <h1>{copy.dashboard.emptyHome}</h1>
     </div>
   )
 }

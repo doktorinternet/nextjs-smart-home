@@ -1,5 +1,6 @@
 import { getAsJson } from "@/app/util/util";
 import { FormEvent,  useEffect, useState } from "react"
+import { copy } from '@/app/copy'
 
 export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, deviceIp: string }) {
 
@@ -52,12 +53,12 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     test();
-    alert("Ett namn har skickats.");
+    alert(copy.switch.submitted);
     event.preventDefault();
   }
 
   const test = () => {
-    setDeviceName("hej");
+    setDeviceName(copy.switch.testName);
   }
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
 
   const onsubmit = (e: { preventDefault: () => void; }) =>{
     e.preventDefault();
-    alert("hej");
+    alert(copy.switch.testAlert);
   }
 
   return <div className="gap-4">
@@ -74,7 +75,7 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
     <form onSubmit={onsubmit}>
       {/* <input hidden readOnly name="action" value="toggle"></input>
       <input hidden readOnly name="state" value={convBoolState(!state)}></input> */}
-      <input type="submit" className="border cursor-pointer" value="iPad-vänlig strömbrytare"></input>
+      <input type="submit" className="border cursor-pointer" value={copy.switch.button}></input>
     </form>
     <div>
       {deviceName}

@@ -3,6 +3,7 @@ import conf from "@/app/configuration.json";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { AppJourney, Direction, LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
 import { useAutoFetch } from "@/app/dashboard/useAutoFetch";
+import { copy, formatCopy, locale } from "@/app/copy";
 
 type DeparturesPayload = {
   results: DepartureApiResponse[];
@@ -47,16 +48,16 @@ function DepartureRow({ departure, now }: { departure: ListedDeparture; now: num
   const { line, journey } = departure;
   const minutes = minutesUntil(journey.departureTime, now);
   const urgency = journey.isCancelled ? "is-cancelled" : minutes <= 5 ? "is-urgent" : minutes <= 15 ? "is-soon" : "";
-  const departureTime = new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit" })
+  const departureTime = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" })
     .format(new Date(journey.departureTime));
   const relativeTime = journey.isCancelled
-    ? "inställd"
-    : minutes <= 0 ? "avgår nu" : `om ${minutes} minuter`;
+    ? copy.transit.cancelledRelative
+    : minutes <= 0 ? copy.transit.departingNow : formatCopy(copy.transit.inMinutes, { minutes });
 
   return (
     <li
       className={`tram-departure-row ${urgency}`}
-      aria-label={`Linje ${line.shortName} mot ${journey.destination}, avgår ${departureTime}, ${relativeTime}`}
+      aria-label={formatCopy(copy.transit.towardDeparture, { line: line.shortName, destination: journey.destination, time: departureTime, relativeTime })}
     >
       <span
         className="tram-line-badge"
@@ -65,17 +66,17 @@ function DepartureRow({ departure, now }: { departure: ListedDeparture; now: num
           color: line.foregroundColor,
           borderColor: line.borderColor,
         }}
-        aria-label={`Linje ${line.shortName}`}
+        aria-label={formatCopy(copy.transit.line, { line: line.shortName })}
       >
         {line.shortName}
       </span>
       <span className="tram-departure-destination" title={journey.destination}>{journey.destination}</span>
       <time className="tram-departure-time" dateTime={journey.departureTime}>{departureTime}</time>
       {journey.isCancelled ? (
-        <span className="tram-departure-remaining">Inställd</span>
+        <span className="tram-departure-remaining">{copy.transit.cancelled}</span>
       ) : (
         <span className="tram-departure-remaining">
-          {minutes <= 0 ? "Nu" : `${minutes} min`}
+          {minutes <= 0 ? copy.transit.now : formatCopy(copy.transit.minutesShort, { minutes })}
         </span>
       )}
     </li>
@@ -131,12 +132,12 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
     try {
       const response = await fetch("/api/vasttrafik/departures");
       if (!response.ok) {
-        throw new Error("Kunde inte hämta avgångarna. Försök igen.");
+        throw new Error(copy.transit.requestError);
       }
 
       const payload: unknown = await response.json();
       if (!isDeparturesPayload(payload)) {
-        throw new Error("Svaret med avgångar var ogiltigt. Försök igen.");
+        throw new Error(copy.transit.invalidResponse);
       }
 
       setData(mapAndMergeByLine(payload.results));
@@ -144,7 +145,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
       setError(
         fetchError instanceof Error
           ? fetchError.message
-          : "Kunde inte hämta avgångarna. Försök igen.",
+          : copy.transit.requestError,
       );
     } finally {
       setHasLoaded(true);
@@ -179,8 +180,8 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
 
       <div className="departures">
         {([
-          [Direction.Townwards, "Syd/Väst"],
-          [Direction.Outwards, "Nord/Öst"],
+          [Direction.Townwards, copy.transit.southWest],
+          [Direction.Outwards, copy.transit.northEast],
         ] as const).map(([direction, title]) => {
           const departures = departuresByDirection.get(direction) ?? [];
           return (
@@ -197,7 +198,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
                   ))}
                 </ol>
               ) : hasLoaded && !loading && !error ? (
-                <p className="tram-direction-empty">Inga avgångar tillgängliga.</p>
+                <p className="tram-direction-empty">{copy.transit.noDepartures}</p>
               ) : null}
             </section>
           );

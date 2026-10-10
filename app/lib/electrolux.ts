@@ -3,6 +3,7 @@ import 'server-only';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute } from 'node:path';
+import { copy } from '@/app/copy';
 
 const apiBase = 'https://api.developer.electrolux.one';
 type Config = { apiKey: string; encryptionKey: Buffer; tokenStorePath: string; initialRefreshToken?: string; applianceId?: string };
@@ -237,14 +238,14 @@ function appliancesFrom(value: unknown): Appliance[] {
 }
 
 const metricDefinitions: Array<{ label: string; keys: string[]; unit: string }> = [
-  { label: 'PM1.0', keys: ['pm1', 'pm1_0', 'pm1.0', 'pm1value'], unit: 'µg/m³' },
-  { label: 'PM2.5', keys: ['pm25', 'pm2_5', 'pm2.5', 'pm2_5value'], unit: 'µg/m³' },
-  { label: 'PM10', keys: ['pm10', 'pm10value'], unit: 'µg/m³' },
-  { label: 'TVOC', keys: ['tvoc', 'tvocvalue'], unit: 'ppb' },
-  { label: 'Temperatur', keys: ['temperature', 'roomtemperature'], unit: '°C' },
-  { label: 'Luftfuktighet', keys: ['humidity', 'relativehumidity'], unit: '%' },
-  { label: 'Filterlivslängd', keys: ['filterlife', 'filterremaining', 'filterremaininglife'], unit: '%' },
-  { label: 'Fläkthastighet', keys: ['fanspeed', 'fanlevel'], unit: '' },
+  { label: copy.electroluxMetrics.pm1, keys: ['pm1', 'pm1_0', 'pm1.0', 'pm1value'], unit: 'µg/m³' },
+  { label: copy.electroluxMetrics.pm25, keys: ['pm25', 'pm2_5', 'pm2.5', 'pm2_5value'], unit: 'µg/m³' },
+  { label: copy.electroluxMetrics.pm10, keys: ['pm10', 'pm10value'], unit: 'µg/m³' },
+  { label: copy.electroluxMetrics.tvoc, keys: ['tvoc', 'tvocvalue'], unit: 'ppb' },
+  { label: copy.electroluxMetrics.temperature, keys: ['temperature', 'roomtemperature'], unit: '°C' },
+  { label: copy.electroluxMetrics.humidity, keys: ['humidity', 'relativehumidity'], unit: '%' },
+  { label: copy.electroluxMetrics.filterLife, keys: ['filterlife', 'filterremaining', 'filterremaininglife'], unit: '%' },
+  { label: copy.electroluxMetrics.fanSpeed, keys: ['fanspeed', 'fanlevel'], unit: '' },
 ];
 
 function normalizeKey(value: string): string {

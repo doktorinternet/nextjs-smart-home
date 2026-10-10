@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRotate } from '@fortawesome/free-solid-svg-icons'
+import { copy, formatCopy } from '@/app/copy'
 
 export function useAutoFetch(storageKey: string) {
   const [ready, setReady] = useState(false)
@@ -51,12 +52,14 @@ export function AutoRefreshControl({
   refreshDisabled?: boolean
 }) {
   const id = `auto-fetch-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-  const actionLabel = refreshError ? `Försök igen: ${refreshLabel}` : refreshing ? `Uppdaterar ${label}` : refreshLabel
+  const actionLabel = refreshError
+    ? formatCopy(copy.refresh.retry, { label: refreshLabel })
+    : refreshing ? formatCopy(copy.refresh.updating, { label }) : refreshLabel
 
   return (
-    <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={`${label} update controls`}>
+    <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={formatCopy(copy.refresh.updateControls, { label })}>
       <label className="dashboard-auto-fetch" htmlFor={id}>
-        <span>Auto</span>
+        <span>{copy.refresh.auto}</span>
         <input
           id={id}
           type="checkbox"
@@ -64,7 +67,7 @@ export function AutoRefreshControl({
           checked={enabled}
           disabled={!ready}
           onChange={(event) => onChange(event.target.checked)}
-          aria-label={`Hämta ${label} automatiskt`}
+          aria-label={formatCopy(copy.refresh.fetchAutomatically, { label })}
         />
       </label>
       <button

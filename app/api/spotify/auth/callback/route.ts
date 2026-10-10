@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { copy } from '@/app/copy';
 import {
   assertSpotifyAuthConfigured,
   exchangeSpotifyAuthorizationCode,
@@ -21,21 +22,21 @@ export async function GET(request: NextRequest) {
   try {
     assertSpotifyAuthConfigured();
   } catch {
-    return callbackError(503, 'Spotify-auktorisering är inte konfigurerad.');
+    return callbackError(503, copy.spotify.authorizationNotConfigured);
   }
 
   const stateCookie = request.cookies.get(getSpotifyStateCookieOptions().name)?.value;
   const query = request.nextUrl.searchParams;
   if (!verifySpotifyState(stateCookie, query.get('state'))) {
-    return callbackError(400, 'Spotify-auktoriseringen är ogiltig eller har gått ut.');
+    return callbackError(400, copy.spotify.authorizationInvalid);
   }
 
   if (query.has('error')) {
-    return callbackError(400, 'Spotify-auktoriseringen avbröts.');
+    return callbackError(400, copy.spotify.authorizationCanceled);
   }
 
   const code = query.get('code');
-  if (!code || code.length > 4096) return callbackError(400, 'Svaret från Spotify-auktoriseringen är ogiltigt.');
+  if (!code || code.length > 4096) return callbackError(400, copy.spotify.authorizationResponseInvalid);
 
   try {
     await exchangeSpotifyAuthorizationCode(code);
@@ -48,8 +49,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const status = error instanceof SpotifyAuthConfigError ? 503 : 502;
     const response = callbackError(status, status === 503
-      ? 'Spotify-auktorisering är inte konfigurerad.'
-      : 'Det gick inte att slutföra Spotify-auktoriseringen.');
+      ? copy.spotify.authorizationNotConfigured
+      : copy.spotify.authorizationCompleteFailed);
     response.cookies.set({ ...getSpotifyStateCookieOptions(), value: '', maxAge: 0 });
     return response;
   }

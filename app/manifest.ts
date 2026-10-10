@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next"
+import { copy } from "./copy"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Smart Home Kiosk",
-    short_name: "Hemkontroll",
-    description: "En kontrollpanel för smarta hem.",
+    name: copy.metadata.applicationName,
+    short_name: copy.metadata.homeScreenTitle,
+    description: copy.metadata.description,
     start_url: "/",
     scope: "/",
     display: "standalone",
