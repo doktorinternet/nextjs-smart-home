@@ -10,8 +10,17 @@ export const copy = {
   },
   dashboard: {
     title: 'Hemöversikt',
+    layout: 'Layout',
+    chooseLayout: 'Välj dashboardlayout',
+    layouts: {
+      pages: 'Sidor',
+      apps: 'Appar',
+      tabs: 'Flikar',
+      expandable: 'Expanderbara paneler',
+      widgets: 'Widgetar',
+    },
     travel: 'Resor',
-    departures: 'Spårvagnsavgångar',
+    departures: 'Kollektivtrafik',
     transit: 'Kollektivtrafik',
     smartHome: 'Smart Home',
     moreSpace: 'Utrymme för mer',

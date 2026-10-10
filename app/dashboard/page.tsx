@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGauge, faPlus, faPrint, faTrain } from '@fortawesome/free-solid-svg-icons'
+import { faGauge, faMusic, faPlus, faPrint, faTrain, faVolumeHigh, faWind } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
@@ -10,6 +10,27 @@ import SpotifyPanel from './SpotifyPanel'
 import ElectroluxPanel from './ElectroluxPanel'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 import { copy, formatCopy, locale } from '@/app/copy'
+import PagesLayout from './layouts/pagesLayout'
+import AppsLayout from './layouts/appsLayout'
+import TabsLayout from './layouts/tabsLayout'
+import ExpandableLayout from './layouts/expandableLayout'
+import WidgetsLayout from './layouts/widgetsLayout'
+
+type LayoutMode = 'pages' | 'apps' | 'tabs' | 'expandable' | 'widgets'
+type DashboardPanel = {
+  id: 'transit' | 'air' | 'printer' | 'cast' | 'spotify' | 'speed'
+  label: string
+  icon: ReactNode
+  content: ReactNode
+}
+
+const layoutOptions: { id: LayoutMode; label: string }[] = [
+  { id: 'pages', label: copy.dashboard.layouts.pages },
+  { id: 'apps', label: copy.dashboard.layouts.apps },
+  { id: 'tabs', label: copy.dashboard.layouts.tabs },
+  { id: 'expandable', label: copy.dashboard.layouts.expandable },
+  { id: 'widgets', label: copy.dashboard.layouts.widgets },
+]
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -305,11 +326,72 @@ function ModuleCard({ eyebrow, title, description, icon }: ModuleCardProps) {
 }
 
 export default function Page() {
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('pages')
+  const [layoutReady, setLayoutReady] = useState(false)
   const transitAutoFetch = useAutoFetch('dashboard.autoFetch.tramDepartures')
   const [refreshDepartures, setRefreshDepartures] = useState<(() => void) | null>(null)
   const [transitFetchState, setTransitFetchState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null })
   const handleRefreshReady = useCallback((refresh: (() => void) | null) => setRefreshDepartures(() => refresh), [])
   const handleTransitFetchStateChange = useCallback((state: { loading: boolean; error: string | null }) => setTransitFetchState(state), [])
+
+  useEffect(() => {
+    const storedMode = window.localStorage.getItem('dashboard.layout')
+    if (layoutOptions.some((option) => option.id === storedMode)) setLayoutMode(storedMode as LayoutMode)
+    setLayoutReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (layoutReady) window.localStorage.setItem('dashboard.layout', layoutMode)
+  }, [layoutMode, layoutReady])
+
+  const panels: DashboardPanel[] = [
+    {
+      id: 'transit', label: copy.dashboard.departures,
+      icon: <FontAwesomeIcon icon={faTrain} />,
+      content: (
+        <section className="dashboard-module dashboard-transit" aria-labelledby="transit-heading">
+          <div className="dashboard-module-heading">
+            <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faTrain} /></span>
+            <div>
+              <p className="dashboard-eyebrow">{copy.dashboard.travel}</p>
+              <h2 id="transit-heading">{copy.dashboard.departures}</h2>
+            </div>
+            <span className="dashboard-source">Västtrafik</span>
+            <AutoRefreshControl
+              label={copy.dashboard.transit}
+              {...transitAutoFetch}
+              onChange={transitAutoFetch.setEnabled}
+              onRefresh={() => refreshDepartures?.()}
+              refreshLabel={copy.transit.refresh}
+              refreshing={transitFetchState.loading}
+              refreshError={Boolean(transitFetchState.error)}
+              refreshDisabled={!refreshDepartures}
+            />
+          </div>
+          <div className="dashboard-transit-content">
+            <CustomTimeTable
+              autoFetch={transitAutoFetch}
+              onRefreshReady={handleRefreshReady}
+              onFetchStateChange={handleTransitFetchStateChange}
+            />
+          </div>
+        </section>
+      ),
+    },
+    { id: 'air', label: copy.electrolux.title, icon: <FontAwesomeIcon icon={faWind} />, content: <ElectroluxPanel /> },
+    { id: 'printer', label: copy.printer.title, icon: <FontAwesomeIcon icon={faPrint} />, content: <PrinterCard /> },
+    { id: 'cast', label: copy.cast.title, icon: <FontAwesomeIcon icon={faVolumeHigh} />, content: <CastPanel /> },
+    { id: 'spotify', label: copy.spotify.title, icon: <FontAwesomeIcon icon={faMusic} />, content: <SpotifyPanel /> },
+    { id: 'speed', label: copy.speed.title, icon: <FontAwesomeIcon icon={faGauge} />, content: <SpeedCard /> },
+  ]
+
+  const selectedLayout = {
+    pages: <PagesLayout panels={panels} />,
+    apps: <AppsLayout panels={panels} />,
+    tabs: <TabsLayout panels={panels} />,
+    expandable: <ExpandableLayout panels={panels} />,
+    widgets: <WidgetsLayout panels={panels} />,
+  }[layoutMode]
 
   return (
     <main className="dashboard-shell">
@@ -321,48 +403,19 @@ export default function Page() {
               <h1>{copy.dashboard.title}</h1>
             </div>
           </div>
-          <div>
-          </div>
+          <label className="dashboard-layout-picker">
+            <span>{copy.dashboard.layout}</span>
+            <select
+              aria-label={copy.dashboard.chooseLayout}
+              value={layoutMode}
+              onChange={(event) => setLayoutMode(event.target.value as LayoutMode)}
+            >
+              {layoutOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+            </select>
+          </label>
         </header>
 
-        <div className="dashboard-grid">
-          <section className="dashboard-module dashboard-transit" aria-labelledby="transit-heading">
-            <div className="dashboard-module-heading">
-              <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faTrain} /></span>
-              <div>
-                <p className="dashboard-eyebrow">{copy.dashboard.travel}</p>
-                <h2 id="transit-heading">{copy.dashboard.departures}</h2>
-              </div>
-              <span className="dashboard-source">Västtrafik</span>
-              <AutoRefreshControl
-                label={copy.dashboard.transit}
-                {...transitAutoFetch}
-                onChange={transitAutoFetch.setEnabled}
-                onRefresh={() => refreshDepartures?.()}
-                refreshLabel={copy.transit.refresh}
-                refreshing={transitFetchState.loading}
-                refreshError={Boolean(transitFetchState.error)}
-                refreshDisabled={!refreshDepartures}
-              />
-            </div>
-            <div className="dashboard-transit-content">
-              <CustomTimeTable
-                autoFetch={transitAutoFetch}
-                onRefreshReady={handleRefreshReady}
-                onFetchStateChange={handleTransitFetchStateChange}
-              />
-            </div>
-          </section>
-
-          <div className="dashboard-side-stack">
-            <ElectroluxPanel />
-            <PrinterCard />
-          </div>
-
-          <CastPanel />
-          <SpotifyPanel />
-          <SpeedCard />
-        </div>
+        <div className="dashboard-layout-stage" aria-live="off">{selectedLayout}</div>
 
         <footer className="dashboard-footer">
           <span>{copy.dashboard.smartHome}</span>

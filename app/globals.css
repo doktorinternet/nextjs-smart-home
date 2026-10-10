@@ -187,6 +187,16 @@
   white-space: nowrap;
 }
 
+.dashboard-layout {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
 body {
   color: var(--body-text);
   
@@ -207,18 +217,17 @@ body {
 }
 
 /* Dashboard shell */
-.dashboard-layout {
-  width: 100%;
-  min-height: 100%;
-}
-
 .dashboard-shell {
   --dashboard-ink: #f7f5f2;
   --dashboard-muted: #a9b0c0;
   --dashboard-accent: #f4bd84;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: clamp(20px, 4vw, 56px);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(8px, 1.5vh, 18px) clamp(10px, 2vw, 24px);
   color: var(--dashboard-ink);
   background:
     radial-gradient(ellipse at 82% 2%, rgba(95, 112, 166, .28), transparent 36%),
@@ -227,7 +236,12 @@ body {
 }
 
 .dashboard-frame {
+  display: grid;
   width: min(100%, 1440px);
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(6px, 1vh, 12px);
   margin: 0 auto;
 }
 
@@ -242,7 +256,42 @@ body {
 .dashboard-header {
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: clamp(24px, 4vw, 42px);
+  margin-bottom: 0;
+}
+
+.dashboard-layout-picker {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.dashboard-layout-picker select {
+  min-width: 132px;
+  min-height: 42px;
+  padding: 0 32px 0 12px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  color: var(--dashboard-ink);
+  background: #202638;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dashboard-layout-picker select:focus-visible {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 2px;
+}
+
+.dashboard-layout-picker option { color: #f7f5f2; background: #202638; }
+
+.dashboard-layout-stage,
+.dashboard-layout-stage > * {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .dashboard-brand { gap: 16px; }
@@ -471,12 +520,15 @@ body {
 }
 
 .dashboard-transit {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   grid-column: 1 / -1;
 }
 
 .dashboard-transit-content {
+  flex: 1 1 auto;
   min-height: 0;
   margin-top: 16px;
   padding: 14px;
