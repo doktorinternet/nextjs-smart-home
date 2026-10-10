@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMusic } from '@fortawesome/free-solid-svg-icons'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 
 type CastDevice = {
@@ -35,21 +37,18 @@ export default function CastPanel() {
       const response = await fetch('/api/cast/devices', { cache: 'no-store' })
       const result: unknown = await response.json()
       if (!response.ok) {
-        const detail = typeof result === 'object' && result !== null && 'error' in result
-          ? (result as { error?: unknown }).error
-          : null
-        throw new Error(typeof detail === 'string' ? detail : 'Cast devices are unavailable')
+        throw new Error('Cast-högtalare är inte tillgängliga.')
       }
       const list = typeof result === 'object' && result !== null && 'devices' in result
         ? (result as { devices?: unknown }).devices
         : null
       if (!Array.isArray(list) || !list.every(isCastDevice)) {
-        throw new Error('Cast bridge returned an invalid device list')
+        throw new Error('Cast-bryggan returnerade en ogiltig enhetslista.')
       }
       setDevices(list)
       setError(null)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Cast devices are unavailable')
+      setError('Det gick inte att hämta Cast-högtalare.')
     } finally {
       setLoading(false)
     }
@@ -74,16 +73,18 @@ export default function CastPanel() {
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
-        const result = await response.json().catch(() => null)
-        const detail = typeof result === 'object' && result !== null && 'error' in result
-          ? (result as { error?: unknown }).error
-          : null
-        setMessage(typeof detail === 'string' ? detail : `Could not send ${command} to ${device.name}.`)
+        setMessage(`Kommandot kunde inte skickas till ${device.name}.`)
       } else {
-        setMessage(command === 'volume' ? `Volume updated for ${device.name}.` : `${command[0].toUpperCase()}${command.slice(1)} sent to ${device.name}.`)
+        const commandMessages = {
+          play: 'Uppspelning startad',
+          pause: 'Uppspelningen pausad',
+          stop: 'Uppspelningen stoppad',
+          volume: 'Volymen uppdaterad',
+        }
+        setMessage(`${commandMessages[command]} för ${device.name}.`)
       }
     } catch {
-      setMessage(`Could not reach the Cast bridge for ${device.name}.`)
+      setMessage(`Det gick inte att nå Cast-bryggan för ${device.name}.`)
     } finally {
       setBusyDevice(null)
     }
@@ -92,50 +93,50 @@ export default function CastPanel() {
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="cast-heading">
       <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true">♫</span>
+        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
         <div>
-          <p className="dashboard-eyebrow">Now playing</p>
-          <h2 id="cast-heading">Cast speakers</h2>
+          <p className="dashboard-eyebrow">Spelas nu</p>
+          <h2 id="cast-heading">Cast-högtalare</h2>
         </div>
         <AutoRefreshControl
-          label="Cast speakers"
+          label="Cast-högtalare"
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void loadDevices()}
-          refreshLabel="Refresh Cast speakers"
+          refreshLabel="Uppdatera Cast-högtalare"
           refreshing={loading}
         />
       </div>
 
       {loading ? (
-        <p className="dashboard-live-message" role="status">Looking for Cast speakers…</p>
+        <p className="dashboard-live-message" role="status">Söker efter Cast-högtalare…</p>
       ) : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
-        <p className="dashboard-live-message" role="status">Automatic updates are off. Refresh to find Cast speakers.</p>
+        null
       ) : error ? (
-        <p className="dashboard-live-message is-error" role="status">{error}. Check that the local Cast bridge is running.</p>
+        <p className="dashboard-live-message is-error" role="status">{error} Kontrollera att den lokala Cast-bryggan är igång.</p>
       ) : devices.length === 0 ? (
-        <p className="dashboard-live-message" role="status">No Cast speakers found. Devices appear here when they are available on the home network.</p>
+        <p className="dashboard-live-message" role="status">Inga Cast-högtalare hittades. Enheter visas här när de är tillgängliga i hemnätverket.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16, marginTop: 20 }}>
           {devices.map((device) => (
             <article key={device.id} style={{ display: 'grid', gap: 10, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
                 <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{device.name}</strong>
-                <span className="dashboard-live-label">{[device.model, device.type].filter(Boolean).join(' · ') || 'Cast speaker'}</span>
+                <span className="dashboard-live-label">{[device.model, device.type].filter(Boolean).join(' · ') || 'Cast-högtalare'}</span>
               </div>
               <div className="dashboard-control-actions-row">
                 {(['play', 'pause', 'stop'] as const).map((command) => (
                   <button key={command} type="button" onClick={() => void sendCommand(device, command)} disabled={busyDevice !== null}>
-                    {busyDevice === device.id ? 'Sending…' : command[0].toUpperCase() + command.slice(1)}
+                    {busyDevice === device.id ? 'Skickar…' : ({ play: 'Spela', pause: 'Pausa', stop: 'Stoppa' }[command])}
                   </button>
                 ))}
               </div>
               <label className="dashboard-live-label" htmlFor={`cast-volume-${device.id}`} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
-                <span>Volume</span><span>{volume}%</span>
-                <input id={`cast-volume-${device.id}`} type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={busyDevice !== null} aria-label={`Volume for ${device.name}`} style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
+                <span>Volym</span><span>{volume}%</span>
+                <input id={`cast-volume-${device.id}`} type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={busyDevice !== null} aria-label={`Volym för ${device.name}`} style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
               </label>
               <div className="dashboard-control-actions-row" style={{ gridTemplateColumns: '1fr' }}>
-                <button type="button" onClick={() => void sendCommand(device, 'volume')} disabled={busyDevice !== null}>Set volume</button>
+                <button type="button" onClick={() => void sendCommand(device, 'volume')} disabled={busyDevice !== null}>Ställ in volym</button>
               </div>
             </article>
           ))}

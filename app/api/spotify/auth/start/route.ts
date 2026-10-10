@@ -18,7 +18,7 @@ export async function GET() {
   } catch (error) {
     const status = error instanceof SpotifyAuthConfigError ? 503 : 500;
     return NextResponse.json(
-      { error: status === 503 ? 'Spotify authorization is not configured' : 'Unable to start Spotify authorization' },
+      { error: status === 503 ? 'Spotify-auktorisering är inte konfigurerad.' : 'Det gick inte att starta Spotify-auktoriseringen.' },
       { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } },
     );
   }

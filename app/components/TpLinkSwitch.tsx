@@ -52,7 +52,7 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     test();
-    alert("A name was submitted");
+    alert("Ett namn har skickats.");
     event.preventDefault();
   }
 
@@ -74,7 +74,7 @@ export default function TpLinkSwitch({ apiData, deviceIp }: { apiData?: {}, devi
     <form onSubmit={onsubmit}>
       {/* <input hidden readOnly name="action" value="toggle"></input>
       <input hidden readOnly name="state" value={convBoolState(!state)}></input> */}
-      <input type="submit" className="border cursor-pointer" value="iPad friendly toggle"></input>
+      <input type="submit" className="border cursor-pointer" value="iPad-vänlig strömbrytare"></input>
     </form>
     <div>
       {deviceName}

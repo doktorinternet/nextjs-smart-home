@@ -18,7 +18,7 @@ function unavailable(message: string, status: number) {
 }
 
 export async function GET(request: Request) {
-  const csvPath = conf.API["Speed-history-path"];
+  const csvPath = process.env.NETWORK_SPEED_HISTORY_PATH;
   if (!csvPath) {
     return unavailable('Speed history is not configured', 503);
   }

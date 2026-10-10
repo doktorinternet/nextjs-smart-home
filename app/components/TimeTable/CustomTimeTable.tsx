@@ -50,13 +50,13 @@ function DepartureRow({ departure, now }: { departure: ListedDeparture; now: num
   const departureTime = new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit" })
     .format(new Date(journey.departureTime));
   const relativeTime = journey.isCancelled
-    ? "cancelled"
-    : minutes <= 0 ? "due now" : `in ${minutes} minutes`;
+    ? "inställd"
+    : minutes <= 0 ? "avgår nu" : `om ${minutes} minuter`;
 
   return (
     <li
       className={`tram-departure-row ${urgency}`}
-      aria-label={`Line ${line.shortName} to ${journey.destination}, departs at ${departureTime}, ${relativeTime}`}
+      aria-label={`Linje ${line.shortName} mot ${journey.destination}, avgår ${departureTime}, ${relativeTime}`}
     >
       <span
         className="tram-line-badge"
@@ -65,14 +65,14 @@ function DepartureRow({ departure, now }: { departure: ListedDeparture; now: num
           color: line.foregroundColor,
           borderColor: line.borderColor,
         }}
-        aria-label={`Line ${line.shortName}`}
+        aria-label={`Linje ${line.shortName}`}
       >
         {line.shortName}
       </span>
       <span className="tram-departure-destination" title={journey.destination}>{journey.destination}</span>
       <time className="tram-departure-time" dateTime={journey.departureTime}>{departureTime}</time>
       {journey.isCancelled ? (
-        <span className="tram-departure-remaining">Cancelled</span>
+        <span className="tram-departure-remaining">Inställd</span>
       ) : (
         <span className="tram-departure-remaining">
           {minutes <= 0 ? "Nu" : `${minutes} min`}
@@ -131,12 +131,12 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
     try {
       const response = await fetch("/api/vasttrafik/departures");
       if (!response.ok) {
-        throw new Error("Could not load departures. Please try again.");
+        throw new Error("Kunde inte hämta avgångarna. Försök igen.");
       }
 
       const payload: unknown = await response.json();
       if (!isDeparturesPayload(payload)) {
-        throw new Error("The departures response was invalid. Please try again.");
+        throw new Error("Svaret med avgångar var ogiltigt. Försök igen.");
       }
 
       setData(mapAndMergeByLine(payload.results));
@@ -144,7 +144,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
       setError(
         fetchError instanceof Error
           ? fetchError.message
-          : "Could not load departures. Please try again.",
+          : "Kunde inte hämta avgångarna. Försök igen.",
       );
     } finally {
       setHasLoaded(true);
@@ -197,7 +197,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
                   ))}
                 </ol>
               ) : hasLoaded && !loading && !error ? (
-                <p className="tram-direction-empty">No departures available.</p>
+                <p className="tram-direction-empty">Inga avgångar tillgängliga.</p>
               ) : null}
             </section>
           );

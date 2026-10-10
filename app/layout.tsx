@@ -4,11 +4,11 @@ import PwaRegister from "./pwa-register"
 
 export const metadata: Metadata = {
   title: "Smart Home Kiosk",
-  description: "A smart home status and control kiosk.",
+  description: "En kontrollpanel för smarta hem.",
   applicationName: "Smart Home Kiosk",
   appleWebApp: {
     capable: true,
-    title: "Home Kiosk",
+    title: "Hemkontroll",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -33,13 +33,13 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="en" className="h-full w-full flex">
+    <html lang="sv" className="h-full w-full flex">
       <body className="flex grow h-full">
         <PwaRegister />
         {/* <div className="navbar flex flex-col gap-2 bg-gray-900 h-full">
-            <Link href="/">Main</Link>
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/api/test">Hello endpoint</Link>
+            <Link href="/">Start</Link>
+            <Link href="/dashboard">Översikt</Link>
+            <Link href="/api/test">Testgränssnitt</Link>
           </div> */}
         <div className="flex grow h-full">
           {children}

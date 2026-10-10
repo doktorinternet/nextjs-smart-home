@@ -648,7 +648,6 @@ body {
 }
 
 .dashboard-control-message {
-  min-height: 18px;
   margin: 0;
   color: #9da5b5;
   font-size: 11px;

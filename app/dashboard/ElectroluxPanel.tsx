@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWind } from '@fortawesome/free-solid-svg-icons';
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch';
 
 type Status = { appliance: string; updatedAt: string; metrics: Array<{ label: string; value: string }> };
@@ -27,16 +29,13 @@ export default function ElectroluxPanel() {
       const response = await fetch('/api/electrolux/status', { cache: 'no-store' });
       const result: unknown = await response.json();
       if (!response.ok) {
-        const message = typeof result === 'object' && result !== null
-          && typeof (result as Record<string, unknown>).error === 'string'
-          ? (result as Record<string, string>).error : 'Air quality data is unavailable';
-        throw new Error(message);
+        throw new Error('Det gick inte att hämta luftkvalitetsdata.');
       }
-      if (!isStatus(result)) throw new Error('Electrolux returned invalid status data');
+      if (!isStatus(result)) throw new Error('Electrolux returnerade ogiltig statusinformation.');
       setStatus(result);
       setError(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Air quality data is unavailable');
+      setError('Det gick inte att hämta luftkvalitetsdata.');
     } finally {
       setLoading(false);
     }
@@ -52,24 +51,23 @@ export default function ElectroluxPanel() {
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="air-quality-heading">
       <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true">◌</span>
+        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faWind} /></span>
         <div>
-          <p className="dashboard-eyebrow">At home</p>
-          <h2 id="air-quality-heading">Air quality</h2>
+          <p className="dashboard-eyebrow">Inomhus</p>
+          <h2 id="air-quality-heading">Luftkvalitet</h2>
         </div>
         <span className="dashboard-source">Pure A9</span>
         <AutoRefreshControl
-          label="Electrolux purifier"
+          label="Electrolux-luftrenare"
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void refresh()}
-          refreshLabel="Refresh Electrolux purifier status"
+          refreshLabel="Uppdatera status för Electrolux-luftrenaren"
           refreshing={loading}
         />
       </div>
       <div className="dashboard-live-content" aria-live="polite">
-        {loading && !status ? <p>Connecting to air purifier…</p> : null}
-        {autoFetch.ready && !autoFetch.enabled && !loading && !status ? <p>Automatic updates are off. Refresh to load purifier status.</p> : null}
+        {loading && !status ? <p>Ansluter till luftrenaren…</p> : null}
         {error && !status ? <p>{error}</p> : null}
         {status ? (
           <>
@@ -80,9 +78,9 @@ export default function ElectroluxPanel() {
                   <div key={metric.label}><dt>{metric.label}</dt><dd>{metric.value}</dd></div>
                 ))}
               </dl>
-            ) : <p>Connected; no supported readings were returned.</p>}
-            {error ? <p className="dashboard-live-note">Refresh failed; showing the last readings.</p> : null}
-            <p className="dashboard-live-note">Updated {new Date(status.updatedAt).toLocaleTimeString()}</p>
+            ) : <p>Ansluten, men inga mätvärden kunde hämtas.</p>}
+            {error ? <p className="dashboard-live-note">Uppdateringen misslyckades. Visar de senaste mätvärdena.</p> : null}
+            <p className="dashboard-live-note">Uppdaterad {new Date(status.updatedAt).toLocaleTimeString('sv-SE')}</p>
           </>
         ) : null}
       </div>

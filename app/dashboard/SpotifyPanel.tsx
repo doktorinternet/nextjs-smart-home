@@ -70,10 +70,6 @@ function isPlayback(value: unknown): value is SpotifyPlayback {
   return true
 }
 
-function responseError(value: unknown, fallback: string) {
-  return isRecord(value) && typeof value.error === 'string' ? value.error : fallback
-}
-
 function durationLabel(milliseconds: number | null) {
   if (milliseconds === null) return null
   const seconds = Math.floor(milliseconds / 1000)
@@ -104,11 +100,10 @@ export default function SpotifyPanel() {
       const [playbackResult, devicesResult]: [unknown, unknown] = await Promise.all([
         playbackResponse.json(), devicesResponse.json(),
       ])
-      if (!playbackResponse.ok) throw new Error(responseError(playbackResult, 'Spotify playback is unavailable'))
-      if (!devicesResponse.ok) throw new Error(responseError(devicesResult, 'Spotify devices are unavailable'))
-      if (playbackResult !== null && !isPlayback(playbackResult)) throw new Error('Spotify returned an invalid playback response')
+      if (!playbackResponse.ok || !devicesResponse.ok) throw new Error('Det gick inte att hämta Spotify-uppspelningen.')
+      if (playbackResult !== null && !isPlayback(playbackResult)) throw new Error('Spotify returnerade ett ogiltigt uppspelningssvar.')
       const deviceList = isRecord(devicesResult) ? devicesResult.devices : null
-      if (!Array.isArray(deviceList) || !deviceList.every(isDevice)) throw new Error('Spotify returned an invalid device list')
+      if (!Array.isArray(deviceList) || !deviceList.every(isDevice)) throw new Error('Spotify returnerade en ogiltig enhetslista.')
       setPlayback(playbackResult)
       setDevices(deviceList)
       setSelectedDeviceId((current) => current || playbackResult?.device?.id || deviceList.find((device) => device.is_active)?.id || deviceList[0]?.id || '')
@@ -116,7 +111,7 @@ export default function SpotifyPanel() {
       if (activeDevice?.volume_percent != null) setVolume(activeDevice.volume_percent)
       setError(null)
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Spotify player is unavailable')
+      setError('Spotify-spelaren är inte tillgänglig.')
     } finally {
       setLoading(false)
     }
@@ -140,14 +135,21 @@ export default function SpotifyPanel() {
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
-        const result: unknown = await response.json().catch(() => null)
-        setMessage(responseError(result, `Spotify could not ${path} playback.`))
+        setMessage('Spotify-kommandot misslyckades. Kontrollera anslutningen och försök igen.')
       } else {
-        setMessage(path === 'volume' ? 'Volume updated.' : path === 'transfer' ? 'Playback transferred.' : `${path[0].toUpperCase()}${path.slice(1)} command sent.`)
+        const commandMessages = {
+          pause: 'Uppspelningen pausades.',
+          resume: 'Uppspelningen återupptogs.',
+          previous: 'Föregående spår startades.',
+          next: 'Nästa spår startades.',
+          transfer: 'Uppspelningen flyttades.',
+          volume: 'Volymen uppdaterades.',
+        }
+        setMessage(commandMessages[path])
         setRefreshToken((value) => value + 1)
       }
     } catch {
-      setMessage('Spotify could not be reached. Check your connection and try again.')
+      setMessage('Det gick inte att nå Spotify. Kontrollera anslutningen och försök igen.')
     } finally {
       setBusy(false)
     }
@@ -161,17 +163,17 @@ export default function SpotifyPanel() {
       const response = await fetch('/api/spotify/player/me', { cache: 'no-store' })
       const result: unknown = await response.json()
       if (!response.ok) {
-        setProfileResult(responseError(result, `Spotify /me request failed (${response.status})`))
+        setProfileResult('Det gick inte att hämta Spotify-profilen.')
       } else if (!isRecord(result)) {
-        setProfileResult('Spotify returned an invalid profile response.')
+        setProfileResult('Spotify returnerade ett ogiltigt profilsvar.')
       } else {
         const displayName = typeof result.display_name === 'string' ? result.display_name : '(not set)'
         const userId = typeof result.id === 'string' ? result.id : '(not returned)'
         const accountType = typeof result.product === 'string' ? result.product : '(not returned)'
-        setProfileResult(`Profile OK · ${displayName} · ${userId} · ${accountType}`)
+        setProfileResult(`Profilen är tillgänglig · ${displayName} · ${userId} · ${accountType}`)
       }
     } catch {
-      setProfileResult('Could not reach the Spotify /me test endpoint.')
+      setProfileResult('Det gick inte att nå Spotifys profiltjänst.')
     } finally {
       setProfileBusy(false)
     }
@@ -192,7 +194,7 @@ export default function SpotifyPanel() {
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
         <div>
-          <p className="dashboard-eyebrow">Music</p>
+          <p className="dashboard-eyebrow">Musik</p>
           <h2 id="spotify-heading">Spotify</h2>
         </div>
         <AutoRefreshControl
@@ -200,65 +202,65 @@ export default function SpotifyPanel() {
           {...autoFetch}
           onChange={autoFetch.setEnabled}
           onRefresh={() => void refresh()}
-          refreshLabel="Refresh Spotify player"
+          refreshLabel="Uppdatera Spotify-spelaren"
           refreshing={loading}
         />
       </div>
 
       <p className="dashboard-live-message" role="status" aria-live="polite">
-        {loading ? 'Loading Spotify player…' : error ? error : autoFetch.ready && !autoFetch.enabled && !playback ? 'Automatic updates are off. Refresh to load Spotify.' : playback?.is_playing && !playback.item ? 'Playback is active, but Spotify did not return track details.' : !playback?.item ? 'Nothing is playing. Start playback on a Spotify Connect device to enable track controls.' : null}
+        {loading ? 'Hämtar Spotify-spelaren…' : error ? error : autoFetch.ready && !autoFetch.enabled && !playback ? null : playback?.is_playing && !playback.item ? 'Uppspelningen är aktiv, men Spotify skickade inga låtuppgifter.' : !playback?.item ? 'Inget spelas just nu. Starta uppspelning på en Spotify Connect-enhet för att aktivera kontrollerna.' : null}
       </p>
       {!loading && !error && track && (
         <div style={{ display: 'grid', gridTemplateColumns: image ? '72px minmax(0, 1fr)' : '1fr', gap: 14, alignItems: 'center', marginTop: 12 }}>
           {image && <img src={image} alt="" width="72" height="72" style={{ borderRadius: 10, objectFit: 'cover' }} />}
           <div style={{ display: 'grid', gap: 4, minWidth: 0 }} aria-live="polite">
             <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.name}</strong>
-            <span className="dashboard-live-label">{artistNames || (track.type === 'episode' ? 'Podcast episode' : 'Spotify')}</span>
-            {progress && <span className="dashboard-live-label">{playback?.is_playing ? 'Playing' : 'Paused'} · {progress} elapsed</span>}
+            <span className="dashboard-live-label">{artistNames || (track.type === 'episode' ? 'Podcastavsnitt' : 'Spotify')}</span>
+            {progress && <span className="dashboard-live-label">{playback?.is_playing ? 'Spelas' : 'Pausad'} · {progress} har spelats</span>}
           </div>
         </div>
       )}
 
       {!loading && !error && devices.length > 0 && (
         <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
-          <label className="dashboard-live-label" htmlFor="spotify-device">Spotify Connect device</label>
+          <label className="dashboard-live-label" htmlFor="spotify-device">Spotify Connect-enhet</label>
           <select id="spotify-device" value={selectedDeviceId} onChange={(event) => setSelectedDeviceId(event.target.value)} disabled={controlsDisabled} style={{ minHeight: 42, padding: '0 10px', borderRadius: 10, color: 'inherit', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.14)', font: 'inherit' }}>
-            {devices.map((device) => <option key={device.id} value={device.id}>{device.name}{device.is_active ? ' · Active' : ''}</option>)}
+            {devices.map((device) => <option key={device.id} value={device.id}>{device.name}{device.is_active ? ' · Aktiv' : ''}</option>)}
           </select>
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void sendCommand('transfer', { deviceId: selectedDeviceId, play: Boolean(playback?.is_playing) })} disabled={controlsDisabled || !selectedDeviceId || selectedDeviceId === playback?.device?.id}><FontAwesomeIcon icon={faRightLeft} aria-hidden="true" /> Transfer playback</button>
+            <button type="button" onClick={() => void sendCommand('transfer', { deviceId: selectedDeviceId, play: Boolean(playback?.is_playing) })} disabled={controlsDisabled || !selectedDeviceId || selectedDeviceId === playback?.device?.id}><FontAwesomeIcon icon={faRightLeft} aria-hidden="true" /> Flytta uppspelningen</button>
           </div>
           <label className="dashboard-live-label" htmlFor="spotify-volume" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
-            <span>Volume{selectedDevice ? ` · ${selectedDevice.name}` : ''}</span><span>{volume}%</span>
-            <input id="spotify-volume" type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={volumeDisabled} aria-label="Spotify volume" style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
+            <span>Volym{selectedDevice ? ` · ${selectedDevice.name}` : ''}</span><span>{volume}%</span>
+            <input id="spotify-volume" type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={volumeDisabled} aria-label="Spotify-volym" style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
           </label>
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={volumeDisabled}><FontAwesomeIcon icon={faVolumeHigh} aria-hidden="true" /> Set volume</button>
+            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={volumeDisabled}><FontAwesomeIcon icon={faVolumeHigh} aria-hidden="true" /> Ställ in volym</button>
           </div>
-          {selectedDevice?.supports_volume === false && <p className="dashboard-live-message">Spotify does not support remote volume control for this device. Change volume on the device itself.</p>}
+          {selectedDevice?.supports_volume === false && <p className="dashboard-live-message">Spotify stöder inte fjärrstyrning av volymen på den här enheten. Ändra volymen direkt på enheten.</p>}
         </div>
       )}
 
-      {!loading && !error && devices.length === 0 && <p className="dashboard-live-message">No Spotify Connect devices are available. Open Spotify on a device and refresh.</p>}
+      {!loading && !error && devices.length === 0 && <p className="dashboard-live-message">Inga Spotify Connect-enheter är tillgängliga. Öppna Spotify på en enhet och uppdatera.</p>}
 
       <div className="dashboard-control-actions-row" style={{ marginTop: 18 }}>
-        <button type="button" onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_prev === true}><FontAwesomeIcon icon={faBackward} aria-hidden="true" /> Previous</button>
+        <button type="button" onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_prev === true}><FontAwesomeIcon icon={faBackward} aria-hidden="true" /> Föregående</button>
         {playback?.is_playing ? (
-          <button type="button" onClick={() => void sendCommand('pause', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || disallowedActions.pausing === true}><FontAwesomeIcon icon={faPause} aria-hidden="true" /> Pause</button>
+          <button type="button" onClick={() => void sendCommand('pause', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || disallowedActions.pausing === true}><FontAwesomeIcon icon={faPause} aria-hidden="true" /> Pausa</button>
         ) : (
-          <button type="button" onClick={() => void sendCommand('resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.resuming === true}><FontAwesomeIcon icon={faPlay} aria-hidden="true" /> Resume</button>
+          <button type="button" onClick={() => void sendCommand('resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.resuming === true}><FontAwesomeIcon icon={faPlay} aria-hidden="true" /> Återuppta</button>
         )}
-        <button type="button" onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_next === true}><FontAwesomeIcon icon={faForward} aria-hidden="true" /> Next</button>
+        <button type="button" onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_next === true}><FontAwesomeIcon icon={faForward} aria-hidden="true" /> Nästa</button>
       </div>
       <div className="dashboard-control-actions-row" style={{ marginTop: 10, gridTemplateColumns: '1fr' }}>
-        <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}><FontAwesomeIcon icon={faMusic} aria-hidden="true" /> Connect or reauthorize Spotify</a>
+        <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}><FontAwesomeIcon icon={faMusic} aria-hidden="true" /> Anslut eller auktorisera Spotify igen</a>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: 10, alignItems: 'center', marginTop: 12 }}>
         <button type="button" onClick={() => void testProfile()} disabled={profileBusy}>
-          {profileBusy ? 'Testing…' : 'Test /me'}
+          {profileBusy ? 'Testar…' : 'Testa profilen'}
         </button>
         <p className="dashboard-control-message" role="status" aria-live="polite" style={{ margin: 0, overflowWrap: 'anywhere' }}>
-          {profileResult || 'Spotify profile test has not run.'}
+          {profileResult || 'Profiltestet för Spotify har inte körts.'}
         </p>
       </div>
       <p className="dashboard-control-message" role="status" aria-live="polite">

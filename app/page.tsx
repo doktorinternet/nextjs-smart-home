@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: 'Test app',
+  title: 'Smart Home',
 }
 export default function Page() {
 
@@ -10,7 +10,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1>This is / which doesn&apos;t have any info yet. You should be automatically redirected to /dashboard</h1>
+      <h1>Startsidan saknar innehåll och du skickas vidare till översikten.</h1>
     </div>
   )
 }

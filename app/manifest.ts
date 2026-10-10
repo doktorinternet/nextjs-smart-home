@@ -4,8 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
     name: "Smart Home Kiosk",
-    short_name: "Home Kiosk",
-    description: "A smart home status and control kiosk.",
+    short_name: "Hemkontroll",
+    description: "En kontrollpanel för smarta hem.",
     start_url: "/",
     scope: "/",
     display: "standalone",

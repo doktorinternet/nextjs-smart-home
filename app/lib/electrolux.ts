@@ -203,10 +203,10 @@ const metricDefinitions: Array<{ label: string; keys: string[]; unit: string }> 
   { label: 'PM2.5', keys: ['pm25', 'pm2_5', 'pm2.5', 'pm2_5value'], unit: 'µg/m³' },
   { label: 'PM10', keys: ['pm10', 'pm10value'], unit: 'µg/m³' },
   { label: 'TVOC', keys: ['tvoc', 'tvocvalue'], unit: 'ppb' },
-  { label: 'Temperature', keys: ['temperature', 'roomtemperature'], unit: '°C' },
-  { label: 'Humidity', keys: ['humidity', 'relativehumidity'], unit: '%' },
-  { label: 'Filter life', keys: ['filterlife', 'filterremaining', 'filterremaininglife'], unit: '%' },
-  { label: 'Fan speed', keys: ['fanspeed', 'fanlevel'], unit: '' },
+  { label: 'Temperatur', keys: ['temperature', 'roomtemperature'], unit: '°C' },
+  { label: 'Luftfuktighet', keys: ['humidity', 'relativehumidity'], unit: '%' },
+  { label: 'Filterlivslängd', keys: ['filterlife', 'filterremaining', 'filterremaininglife'], unit: '%' },
+  { label: 'Fläkthastighet', keys: ['fanspeed', 'fanlevel'], unit: '' },
 ];
 
 function normalizeKey(value: string): string {

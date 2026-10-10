@@ -51,7 +51,7 @@ export function AutoRefreshControl({
   refreshDisabled?: boolean
 }) {
   const id = `auto-fetch-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-  const actionLabel = refreshError ? `Try again: ${refreshLabel}` : refreshing ? `Refreshing ${label}` : refreshLabel
+  const actionLabel = refreshError ? `Försök igen: ${refreshLabel}` : refreshing ? `Uppdaterar ${label}` : refreshLabel
 
   return (
     <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={`${label} update controls`}>
@@ -64,7 +64,7 @@ export function AutoRefreshControl({
           checked={enabled}
           disabled={!ready}
           onChange={(event) => onChange(event.target.checked)}
-          aria-label={`Automatically fetch ${label}`}
+          aria-label={`Hämta ${label} automatiskt`}
         />
       </label>
       <button

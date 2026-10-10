@@ -31,7 +31,7 @@ export default function Line({
           <div className='pl-2'>{journey.destination}</div>
           <div className='flex pl-2'>
             <div>{`${inMinutesFromNow(journey.departureTime)}`}</div>
-            <div className='pl-4'>vid</div>
+            <div className='pl-4'>kl.</div>
             <div className='pl-4'>
               <TimeString timestamp={journey.departureTime} seconds={false} />
             </div>
@@ -67,11 +67,11 @@ export default function Line({
       <h2 className='font-sans text-8xl'>{departuresPerLine.line.shortName}</h2>
       <div className={'flex flex-row justify-center h-full w-full pl-2'}>
         {
-          createDirectionSegments(departuresPerLine, Direction.Townwards) ?? <div>nothing here</div>
+          createDirectionSegments(departuresPerLine, Direction.Townwards) ?? <div>Inga avgångar</div>
         }
         <div className="h-full"></div>
         {
-          createDirectionSegments(departuresPerLine, Direction.Outwards) ?? <div>nothing here</div>
+          createDirectionSegments(departuresPerLine, Direction.Outwards) ?? <div>Inga avgångar</div>
         }
       </div>
     </div>
