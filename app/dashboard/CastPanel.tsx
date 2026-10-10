@@ -97,15 +97,16 @@ export default function CastPanel() {
           <p className="dashboard-eyebrow">Now playing</p>
           <h2 id="cast-heading">Cast speakers</h2>
         </div>
-        <AutoFetchSwitch label="Cast speakers" {...autoFetch} onChange={autoFetch.setEnabled} />
+        <div className="dashboard-header-controls">
+          <AutoFetchSwitch label="Cast speakers" {...autoFetch} onChange={autoFetch.setEnabled} />
         <button
-          className="dashboard-control-lock"
+          className="dashboard-header-refresh"
           type="button"
           onClick={() => void loadDevices()}
           disabled={loading}
           aria-label="Refresh Cast speakers"
-          style={{ marginLeft: 'auto', minHeight: 40, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', fontSize: 12, cursor: 'pointer' }}
         >Refresh</button>
+        </div>
       </div>
 
       {loading ? (

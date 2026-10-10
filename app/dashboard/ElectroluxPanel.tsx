@@ -57,11 +57,11 @@ export default function ElectroluxPanel() {
           <p className="dashboard-eyebrow">At home</p>
           <h2 id="air-quality-heading">Air quality</h2>
         </div>
-        <AutoFetchSwitch label="Electrolux purifier" {...autoFetch} onChange={autoFetch.setEnabled} />
         <span className="dashboard-source">Pure A9</span>
-      </div>
-      <div className="dashboard-panel-actions dashboard-panel-actions-end">
-        <button className="dashboard-control-lock" type="button" onClick={() => void refresh()} disabled={loading} aria-label="Refresh Electrolux purifier status">Refresh</button>
+        <div className="dashboard-header-controls">
+          <AutoFetchSwitch label="Electrolux purifier" {...autoFetch} onChange={autoFetch.setEnabled} />
+          <button className="dashboard-header-refresh" type="button" onClick={() => void refresh()} disabled={loading} aria-label="Refresh Electrolux purifier status">Refresh</button>
+        </div>
       </div>
       <div className="dashboard-live-content" aria-live="polite">
         {loading && !status ? <p>Connecting to air purifier…</p> : null}

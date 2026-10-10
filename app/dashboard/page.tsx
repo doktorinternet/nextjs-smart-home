@@ -109,12 +109,15 @@ function PrinterCard() {
           <p className="dashboard-eyebrow">Workshop</p>
           <h2 id="printer-heading">3D printer</h2>
         </div>
-        <AutoFetchSwitch label="printer" {...autoFetch} onChange={autoFetch.setEnabled} />
         {!loading && !error && (
           <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
             <span aria-hidden="true" />{disconnected ? 'Offline' : connection}
           </span>
         )}
+        <div className="dashboard-header-controls">
+          <AutoFetchSwitch label="printer" {...autoFetch} onChange={autoFetch.setEnabled} />
+          <button className="dashboard-header-refresh" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh printer status">Refresh</button>
+        </div>
       </div>
 
       {loading ? (
@@ -149,7 +152,6 @@ function PrinterCard() {
       )}
 
       <div className="dashboard-printer-controls">
-        <button className="dashboard-control-lock" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh printer status">Refresh</button>
         <div className="dashboard-control-actions">
           <div className="dashboard-control-actions-row">
             <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>Pause</button>
@@ -211,9 +213,11 @@ function SpeedCard() {
           <p className="dashboard-eyebrow">Connection</p>
           <h2 id="speed-heading">Network speed</h2>
         </div>
-        <AutoFetchSwitch label="network speed" {...autoFetch} onChange={autoFetch.setEnabled} />
-        <button className="dashboard-control-lock" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh network speed history">Refresh</button>
         {latest && <span className="dashboard-speed-time">Latest test</span>}
+        <div className="dashboard-header-controls">
+          <AutoFetchSwitch label="network speed" {...autoFetch} onChange={autoFetch.setEnabled} />
+          <button className="dashboard-header-refresh" type="button" onClick={() => void load()} disabled={loading} aria-label="Refresh network speed history">Refresh</button>
+        </div>
       </div>
 
       {loading ? (
@@ -273,6 +277,12 @@ function ModuleCard({ eyebrow, title, description, icon }: ModuleCardProps) {
 }
 
 export default function Page() {
+  const transitAutoFetch = useAutoFetch('dashboard.autoFetch.tramDepartures')
+  const [refreshDepartures, setRefreshDepartures] = useState<(() => void) | null>(null)
+  const [transitFetchState, setTransitFetchState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null })
+  const handleRefreshReady = useCallback((refresh: (() => void) | null) => setRefreshDepartures(() => refresh), [])
+  const handleTransitFetchStateChange = useCallback((state: { loading: boolean; error: string | null }) => setTransitFetchState(state), [])
+
   return (
     <main className="dashboard-shell">
       <div className="dashboard-frame">
@@ -298,9 +308,25 @@ export default function Page() {
                 <h2 id="transit-heading">Tram departures</h2>
               </div>
               <span className="dashboard-source">Västtrafik</span>
+              <div className="dashboard-header-controls">
+                <AutoFetchSwitch label="tram departures" {...transitAutoFetch} onChange={transitAutoFetch.setEnabled} />
+                <button
+                  className="dashboard-header-refresh"
+                  type="button"
+                  onClick={() => refreshDepartures?.()}
+                  disabled={transitFetchState.loading || !refreshDepartures}
+                  aria-label="Refresh tram departures"
+                >
+                  {transitFetchState.loading ? 'Refreshing…' : transitFetchState.error ? 'Try again' : 'Refresh'}
+                </button>
+              </div>
             </div>
             <div className="dashboard-transit-content">
-              <CustomTimeTable />
+              <CustomTimeTable
+                autoFetch={transitAutoFetch}
+                onRefreshReady={handleRefreshReady}
+                onFetchStateChange={handleTransitFetchStateChange}
+              />
             </div>
           </section>
 

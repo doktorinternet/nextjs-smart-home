@@ -193,15 +193,16 @@ export default function SpotifyPanel() {
           <p className="dashboard-eyebrow">Music</p>
           <h2 id="spotify-heading">Spotify</h2>
         </div>
-        <AutoFetchSwitch label="Spotify" {...autoFetch} onChange={autoFetch.setEnabled} />
+        <div className="dashboard-header-controls">
+          <AutoFetchSwitch label="Spotify" {...autoFetch} onChange={autoFetch.setEnabled} />
         <button
-          className="dashboard-control-lock"
+          className="dashboard-header-refresh"
           type="button"
           onClick={() => void refresh()}
           disabled={loading}
           aria-label="Refresh Spotify player"
-          style={{ marginLeft: 'auto', minHeight: 40, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', fontSize: 12, cursor: 'pointer' }}
         >Refresh</button>
+        </div>
       </div>
 
       <p className="dashboard-live-message" role="status" aria-live="polite">

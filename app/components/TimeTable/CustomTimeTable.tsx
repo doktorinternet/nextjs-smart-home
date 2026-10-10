@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import conf from "@/app/configuration.json";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { AppJourney, Direction, LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
-import { AutoFetchSwitch, useAutoFetch } from "@/app/dashboard/useAutoFetch";
+import { useAutoFetch } from "@/app/dashboard/useAutoFetch";
 
 type DeparturesPayload = {
   results: DepartureApiResponse[];
@@ -75,15 +75,20 @@ function DepartureRow({ departure, now }: { departure: ListedDeparture; now: num
         <span className="tram-departure-remaining">Cancelled</span>
       ) : (
         <span className="tram-departure-remaining">
-          {minutes <= 0 ? "Now" : `${minutes} min`}
+          {minutes <= 0 ? "Nu" : `${minutes} min`}
         </span>
       )}
     </li>
   );
 }
 
-export default function CustomTimeTable() {
-  const autoFetch = useAutoFetch("dashboard.autoFetch.tramDepartures");
+type CustomTimeTableProps = {
+  autoFetch: ReturnType<typeof useAutoFetch>;
+  onRefreshReady: (refresh: (() => void) | null) => void;
+  onFetchStateChange: (state: { loading: boolean; error: string | null }) => void;
+};
+
+export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStateChange }: CustomTimeTableProps) {
   const [data, setData] = useState<LineDepartures[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -155,6 +160,15 @@ export default function CustomTimeTable() {
     return () => clearInterval(interval);
   }, [autoFetch.ready, autoFetch.enabled, fetchData]);
 
+  useEffect(() => {
+    onRefreshReady(fetchData);
+    return () => onRefreshReady(null);
+  }, [fetchData, onRefreshReady]);
+
+  useEffect(() => {
+    onFetchStateChange({ loading, error });
+  }, [error, loading, onFetchStateChange]);
+
   return (
     <div className="time-table grow" aria-busy={loading}>
       <div className="flex items-center justify-between gap-3">
@@ -164,18 +178,12 @@ export default function CustomTimeTable() {
           {autoFetch.ready && !autoFetch.enabled && !loading && "Automatic updates are off."}
           {error && <span role="alert">{error}</span>}
         </div>
-        <div className="dashboard-panel-actions">
-          <AutoFetchSwitch label="tram departures" {...autoFetch} onChange={autoFetch.setEnabled} />
-          <button type="button" onClick={() => void fetchData()} disabled={loading}>
-            {loading ? "Refreshing…" : error ? "Try again" : "Refresh departures"}
-          </button>
-        </div>
       </div>
 
       <div className="departures">
         {([
           [Direction.Townwards, "Syd/Väst"],
-          [Direction.Outwards, "Norr"],
+          [Direction.Outwards, "Nord/Öst"],
         ] as const).map(([direction, title]) => {
           const departures = departuresByDirection.get(direction) ?? [];
           return (
