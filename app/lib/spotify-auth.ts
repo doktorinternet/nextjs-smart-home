@@ -32,6 +32,13 @@ export class SpotifyAuthConfigError extends Error {
   }
 }
 
+export class SpotifyTokenRequestError extends Error {
+  constructor(readonly status: number) {
+    super('Spotify token request failed');
+    this.name = 'SpotifyTokenRequestError';
+  }
+}
+
 function getConfig(): SpotifyConfig {
   const clientId = process.env.SPOTIFY_CLIENT_ID?.trim();
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -200,7 +207,7 @@ async function postTokenRequest(body: URLSearchParams, config: SpotifyConfig): P
     cache: 'no-store',
     signal: AbortSignal.timeout(10_000),
   });
-  if (!response.ok) throw new Error('Spotify token request failed');
+  if (!response.ok) throw new SpotifyTokenRequestError(response.status);
   const result: unknown = await response.json();
   if (typeof result !== 'object' || result === null || Array.isArray(result)) {
     throw new Error('Spotify token response is invalid');

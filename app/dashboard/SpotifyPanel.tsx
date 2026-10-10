@@ -10,6 +10,7 @@ type SpotifyDevice = {
   is_active?: boolean
   is_restricted?: boolean
   volume_percent?: number | null
+  supports_volume?: boolean
 }
 
 type SpotifyTrack = {
@@ -24,6 +25,7 @@ type SpotifyPlayback = {
   progress_ms: number | null
   item: SpotifyTrack | null
   device: SpotifyDevice | null
+  actions?: { disallows?: Record<string, boolean> }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -37,6 +39,7 @@ function isDevice(value: unknown): value is SpotifyDevice {
     && typeof value.type === 'string'
     && (value.is_active === undefined || typeof value.is_active === 'boolean')
     && (value.is_restricted === undefined || typeof value.is_restricted === 'boolean')
+    && (value.supports_volume === undefined || typeof value.supports_volume === 'boolean')
     && (value.volume_percent === undefined || value.volume_percent === null ||
       (typeof value.volume_percent === 'number' && Number.isInteger(value.volume_percent) && value.volume_percent >= 0 && value.volume_percent <= 100))
 }
@@ -57,6 +60,11 @@ function isPlayback(value: unknown): value is SpotifyPlayback {
   if (value.progress_ms !== null && (typeof value.progress_ms !== 'number' || !Number.isFinite(value.progress_ms) || value.progress_ms < 0)) return false
   if (value.item !== null && !isTrack(value.item)) return false
   if (value.device !== null && !isDevice(value.device)) return false
+  if (value.actions !== undefined) {
+    if (!isRecord(value.actions)) return false
+    if (value.actions.disallows !== undefined && (!isRecord(value.actions.disallows) ||
+      !Object.values(value.actions.disallows).every((allowed) => typeof allowed === 'boolean'))) return false
+  }
   return true
 }
 
@@ -81,6 +89,8 @@ export default function SpotifyPanel() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [profileBusy, setProfileBusy] = useState(false)
+  const [profileResult, setProfileResult] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -141,12 +151,39 @@ export default function SpotifyPanel() {
     }
   }
 
+  async function testProfile() {
+    if (profileBusy) return
+    setProfileBusy(true)
+    setProfileResult(null)
+    try {
+      const response = await fetch('/api/spotify/player/me', { cache: 'no-store' })
+      const result: unknown = await response.json()
+      if (!response.ok) {
+        setProfileResult(responseError(result, `Spotify /me request failed (${response.status})`))
+      } else if (!isRecord(result)) {
+        setProfileResult('Spotify returned an invalid profile response.')
+      } else {
+        const displayName = typeof result.display_name === 'string' ? result.display_name : '(not set)'
+        const userId = typeof result.id === 'string' ? result.id : '(not returned)'
+        const accountType = typeof result.product === 'string' ? result.product : '(not returned)'
+        setProfileResult(`Profile OK · ${displayName} · ${userId} · ${accountType}`)
+      }
+    } catch {
+      setProfileResult('Could not reach the Spotify /me test endpoint.')
+    } finally {
+      setProfileBusy(false)
+    }
+  }
+
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null
   const track = playback?.item ?? null
   const image = track?.album?.images?.[0]?.url
   const artistNames = track?.artists?.map((artist) => artist.name).join(', ')
   const progress = durationLabel(playback?.progress_ms ?? null)
   const controlsDisabled = busy
+  const volumeDisabled = controlsDisabled || !selectedDeviceId || selectedDevice?.supports_volume === false
+  const disallowedActions = playback?.actions?.disallows ?? {}
+  const playbackDeviceId = playback?.device?.id
 
   return (
     <section className="dashboard-module dashboard-live-card" aria-labelledby="spotify-heading">
@@ -168,7 +205,7 @@ export default function SpotifyPanel() {
       </div>
 
       <p className="dashboard-live-message" role="status" aria-live="polite">
-        {loading ? 'Loading Spotify player…' : error ? error : autoFetch.ready && !autoFetch.enabled && !playback ? 'Automatic updates are off. Refresh to load Spotify.' : !playback?.item ? 'Nothing is playing right now.' : null}
+        {loading ? 'Loading Spotify player…' : error ? error : autoFetch.ready && !autoFetch.enabled && !playback ? 'Automatic updates are off. Refresh to load Spotify.' : playback?.is_playing && !playback.item ? 'Playback is active, but Spotify did not return track details.' : !playback?.item ? 'Nothing is playing. Start playback on a Spotify Connect device to enable track controls.' : null}
       </p>
       {!loading && !error && track && (
         <div style={{ display: 'grid', gridTemplateColumns: image ? '72px minmax(0, 1fr)' : '1fr', gap: 14, alignItems: 'center', marginTop: 12 }}>
@@ -192,27 +229,36 @@ export default function SpotifyPanel() {
           </div>
           <label className="dashboard-live-label" htmlFor="spotify-volume" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
             <span>Volume{selectedDevice ? ` · ${selectedDevice.name}` : ''}</span><span>{volume}%</span>
-            <input id="spotify-volume" type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={controlsDisabled || !selectedDeviceId} aria-label="Spotify volume" style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
+            <input id="spotify-volume" type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={volumeDisabled} aria-label="Spotify volume" style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
           </label>
           <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={controlsDisabled || !selectedDeviceId}>Set volume</button>
+            <button type="button" onClick={() => void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: volume })} disabled={volumeDisabled}>Set volume</button>
           </div>
+          {selectedDevice?.supports_volume === false && <p className="dashboard-live-message">Spotify does not support remote volume control for this device. Change volume on the device itself.</p>}
         </div>
       )}
 
       {!loading && !error && devices.length === 0 && <p className="dashboard-live-message">No Spotify Connect devices are available. Open Spotify on a device and refresh.</p>}
 
       <div className="dashboard-control-actions-row" style={{ marginTop: 18 }}>
-        <button type="button" onClick={() => void sendCommand('previous')} disabled={controlsDisabled || !playback?.item}>Previous</button>
+        <button type="button" onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_prev === true}>Previous</button>
         {playback?.is_playing ? (
-          <button type="button" onClick={() => void sendCommand('pause', selectedDeviceId ? { deviceId: selectedDeviceId } : {})} disabled={controlsDisabled || !playback.item}>Pause</button>
+          <button type="button" onClick={() => void sendCommand('pause', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || disallowedActions.pausing === true}>Pause</button>
         ) : (
-          <button type="button" onClick={() => void sendCommand('resume', selectedDeviceId ? { deviceId: selectedDeviceId } : {})} disabled={controlsDisabled || !playback?.item}>Resume</button>
+          <button type="button" onClick={() => void sendCommand('resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.resuming === true}>Resume</button>
         )}
-        <button type="button" onClick={() => void sendCommand('next')} disabled={controlsDisabled || !playback?.item}>Next</button>
+        <button type="button" onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})} disabled={controlsDisabled || !playback || disallowedActions.skipping_next === true}>Next</button>
       </div>
       <div className="dashboard-control-actions-row" style={{ marginTop: 10, gridTemplateColumns: '1fr' }}>
         <a href="/api/spotify/auth/start" className="dashboard-control-lock" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', minHeight: 42, padding: '0 12px', border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, color: '#c5cad4', background: 'transparent', font: 'inherit', textDecoration: 'none' }}>Connect or reauthorize Spotify</a>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: 10, alignItems: 'center', marginTop: 12 }}>
+        <button type="button" onClick={() => void testProfile()} disabled={profileBusy}>
+          {profileBusy ? 'Testing…' : 'Test /me'}
+        </button>
+        <p className="dashboard-control-message" role="status" aria-live="polite" style={{ margin: 0, overflowWrap: 'anywhere' }}>
+          {profileResult || 'Spotify profile test has not run.'}
+        </p>
       </div>
       <p className="dashboard-control-message" role="status" aria-live="polite">
         {message}
