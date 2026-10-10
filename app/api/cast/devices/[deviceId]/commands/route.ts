@@ -10,9 +10,10 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { deviceId: string } },
+  { params }: { params: Promise<{ deviceId: string }> },
 ) {
-  if (!isCastDeviceId(params.deviceId)) {
+  const { deviceId } = await params;
+  if (!isCastDeviceId(deviceId)) {
     return NextResponse.json({ error: 'Invalid Cast device id' }, { status: 400 });
   }
 
@@ -47,7 +48,7 @@ export async function POST(
   }
 
   try {
-    await sendCastCommand(params.deviceId, command);
+    await sendCastCommand(deviceId, command);
     return new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     if (error instanceof CastBridgeError) {
