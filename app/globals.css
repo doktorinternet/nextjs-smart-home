@@ -1,8 +1,23 @@
-@import "tailwindcss/base";
+@import "tailwindcss";
 
-@import "tailwindcss/components";
+@theme {
+  --breakpoint-md: 64rem;
+  --color-time_table: rgb(var(--bg-section));
+  --color-dark_gray: #4a4a4a;
+  --color-light_gray: #989898;
+  --spacing-1: 1px;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-24: 24px;
+  --spacing-100: 100px;
+  --spacing-1024: 920px;
+  --radius-md: 10px;
+  --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
+  --background-image-gradient-conic: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
+}
 
-@import "tailwindcss/utilities";
+@source inline("col-span-{1..8} row-span-{1..8} grid-cols-{1..9} grid-rows-{1..9} p-12 gap-12");
 
 :root {
   --foreground-rgb: 0, 0, 0;
