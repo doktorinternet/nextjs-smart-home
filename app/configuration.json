@@ -10,6 +10,6 @@
     "Transparency": "75"
   },
   "API": {
-    "Departures-interval":10000
+    "Departures-interval":60000
   }
 }
