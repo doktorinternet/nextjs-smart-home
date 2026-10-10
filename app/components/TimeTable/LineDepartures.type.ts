@@ -80,6 +80,7 @@ export function mapAndMergeByLine(apiResults: DepartureApiResponse[]): LineDepar
     const lineDepartures = lineMap.get(line.gid)!;
     const destination = result.serviceJourney.directionDetails.shortDirection; 
     lineDepartures.journeys.push({
+      id: result.serviceJourney.gid,
       departureTime: result.estimatedOtherwisePlannedTime,
       destination: destination,
       direction: DestinationDirections.get(destination),
@@ -108,6 +109,7 @@ export function mapAndMergeByLine(apiResults: DepartureApiResponse[]): LineDepar
 }
 
 export type AppJourney = {
+  id: string,
   destination: string,
   direction: Direction | undefined,
   departureTime: string,

@@ -71,19 +71,100 @@
 
 .departures {
   display: grid;
-  gap: 12px;
-  /* grid-template-columns: var(--grid-col-repeat); */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 }
 
-.tram-line {
-  padding: .5em;
-  border-radius: 12px;
-  /* width: var(--departures-card-size); */
-  height: calc(var(--departures-card-size)*.75);
+.tram-direction {
+  min-width: 0;
+}
 
-  h2 {
-    color: var(--white-semi-trans)
-  }
+.tram-direction-heading {
+  margin: 0;
+  padding: 0 4px 9px;
+  color: #d6dbea;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.tram-departure-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tram-departure-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 52px 58px;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(13, 18, 29, .52);
+  color: #edf0f7;
+  font-size: 13px;
+}
+
+.tram-departure-row:nth-child(even) { background: rgba(21, 27, 41, .68); }
+.tram-departure-row:first-child { border-top: 1px solid rgba(255, 255, 255, .09); }
+
+.tram-line-badge {
+  display: inline-flex;
+  min-width: 34px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 1px solid;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .24), 0 2px 5px rgba(0, 0, 0, .18);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tram-departure-destination {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tram-departure-time {
+  color: #c4cada;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.tram-departure-remaining {
+  color: #d7deec;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tram-departure-row.is-urgent .tram-departure-remaining { color: #ffbd91; }
+.tram-departure-row.is-soon .tram-departure-remaining { color: #e8cf91; }
+.tram-departure-row.is-cancelled { color: #b2b7c2; }
+.tram-departure-row.is-cancelled .tram-departure-remaining {
+  color: #f2a1a1;
+  min-width: 0;
+  font-size: 10px;
+  letter-spacing: -.25px;
+}
+.tram-direction-empty { margin: 10px 4px; color: #8e96a8; font-size: 13px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 body {
@@ -287,23 +368,21 @@ body {
 }
 
 .dashboard-transit {
-  min-height: 500px;
-  grid-row: span 2;
+  min-width: 0;
+  min-height: 0;
+  grid-column: 1 / -1;
 }
 
 .dashboard-transit-content {
-  min-height: 400px;
-  margin-top: 26px;
-  padding: 18px;
+  min-height: 0;
+  margin-top: 16px;
+  padding: 14px;
   border: 1px solid rgba(255, 255, 255, .08);
   border-radius: 16px;
   background: rgba(10, 14, 23, .34);
 }
 
-.dashboard-transit-content .time-table { min-height: 360px; }
-.dashboard-transit-content .departures { gap: 10px; }
-.dashboard-transit-content .tram-line { min-height: 88px; height: auto; }
-.dashboard-transit-content .tram-line h2 { font-size: clamp(38px, 5vw, 60px); }
+.dashboard-transit-content .time-table { min-height: 0; }
 
 .dashboard-side-stack {
   display: grid;
@@ -649,7 +728,7 @@ body {
 
 @media (max-width: 820px) {
   .dashboard-grid { grid-template-columns: minmax(0, 1fr) minmax(250px, .8fr); }
-  .dashboard-transit { grid-row: span 2; }
+  .dashboard-transit { grid-row: auto; }
   .dashboard-side-stack .dashboard-module { min-height: 225px; }
 }
 
@@ -659,8 +738,8 @@ body {
   .dashboard-header-note { display: none; }
   .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
   .dashboard-transit { min-height: 0; grid-row: auto; }
-  .dashboard-transit-content { min-height: 280px; margin-top: 20px; padding: 12px; }
-  .dashboard-transit-content .time-table { min-height: 250px; }
+  .dashboard-transit-content { min-height: 0; margin-top: 16px; padding: 12px; }
+  .dashboard-transit-content .time-table { min-height: 0; }
   .dashboard-side-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-side-stack .dashboard-module { min-height: 215px; }
   .dashboard-module { min-height: 215px; padding: 20px; border-radius: 18px; }
@@ -674,4 +753,18 @@ body {
   .dashboard-side-stack .dashboard-module { min-height: 180px; }
   .dashboard-source { display: none; }
   .dashboard-footer { font-size: 12px; }
+}
+
+@media (max-width: 560px) {
+  .departures { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .tram-departure-row {
+    grid-template-columns: 36px minmax(0, 1fr) 44px 50px;
+    gap: 5px;
+    padding-right: 3px;
+    padding-left: 3px;
+    font-size: 12px;
+  }
+  .tram-line-badge { min-width: 30px; min-height: 26px; }
+  .tram-departure-remaining { font-size: 11px; }
+  .tram-departure-row.is-cancelled .tram-departure-remaining { font-size: 9px; }
 }

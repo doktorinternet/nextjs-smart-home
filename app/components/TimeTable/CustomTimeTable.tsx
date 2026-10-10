@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import conf from "@/app/configuration.json";
-import Line from "./Line";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
-import { LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
+import { AppJourney, Direction, LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
 import { AutoFetchSwitch, useAutoFetch } from "@/app/dashboard/useAutoFetch";
 
 type DeparturesPayload = {
@@ -21,9 +20,11 @@ function isDeparturesPayload(value: unknown): value is DeparturesPayload {
 
     const { line, directionDetails } = result.serviceJourney;
     return (
+      typeof result.serviceJourney.gid === "string" && result.serviceJourney.gid.length > 0 &&
       isRecord(line) &&
       ["gid", "name", "shortName", "designation", "backgroundColor", "foregroundColor", "borderColor"]
         .every((field) => typeof line[field] === "string") &&
+      typeof line.gid === "string" && line.gid.length > 0 &&
       typeof line.isWheelchairAccessible === "boolean" &&
       isRecord(directionDetails) &&
       typeof directionDetails.shortDirection === "string" &&
@@ -33,13 +34,87 @@ function isDeparturesPayload(value: unknown): value is DeparturesPayload {
   });
 }
 
+type ListedDeparture = {
+  line: LineDepartures["line"];
+  journey: AppJourney;
+};
+
+function minutesUntil(departureTime: string, now: number) {
+  return Math.floor((Date.parse(departureTime) - now) / 60_000);
+}
+
+function DepartureRow({ departure, now }: { departure: ListedDeparture; now: number }) {
+  const { line, journey } = departure;
+  const minutes = minutesUntil(journey.departureTime, now);
+  const urgency = journey.isCancelled ? "is-cancelled" : minutes <= 5 ? "is-urgent" : minutes <= 15 ? "is-soon" : "";
+  const departureTime = new Intl.DateTimeFormat("sv-SE", { hour: "2-digit", minute: "2-digit" })
+    .format(new Date(journey.departureTime));
+  const relativeTime = journey.isCancelled
+    ? "cancelled"
+    : minutes <= 0 ? "due now" : `in ${minutes} minutes`;
+
+  return (
+    <li
+      className={`tram-departure-row ${urgency}`}
+      aria-label={`Line ${line.shortName} to ${journey.destination}, departs at ${departureTime}, ${relativeTime}`}
+    >
+      <span
+        className="tram-line-badge"
+        style={{
+          backgroundColor: line.backgroundColor,
+          color: line.foregroundColor,
+          borderColor: line.borderColor,
+        }}
+        aria-label={`Line ${line.shortName}`}
+      >
+        {line.shortName}
+      </span>
+      <span className="tram-departure-destination" title={journey.destination}>{journey.destination}</span>
+      <time className="tram-departure-time" dateTime={journey.departureTime}>{departureTime}</time>
+      {journey.isCancelled ? (
+        <span className="tram-departure-remaining">Cancelled</span>
+      ) : (
+        <span className="tram-departure-remaining">
+          {minutes <= 0 ? "Now" : `${minutes} min`}
+        </span>
+      )}
+    </li>
+  );
+}
+
 export default function CustomTimeTable() {
   const autoFetch = useAutoFetch("dashboard.autoFetch.tramDepartures");
   const [data, setData] = useState<LineDepartures[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const requestInFlight = useRef(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const departuresByDirection = useMemo(() => {
+    const departures = new Map<Direction, ListedDeparture[]>([
+      [Direction.Townwards, []],
+      [Direction.Outwards, []],
+    ]);
+
+    for (const line of data) {
+      for (const journey of line.journeys) {
+        if (journey.direction === undefined) continue;
+        departures.get(journey.direction)?.push({ line: line.line, journey });
+      }
+    }
+
+    departures.forEach((list) => {
+      list.sort((a, b) => Date.parse(a.journey.departureTime) - Date.parse(b.journey.departureTime));
+    });
+
+    return departures;
+  }, [data]);
 
   const fetchData = useCallback(async () => {
     if (requestInFlight.current) return;
@@ -98,12 +173,30 @@ export default function CustomTimeTable() {
       </div>
 
       <div className="departures">
-        {hasLoaded && !loading && !error && data.length === 0 && (
-          <p role="status">No departures available.</p>
-        )}
-        {data.map((line) => (
-          <Line key={line.line.gid} departuresPerLine={line} />
-        ))}
+        {([
+          [Direction.Townwards, "Syd/Väst"],
+          [Direction.Outwards, "Norr"],
+        ] as const).map(([direction, title]) => {
+          const departures = departuresByDirection.get(direction) ?? [];
+          return (
+            <section className="tram-direction" key={direction} aria-labelledby={`tram-direction-${direction}`}>
+              <h3 id={`tram-direction-${direction}`} className="tram-direction-heading">{title}</h3>
+              {departures.length > 0 ? (
+                <ol className="tram-departure-list">
+                  {departures.map((departure) => (
+                    <DepartureRow
+                      key={`${departure.line.gid}-${departure.journey.id}`}
+                      departure={departure}
+                      now={now}
+                    />
+                  ))}
+                </ol>
+              ) : hasLoaded && !loading && !error ? (
+                <p className="tram-direction-empty">No departures available.</p>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
