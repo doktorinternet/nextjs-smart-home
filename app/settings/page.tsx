@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { faArrowLeft, faCircleCheck, faCircleQuestion, faCircleXmark, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { useCallback, useEffect, useState, type KeyboardEvent } from 'react'
+import { faArrowLeft, faCircleCheck, faCircleQuestion, faCircleXmark, faGear, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Link from 'next/link'
 import { copy } from '@/app/copy'
+import { layoutOptions, type LayoutMode } from '@/app/dashboard/layouts/layoutOptions'
 import styles from './settings.module.css'
 
 type PermissionStatus = {
@@ -16,7 +17,12 @@ type PermissionStatus = {
   missingScopes: string[]
 }
 
+type SettingsSection = 'general' | 'spotify'
+
 export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState<SettingsSection>('general')
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('pages')
+  const [layoutReady, setLayoutReady] = useState(false)
   const [permissionStatus, setPermissionStatus] = useState<PermissionStatus | null>(null)
   const [checking, setChecking] = useState(true)
   const [checkError, setCheckError] = useState(false)
@@ -41,6 +47,16 @@ export default function SettingsPage() {
     setAuthorizationComplete(new URLSearchParams(window.location.search).get('spotify') === 'connected')
   }, [checkPermissions])
 
+  useEffect(() => {
+    const storedMode = window.localStorage.getItem('dashboard.layout')
+    if (layoutOptions.some((option) => option.id === storedMode)) setLayoutMode(storedMode as LayoutMode)
+    setLayoutReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (layoutReady) window.localStorage.setItem('dashboard.layout', layoutMode)
+  }, [layoutMode, layoutReady])
+
   const statusMessage = permissionStatus?.status === 'complete'
     ? copy.settings.permissionComplete
     : permissionStatus?.status === 'missing'
@@ -51,6 +67,14 @@ export default function SettingsPage() {
     : permissionStatus?.status === 'missing'
       ? faCircleXmark
       : faCircleQuestion
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, section: SettingsSection) {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowRight' && event.key !== 'ArrowUp' && event.key !== 'ArrowLeft') return
+    event.preventDefault()
+    const nextSection = section === 'general' ? 'spotify' : 'general'
+    setActiveSection(nextSection)
+    document.getElementById(`${nextSection}-settings-tab`)?.focus()
+  }
 
   return (
     <main className={styles.shell}>
@@ -69,11 +93,29 @@ export default function SettingsPage() {
               className={styles.navigationButton}
               type="button"
               role="tab"
+              id="general-settings-tab"
+              aria-selected={activeSection === 'general'}
+              aria-controls="general-settings-panel"
+              aria-label={copy.settings.generalSection}
+              title={copy.settings.generalSection}
+              tabIndex={activeSection === 'general' ? 0 : -1}
+              onClick={() => setActiveSection('general')}
+              onKeyDown={(event) => handleTabKeyDown(event, 'general')}
+            >
+              <FontAwesomeIcon icon={faGear} aria-hidden="true" />
+            </button>
+            <button
+              className={styles.navigationButton}
+              type="button"
+              role="tab"
               id="spotify-settings-tab"
-              aria-selected="true"
+              aria-selected={activeSection === 'spotify'}
               aria-controls="spotify-settings-panel"
               aria-label={copy.settings.spotifySection}
               title={copy.settings.spotifySection}
+              tabIndex={activeSection === 'spotify' ? 0 : -1}
+              onClick={() => setActiveSection('spotify')}
+              onKeyDown={(event) => handleTabKeyDown(event, 'spotify')}
             >
               <FontAwesomeIcon icon={faSpotify} aria-hidden="true" />
             </button>
@@ -81,9 +123,37 @@ export default function SettingsPage() {
 
           <section
             className={styles.panel}
+            id="general-settings-panel"
+            role="tabpanel"
+            aria-labelledby="general-settings-tab"
+            tabIndex={0}
+            hidden={activeSection !== 'general'}
+          >
+            <div className={styles.dashboardLayout}>
+              <div className={styles.dashboardLayoutCopy}>
+                <p className={styles.eyebrow}>{copy.dashboard.title}</p>
+                <h2>{copy.dashboard.layout}</h2>
+              </div>
+              <label className={styles.layoutPicker}>
+                <span>{copy.dashboard.layout}</span>
+                <select
+                  aria-label={copy.dashboard.chooseLayout}
+                  value={layoutMode}
+                  onChange={(event) => setLayoutMode(event.target.value as LayoutMode)}
+                >
+                  {layoutOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section
+            className={styles.panel}
             id="spotify-settings-panel"
             role="tabpanel"
             aria-labelledby="spotify-settings-tab"
+            tabIndex={0}
+            hidden={activeSection !== 'spotify'}
           >
             <div className={styles.panelHeader}>
               <div className={styles.spotifyMark} aria-hidden="true">

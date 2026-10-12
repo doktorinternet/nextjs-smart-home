@@ -16,22 +16,14 @@ import AppsLayout from './layouts/appsLayout'
 import TabsLayout from './layouts/tabsLayout'
 import ExpandableLayout from './layouts/expandableLayout'
 import WidgetsLayout from './layouts/widgetsLayout'
+import { layoutOptions, type LayoutMode } from './layouts/layoutOptions'
 
-type LayoutMode = 'pages' | 'apps' | 'tabs' | 'expandable' | 'widgets'
 type DashboardPanel = {
   id: 'transit' | 'air' | 'printer' | 'cast' | 'spotify' | 'speed'
   label: string
   icon: ReactNode
   content: ReactNode
 }
-
-const layoutOptions: { id: LayoutMode; label: string }[] = [
-  { id: 'pages', label: copy.dashboard.layouts.pages },
-  { id: 'apps', label: copy.dashboard.layouts.apps },
-  { id: 'tabs', label: copy.dashboard.layouts.tabs },
-  { id: 'expandable', label: copy.dashboard.layouts.expandable },
-  { id: 'widgets', label: copy.dashboard.layouts.widgets },
-]
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -404,16 +396,6 @@ export default function Page() {
               <h1>{copy.dashboard.title}</h1>
             </div>
           </div>
-          <label className="dashboard-layout-picker">
-            <span>{copy.dashboard.layout}</span>
-            <select
-              aria-label={copy.dashboard.chooseLayout}
-              value={layoutMode}
-              onChange={(event) => setLayoutMode(event.target.value as LayoutMode)}
-            >
-              {layoutOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
-            </select>
-          </label>
           <Link className="dashboard-settings-link" href="/settings" aria-label={copy.dashboard.settings} title={copy.dashboard.settings}>
             <FontAwesomeIcon icon={faGear} aria-hidden="true" />
           </Link>

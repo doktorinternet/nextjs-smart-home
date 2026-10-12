@@ -29,6 +29,7 @@ export const copy = {
     title: 'Inställningar',
     backToDashboard: 'Tillbaka till översikten',
     sections: 'Inställningssektioner',
+    generalSection: 'Allmänt',
     spotifySection: 'Spotify',
     spotifyTitle: 'Spotify-anslutning',
     spotifyDescription: 'Kontrollera åtkomsten som dashboarden behöver för uppspelning och ditt bibliotek.',
