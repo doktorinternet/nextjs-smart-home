@@ -711,7 +711,6 @@ body {
 .spotify-device-summary:focus-visible,
 .spotify-device-tile:focus-visible,
 .spotify-library-tabs button:focus-visible,
-.spotify-card-play:focus-visible,
 .spotify-playlist-action:focus-visible { outline: 2px solid #52df91; outline-offset: 2px; }
 .spotify-next-icon { transform: rotate(180deg); }
 .spotify-repeat-one { position: absolute; top: 15px; font-size: 9px; font-weight: 700; }
@@ -747,8 +746,6 @@ body {
 .spotify-content-subtitle { overflow: hidden; color: #aeb8c8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .spotify-playlist-action { width: 100%; padding: 0; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .spotify-playlist-action:disabled { opacity: .45; cursor: not-allowed; }
-.spotify-card-play { display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 6px; padding: 5px 8px; border: 1px solid rgba(82,223,145,.38); border-radius: 10px; color: #72e3a2; background: rgba(50,205,112,.08); font: inherit; font-size: 11px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; }
-.spotify-card-play:disabled { opacity: .45; cursor: not-allowed; }
 .spotify-spoken-content { display: grid; gap: 12px; min-width: 0; }
 .spotify-status { min-height: 14px; margin: 0; color: #aeb8c8; font-size: 11px; }
 
@@ -763,6 +760,14 @@ body {
   .spotify-content-art,
   .spotify-content-placeholder { width: 112px; }
 }
+
+.spotify-library-content.is-compact { min-height: 88px; }
+.spotify-library-content.is-compact .spotify-content-row { min-height: 80px; }
+.spotify-library-content.is-compact .spotify-content-card { flex-basis: 72px; gap: 0; }
+.spotify-library-content.is-compact .spotify-content-art,
+.spotify-library-content.is-compact .spotify-content-placeholder { width: 100%; border-radius: 9px; }
+.spotify-library-content.is-compact .spotify-content-title,
+.spotify-library-content.is-compact .spotify-content-subtitle { display: none; }
 
 .dashboard-live-content {
   flex: 1;
