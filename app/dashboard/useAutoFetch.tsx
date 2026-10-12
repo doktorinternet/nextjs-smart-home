@@ -52,11 +52,24 @@ export function AutoRefreshControl({
   refreshDisabled?: boolean
 }) {
   const [iconState, setIconState] = useState<'idle' | 'refreshing' | 'complete'>('idle')
+  const [showAutoFetchSwitch, setShowAutoFetchSwitch] = useState(false)
   const refreshStartedAt = useRef<number | null>(null)
+  const holdTimer = useRef<number | null>(null)
+  const hideSwitchTimer = useRef<number | null>(null)
+  const pointerStartX = useRef(0)
+  const dragEnabledState = useRef<boolean | null>(null)
+  const pointerDown = useRef(false)
+  const holdActivated = useRef(false)
+  const suppressNextClick = useRef(false)
   const id = `auto-fetch-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   const actionLabel = refreshError
     ? formatCopy(copy.refresh.retry, { label: refreshLabel })
     : refreshing ? formatCopy(copy.refresh.updating, { label }) : refreshLabel
+
+  useEffect(() => () => {
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current)
+    if (hideSwitchTimer.current !== null) window.clearTimeout(hideSwitchTimer.current)
+  }, [])
 
   useEffect(() => {
     let completionTimer: ReturnType<typeof setTimeout> | undefined
@@ -80,31 +93,95 @@ export function AutoRefreshControl({
     }
   }, [refreshing])
 
+  const handlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!event.isPrimary || event.button !== 0 || !ready) return
+    pointerDown.current = true
+    holdActivated.current = false
+    suppressNextClick.current = false
+    pointerStartX.current = event.clientX
+    dragEnabledState.current = enabled
+    if (hideSwitchTimer.current !== null) window.clearTimeout(hideSwitchTimer.current)
+    event.currentTarget.setPointerCapture(event.pointerId)
+    holdTimer.current = window.setTimeout(() => {
+      holdActivated.current = true
+      suppressNextClick.current = true
+      setShowAutoFetchSwitch(true)
+    }, 450)
+  }
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!pointerDown.current || !holdActivated.current) return
+    const dragDistance = event.clientX - pointerStartX.current
+    if (dragDistance <= -14 && dragEnabledState.current !== false) {
+      dragEnabledState.current = false
+      onChange(false)
+    } else if (dragDistance >= 14 && dragEnabledState.current !== true) {
+      dragEnabledState.current = true
+      onChange(true)
+    }
+  }
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!pointerDown.current) return
+    pointerDown.current = false
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current)
+    holdTimer.current = null
+    if (holdActivated.current) {
+      suppressNextClick.current = true
+      hideSwitchTimer.current = window.setTimeout(() => setShowAutoFetchSwitch(false), 900)
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+  }
+
+  const handlePointerCancel = () => {
+    pointerDown.current = false
+    suppressNextClick.current = false
+    if (holdTimer.current !== null) window.clearTimeout(holdTimer.current)
+    holdTimer.current = null
+    setShowAutoFetchSwitch(false)
+  }
+
   return (
     <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={formatCopy(copy.refresh.updateControls, { label })}>
-      <label className="dashboard-auto-fetch" htmlFor={id}>
-        <span>{copy.refresh.auto}</span>
-        <input
-          id={id}
-          type="checkbox"
-          role="switch"
-          checked={enabled}
-          disabled={!ready}
-          onChange={(event) => onChange(event.target.checked)}
-          aria-label={formatCopy(copy.refresh.fetchAutomatically, { label })}
-        />
-      </label>
       <button
-        className={`dashboard-header-refresh${refreshError ? ' is-error' : ''}${iconState === 'refreshing' ? ' is-refreshing' : ''}`}
+        className={`dashboard-header-refresh${enabled ? ' is-auto-enabled' : ''}${refreshError ? ' is-error' : ''}${iconState === 'refreshing' ? ' is-refreshing' : ''}`}
         type="button"
-        onClick={onRefresh}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+        onClick={() => {
+          if (suppressNextClick.current) {
+            suppressNextClick.current = false
+            return
+          }
+          onRefresh()
+        }}
+        onKeyDown={(event) => {
+          if (event.shiftKey && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault()
+            if (!event.repeat) onChange(!enabled)
+          }
+        }}
         disabled={refreshing || refreshDisabled}
         aria-label={actionLabel}
-        title={actionLabel}
+        aria-describedby={`${id}-instructions`}
+        aria-keyshortcuts="Shift+Enter Shift+Space"
+        title={`${actionLabel}. ${copy.refresh.holdToChange}`}
       >
-        <span className={`dashboard-refresh-icons is-${iconState}`} aria-hidden="true">
+        <span className="sr-only" id={`${id}-instructions`}>
+          {enabled ? copy.refresh.autoFetchEnabled : copy.refresh.autoFetchDisabled} {copy.refresh.holdToChange} {copy.refresh.keyboardToggle}
+        </span>
+        <span className={`dashboard-refresh-icons is-${iconState}${showAutoFetchSwitch ? ' is-hidden' : ''}`} aria-hidden="true">
           <FontAwesomeIcon className="dashboard-refresh-icon is-rotate" icon={faRotate} />
           <FontAwesomeIcon className="dashboard-refresh-icon is-check" icon={faCheck} />
+        </span>
+        <span className={`dashboard-auto-fetch-reveal${showAutoFetchSwitch ? ' is-visible' : ''}`} aria-hidden="true">
+          <span className={`dashboard-auto-fetch-track${enabled ? ' is-enabled' : ''}`}>
+            <span className="dashboard-auto-fetch-thumb" />
+          </span>
         </span>
       </button>
     </div>

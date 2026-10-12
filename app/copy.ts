@@ -47,9 +47,11 @@ export const copy = {
     authorizationComplete: 'Spotify-anslutningen uppdaterades. Kontrollera behörigheterna nedan.',
   },
   refresh: {
-    auto: 'Auto',
     updateControls: 'Uppdateringskontroller för {label}',
-    fetchAutomatically: 'Hämta {label} automatiskt',
+    autoFetchEnabled: 'Automatisk hämtning är aktiverad.',
+    autoFetchDisabled: 'Automatisk hämtning är inaktiverad.',
+    holdToChange: 'Håll in och dra åt vänster eller höger för att ändra automatisk hämtning.',
+    keyboardToggle: 'Tryck Skift+Enter för att växla automatisk hämtning.',
     retry: 'Försök igen: {label}',
     updating: 'Uppdaterar {label}',
   },
