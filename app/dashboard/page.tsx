@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGauge, faMusic, faPlus, faPrint, faTrain, faVolumeHigh, faWind } from '@fortawesome/free-solid-svg-icons'
+import { faGauge, faGear, faMusic, faPlus, faPrint, faTrain, faVolumeHigh, faWind } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import Link from 'next/link'
 import CustomTimeTable from '@/app/components/TimeTable/CustomTimeTable'
 import CastPanel from './CastPanel'
 import SpotifyPanel from './SpotifyPanel'
@@ -386,11 +387,11 @@ export default function Page() {
   ]
 
   const selectedLayout = {
+    widgets: <WidgetsLayout panels={panels} />,
     pages: <PagesLayout panels={panels} />,
     apps: <AppsLayout panels={panels} />,
     tabs: <TabsLayout panels={panels} />,
     expandable: <ExpandableLayout panels={panels} />,
-    widgets: <WidgetsLayout panels={panels} />,
   }[layoutMode]
 
   return (
@@ -413,6 +414,9 @@ export default function Page() {
               {layoutOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
             </select>
           </label>
+          <Link className="dashboard-settings-link" href="/settings" aria-label={copy.dashboard.settings} title={copy.dashboard.settings}>
+            <FontAwesomeIcon icon={faGear} aria-hidden="true" />
+          </Link>
         </header>
 
         <div className="dashboard-layout-stage" aria-live="off">{selectedLayout}</div>

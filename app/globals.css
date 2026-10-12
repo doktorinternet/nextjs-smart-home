@@ -287,6 +287,23 @@ body {
 
 .dashboard-layout-picker option { color: #f7f5f2; background: #202638; }
 
+.dashboard-settings-link {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  color: var(--dashboard-ink);
+  background: rgba(255, 255, 255, .06);
+  font-size: 17px;
+  text-decoration: none;
+}
+
+.dashboard-settings-link:hover { background: rgba(255, 255, 255, .12); }
+.dashboard-settings-link:focus-visible { outline: 2px solid var(--dashboard-accent); outline-offset: 2px; }
+
 .dashboard-layout-stage,
 .dashboard-layout-stage > * {
   width: 100%;

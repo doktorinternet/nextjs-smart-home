@@ -23,7 +23,16 @@ type SpotifyConfig = {
   tokenStorePath: string;
 };
 
-type StoredRefreshToken = { refreshToken: string; storedAt: string };
+type StoredRefreshToken = { refreshToken: string; grantedScopes?: string[]; storedAt: string };
+
+export const expectedSpotifyScopes = [
+  'user-read-playback-state',
+  'user-modify-playback-state',
+  'playlist-read-private',
+  'playlist-read-collaborative',
+  'user-library-read',
+  'user-read-playback-position',
+] as const;
 
 export class SpotifyAuthConfigError extends Error {
   constructor() {
@@ -33,9 +42,12 @@ export class SpotifyAuthConfigError extends Error {
 }
 
 export class SpotifyTokenRequestError extends Error {
-  constructor(readonly status: number) {
+  readonly status: number;
+
+  constructor(status: number) {
     super('Spotify token request failed');
     this.name = 'SpotifyTokenRequestError';
+    this.status = status;
   }
 }
 
@@ -79,7 +91,7 @@ export function assertSpotifyAuthConfigured(): void {
 
 export function getSpotifyPostAuthUrl(): URL {
   const config = getConfig();
-  return new URL('/dashboard?spotify=connected', new URL(config.redirectUri).origin);
+  return new URL('/settings?spotify=connected', new URL(config.redirectUri).origin);
 }
 
 export function getSpotifyStateCookieOptions() {
@@ -108,7 +120,8 @@ export function createSpotifyAuthorizationRequest() {
     client_id: config.clientId,
     response_type: 'code',
     redirect_uri: config.redirectUri,
-    scope: 'user-read-playback-state user-modify-playback-state playlist-read-private user-library-read',
+    scope: expectedSpotifyScopes.join(' '),
+    show_dialog: 'true',
     state,
   }).toString();
   return { url: url.toString(), signedState };
@@ -166,11 +179,12 @@ function decryptRefreshToken(envelope: string, key: Buffer): string {
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
 }
 
-async function storeRefreshToken(refreshToken: string, config: SpotifyConfig): Promise<void> {
+async function storeRefreshToken(refreshToken: string, config: SpotifyConfig, grantedScopes?: string[]): Promise<void> {
   const directory = dirname(config.tokenStorePath);
   await mkdir(directory, { recursive: true, mode: 0o700 });
   const contents = JSON.stringify({
     refreshToken: encryptRefreshToken(refreshToken, config.encryptionKey),
+    ...(grantedScopes === undefined ? {} : { grantedScopes }),
     storedAt: new Date().toISOString(),
   } satisfies StoredRefreshToken);
   const temporaryPath = `${config.tokenStorePath}.${randomBytes(12).toString('hex')}.tmp`;
@@ -184,8 +198,14 @@ async function storeRefreshToken(refreshToken: string, config: SpotifyConfig): P
   }
 }
 
-async function loadRefreshToken(config: SpotifyConfig): Promise<string> {
-  const contents = await readFile(config.tokenStorePath, 'utf8');
+async function loadStoredAuthorization(config: SpotifyConfig): Promise<StoredRefreshToken | null> {
+  let contents: string;
+  try {
+    contents = await readFile(config.tokenStorePath, 'utf8');
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') return null;
+    throw error;
+  }
   const stored: unknown = JSON.parse(contents);
   if (
     typeof stored !== 'object' || stored === null ||
@@ -193,7 +213,15 @@ async function loadRefreshToken(config: SpotifyConfig): Promise<string> {
   ) {
     throw new Error('Stored Spotify credentials are invalid');
   }
-  return decryptRefreshToken(stored.refreshToken, config.encryptionKey);
+  const grantedScopes = 'grantedScopes' in stored && Array.isArray(stored.grantedScopes) &&
+    stored.grantedScopes.every((scope) => typeof scope === 'string')
+    ? stored.grantedScopes
+    : undefined;
+  return {
+    refreshToken: decryptRefreshToken(stored.refreshToken, config.encryptionKey),
+    ...(grantedScopes === undefined ? {} : { grantedScopes }),
+    storedAt: 'storedAt' in stored && typeof stored.storedAt === 'string' ? stored.storedAt : '',
+  };
 }
 
 async function postTokenRequest(body: URLSearchParams, config: SpotifyConfig): Promise<Record<string, unknown>> {
@@ -225,23 +253,47 @@ export async function exchangeSpotifyAuthorizationCode(code: string): Promise<vo
   if (typeof result.refresh_token !== 'string' || !result.refresh_token) {
     throw new Error('Spotify did not return a refresh token');
   }
-  await storeRefreshToken(result.refresh_token, config);
+  const grantedScopes = typeof result.scope === 'string'
+    ? [...new Set(result.scope.split(/\s+/).filter(Boolean))]
+    : [];
+  await storeRefreshToken(result.refresh_token, config, grantedScopes);
+}
+
+export async function getSpotifyPermissionStatus() {
+  const config = getConfig();
+  const stored = await loadStoredAuthorization(config);
+  const grantedScopes = stored?.grantedScopes ?? [];
+  const missingScopes = expectedSpotifyScopes.filter((scope) => !grantedScopes.includes(scope));
+  const status = !stored?.grantedScopes
+    ? 'unverified'
+    : missingScopes.length === 0
+      ? 'complete'
+      : 'missing';
+
+  return {
+    status,
+    connected: Boolean(stored),
+    expectedScopes: expectedSpotifyScopes,
+    grantedScopes,
+    missingScopes,
+  } as const;
 }
 
 /** Returns an access token for server-side callers only; routes must never serialize it. */
 export async function refreshSpotifyAccessToken(): Promise<{ accessToken: string; expiresIn: number }> {
   const config = getConfig();
-  const oldRefreshToken = await loadRefreshToken(config);
+  const stored = await loadStoredAuthorization(config);
+  if (!stored) throw new Error('Stored Spotify credentials are unavailable');
   const result = await postTokenRequest(new URLSearchParams({
     grant_type: 'refresh_token',
-    refresh_token: oldRefreshToken,
+    refresh_token: stored.refreshToken,
   }), config);
   if (typeof result.access_token !== 'string' || !result.access_token) {
     throw new Error('Spotify did not return an access token');
   }
 
   if (typeof result.refresh_token === 'string' && result.refresh_token) {
-    await storeRefreshToken(result.refresh_token, config);
+    await storeRefreshToken(result.refresh_token, config, stored.grantedScopes);
   }
 
   return {
