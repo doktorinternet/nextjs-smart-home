@@ -619,7 +619,7 @@ body {
   align-items: center;
   min-width: 0;
 }
-.spotify-now-playing.is-device-expanded { align-items: start; row-gap: 8px; }
+.spotify-now-playing.is-device-expanded { align-items: center; row-gap: 8px; }
 .spotify-current-art,
 .spotify-current-art-empty {
   display: grid;

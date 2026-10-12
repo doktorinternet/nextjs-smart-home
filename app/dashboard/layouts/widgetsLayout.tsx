@@ -25,13 +25,16 @@ export const widgetsLayoutConfig: WidgetsZone[] = [
 ]
 
 export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel[] }) {
-  const [activePages, setActivePages] = useState<Record<string, number>>({})
+  const [activePages, setActivePages] = useState<Record<string, { index: number; direction: number }>>({})
   const touchStarts = useRef<Record<string, { x: number; y: number } | null>>({})
   const featureWeight = widgetsLayoutConfig.find((zone) => zone.size === 'feature')?.rowWeight ?? 1
   const standardWeight = widgetsLayoutConfig.find((zone) => zone.size === 'standard')?.rowWeight ?? 1
 
   function selectPage(zoneId: string, index: number) {
-    setActivePages((current) => ({ ...current, [zoneId]: index }))
+    setActivePages((current) => {
+      const previous = current[zoneId] ?? { index: 0, direction: 1 }
+      return { ...current, [zoneId]: { index, direction: index >= previous.index ? 1 : -1 } }
+    })
   }
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>, zoneId: string) {
@@ -61,7 +64,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
         const zonePanels = zone.panelIds
           .map((panelId) => panels.find((panel) => panel.id === panelId))
           .filter((panel): panel is DashboardLayoutPanel => panel !== undefined)
-        const activeIndex = Math.min(activePages[zone.id] ?? 0, Math.max(0, zonePanels.length - 1))
+        const activeIndex = Math.min(activePages[zone.id]?.index ?? 0, Math.max(0, zonePanels.length - 1))
 
         return (
           <section className={styles.zone} data-size={zone.size} key={zone.id} aria-label={`${zone.label} widgets`}>
@@ -92,6 +95,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
 
             <div
               className={styles.stage}
+              data-direction={activePages[zone.id]?.direction > 0 ? 'forward' : 'backward'}
               onPointerDown={(event) => handlePointerDown(event, zone.id)}
               onPointerUp={(event) => handlePointerUp(event, zone, activeIndex)}
               onPointerCancel={() => { touchStarts.current[zone.id] = null }}

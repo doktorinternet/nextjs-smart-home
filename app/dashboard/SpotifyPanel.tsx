@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import {
@@ -251,6 +252,7 @@ function CoverCard({
 
 export default function SpotifyPanel() {
   const autoFetch = useAutoFetch('dashboard.autoFetch.spotify')
+  const shouldReduceMotion = useReducedMotion()
   const [playback, setPlayback] = useState<SpotifyPlayback | null>(null)
   const [devices, setDevices] = useState<SpotifyDevice[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState('')
@@ -517,34 +519,46 @@ export default function SpotifyPanel() {
             <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
             <span className="spotify-chevron" aria-hidden="true">⌄</span>
           </button>
-          {devicePickerExpanded && devices.length > 0 && (
-            <div className="spotify-device-picker" id="spotify-device-list">
-              <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
-              <div className="spotify-device-grid">
-                {devices.map((device) => {
-                  const active = device.id === playback?.device?.id
-                  return (
-                    <button
-                      className={'spotify-device-tile' + (active ? ' is-active' : '')}
-                      type="button"
-                      key={device.id}
-                      onClick={() => {
-                        setSelectedDeviceId(device.id)
-                        if (device.volume_percent != null) setVolume(device.volume_percent)
-                        if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
-                      }}
-                      disabled={controlsDisabled || device.is_restricted === true}
-                      aria-pressed={active}
-                    >
-                      <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
-                      <span>{device.name}</span>
-                      <small>{active ? copy.spotify.active : device.type}</small>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+          <AnimatePresence initial={false}>
+            {devicePickerExpanded && devices.length > 0 && (
+              <motion.div
+                key="spotify-device-list"
+                id="spotify-device-list"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={shouldReduceMotion ? { duration: 0 } : { duration: .24, ease: 'easeInOut' }}
+                style={{ gridColumn: '1 / -1', overflow: 'hidden' }}
+              >
+                <div className="spotify-device-picker">
+                  <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
+                  <div className="spotify-device-grid">
+                    {devices.map((device) => {
+                      const active = device.id === playback?.device?.id
+                      return (
+                        <button
+                          className={'spotify-device-tile' + (active ? ' is-active' : '')}
+                          type="button"
+                          key={device.id}
+                          onClick={() => {
+                            setSelectedDeviceId(device.id)
+                            if (device.volume_percent != null) setVolume(device.volume_percent)
+                            if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
+                          }}
+                          disabled={controlsDisabled || device.is_restricted === true}
+                          aria-pressed={active}
+                        >
+                          <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
+                          <span>{device.name}</span>
+                          <small>{active ? copy.spotify.active : device.type}</small>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -638,45 +652,56 @@ export default function SpotifyPanel() {
           ><FontAwesomeIcon icon={faBookOpen} aria-hidden="true" />{copy.spotify.spoken}</button>
         </div>
 
-        {!devicePickerExpanded && <>
-        {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
+        <AnimatePresence initial={false}>
+          {!devicePickerExpanded && (
+            <motion.div
+              key="spotify-library-content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={shouldReduceMotion ? { duration: 0 } : { duration: .2, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
 
-        {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (
-          library.items.length > 0
-            ? <div className="spotify-content-row">{library.items.map(renderPlaylist)}</div>
-            : <p className="spotify-hint">{copy.spotify.noPlaylists}</p>
-        )}
+              {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (
+                library.items.length > 0
+                  ? <div className="spotify-content-row">{library.items.map(renderPlaylist)}</div>
+                  : <p className="spotify-hint">{copy.spotify.noPlaylists}</p>
+              )}
 
-        {!libraryError && libraryKind === 'spoken' && loadedLibrary.has('spoken') && (
-          <div className="spotify-spoken-content">
-            {spokenAvailability.episodes && library.episodes.length > 0 && (
-              <>
-                <h3 className="spotify-section-label">{copy.spotify.podcasts}</h3>
-                <div className="spotify-content-row">{library.episodes.map(renderEpisode)}</div>
-              </>
-            )}
-            {spokenAvailability.audiobooks && library.audiobooks.length > 0 && (
-              <>
-                <h3 className="spotify-section-label">{copy.spotify.audiobooks}</h3>
-                <div className="spotify-content-row">
-                  {library.audiobooks.map((book) => (
-                    <CoverCard key={book.id} href={book.externalUrl} image={book.images[0]?.url} title={book.name} subtitle={book.authors || copy.spotify.audiobooks}>
-                      <a className="spotify-card-play" href={book.externalUrl} target="_blank" rel="noreferrer">{copy.spotify.openSpotify}</a>
-                    </CoverCard>
-                  ))}
+              {!libraryError && libraryKind === 'spoken' && loadedLibrary.has('spoken') && (
+                <div className="spotify-spoken-content">
+                  {spokenAvailability.episodes && library.episodes.length > 0 && (
+                    <>
+                      <h3 className="spotify-section-label">{copy.spotify.podcasts}</h3>
+                      <div className="spotify-content-row">{library.episodes.map(renderEpisode)}</div>
+                    </>
+                  )}
+                  {spokenAvailability.audiobooks && library.audiobooks.length > 0 && (
+                    <>
+                      <h3 className="spotify-section-label">{copy.spotify.audiobooks}</h3>
+                      <div className="spotify-content-row">
+                        {library.audiobooks.map((book) => (
+                          <CoverCard key={book.id} href={book.externalUrl} image={book.images[0]?.url} title={book.name} subtitle={book.authors || copy.spotify.audiobooks}>
+                            <a className="spotify-card-play" href={book.externalUrl} target="_blank" rel="noreferrer">{copy.spotify.openSpotify}</a>
+                          </CoverCard>
+                        ))}
+                      </div>
+                      <p className="spotify-hint">{copy.spotify.audiobookOpenOnly}</p>
+                    </>
+                  )}
+                  {!spokenAvailability.episodes && !spokenAvailability.audiobooks &&
+                    <p className="spotify-hint">{copy.spotify.libraryPermission}</p>}
+                  {spokenAvailability.episodes && library.episodes.length === 0 &&
+                    <p className="spotify-hint">{copy.spotify.noEpisodes}</p>}
+                  {spokenAvailability.audiobooks && library.audiobooks.length === 0 &&
+                    <p className="spotify-hint">{copy.spotify.noAudiobooks}</p>}
                 </div>
-                <p className="spotify-hint">{copy.spotify.audiobookOpenOnly}</p>
-              </>
-            )}
-            {!spokenAvailability.episodes && !spokenAvailability.audiobooks &&
-              <p className="spotify-hint">{copy.spotify.libraryPermission}</p>}
-            {spokenAvailability.episodes && library.episodes.length === 0 &&
-              <p className="spotify-hint">{copy.spotify.noEpisodes}</p>}
-            {spokenAvailability.audiobooks && library.audiobooks.length === 0 &&
-              <p className="spotify-hint">{copy.spotify.noAudiobooks}</p>}
-          </div>
-        )}
-        </>}
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       <p className="spotify-status" role="status" aria-live="polite">{message}</p>

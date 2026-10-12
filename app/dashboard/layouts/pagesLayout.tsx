@@ -23,11 +23,19 @@ const pages: PageDefinition[] = [
 ]
 
 export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[] }) {
-  const [activePage, setActivePage] = useState(0)
+  const [pageState, setPageState] = useState({ index: 0, direction: 1 })
+  const activePage = pageState.index
   const touchStart = useRef<{ x: number; y: number } | null>(null)
 
+  const selectPage = (index: number) => {
+    setPageState((current) => {
+      const nextIndex = Math.min(pages.length - 1, Math.max(0, index))
+      return { index: nextIndex, direction: nextIndex >= current.index ? 1 : -1 }
+    })
+  }
+
   const movePage = (direction: -1 | 1) => {
-    setActivePage((current) => Math.min(pages.length - 1, Math.max(0, current + direction)))
+    selectPage(activePage + direction)
   }
 
   const handleTouchStart = (event: PointerEvent<HTMLElement>) => {
@@ -67,7 +75,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
       onPointerCancel={() => { touchStart.current = null }}
     >
       <section className={styles.page} aria-label={`${pages[activePage].label} dashboard page`}>
-        <div className={styles.panels} data-page={activePage}>
+        <div className={styles.panels} data-page={activePage} data-direction={pageState.direction > 0 ? 'forward' : 'backward'}>
           {panels.map((panel) => {
             const isVisible = pages[activePage].panelIds.includes(panel.id)
             return (
@@ -103,7 +111,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
                 key={page.label}
                 aria-label={`${page.label} page, ${index + 1} of ${pages.length}`}
                 aria-current={activePage === index ? 'page' : undefined}
-                onClick={() => setActivePage(index)}
+                onClick={() => selectPage(index)}
               >
                 <span className={styles.dot} aria-hidden="true" />
               </button>

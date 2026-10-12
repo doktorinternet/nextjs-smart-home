@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import styles from './expandableLayout.module.css'
 
 type DashboardLayoutPanel = {
@@ -17,15 +18,20 @@ type ExpandableLayoutProps = {
 
 export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
   const [selectedIds, setSelectedIds] = useState<DashboardLayoutPanel['id'][]>(['transit', 'air'])
+  const [hiddenIds, setHiddenIds] = useState<DashboardLayoutPanel['id'][]>(() =>
+    panels.filter((panel) => !['transit', 'air'].includes(panel.id)).map((panel) => panel.id),
+  )
+  const shouldReduceMotion = useReducedMotion()
 
   function togglePanel(id: DashboardLayoutPanel['id']) {
-    setSelectedIds((current) => {
-      if (current.includes(id)) {
-        // Keep one panel visible so the main area never becomes an empty shell.
-        return current.length === 1 ? current : current.filter((selectedId) => selectedId !== id)
-      }
-      return [...current, id]
-    })
+    if (selectedIds.includes(id)) {
+      if (selectedIds.length === 1) return
+      setSelectedIds((current) => current.filter((selectedId) => selectedId !== id))
+      return
+    }
+
+    setHiddenIds((current) => current.filter((hiddenId) => hiddenId !== id))
+    setSelectedIds((current) => [...current, id])
   }
 
   return (
@@ -55,15 +61,26 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
         {panels.map((panel) => {
           const selected = selectedIds.includes(panel.id)
           return (
-            <div
+            <motion.div
               className={styles.panel}
               key={panel.id}
+              layout
+              animate={{ opacity: selected ? 1 : 0 }}
+              transition={shouldReduceMotion
+                ? { duration: 0 }
+                : { layout: { type: 'spring', stiffness: 320, damping: 34 }, opacity: { duration: .2 } }}
+              data-selected={selected}
               aria-label={panel.label}
               aria-hidden={!selected}
-              hidden={!selected}
+              hidden={!selected && hiddenIds.includes(panel.id)}
+              onAnimationComplete={() => {
+                if (!selected) {
+                  setHiddenIds((current) => current.includes(panel.id) ? current : [...current, panel.id])
+                }
+              }}
             >
               <div className={styles.panelContent}>{panel.content}</div>
-            </div>
+            </motion.div>
           )
         })}
       </div>

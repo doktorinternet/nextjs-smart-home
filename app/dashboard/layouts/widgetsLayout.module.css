@@ -93,6 +93,24 @@
   touch-action: pan-y;
 }
 
+.stage[data-direction='forward'] .panel:not([hidden]) {
+  animation: widget-enter-forward .26s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.stage[data-direction='backward'] .panel:not([hidden]) {
+  animation: widget-enter-backward .26s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+@keyframes widget-enter-forward {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes widget-enter-backward {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
 .panel {
   box-sizing: border-box;
   width: 100%;
@@ -145,4 +163,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .arrow { scroll-behavior: auto; }
+  .stage[data-direction] .panel:not([hidden]) { animation: none; }
 }
