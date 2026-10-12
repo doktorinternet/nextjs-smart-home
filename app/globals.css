@@ -700,8 +700,17 @@ body {
   background: rgba(255,255,255,.045);
   font-size: 20px;
   cursor: pointer;
+  transition: opacity .24s ease-in-out;
 }
 .spotify-playback-controls button.is-active { color: #52df91; border-color: rgba(82,223,145,.5); background: rgba(50,205,112,.1); }
+.spotify-playback-controls button.is-pending { opacity: .72; }
+.spotify-playback-controls button.is-pending > svg { animation: spotify-control-spin .9s linear infinite; }
+.spotify-playback-controls button.is-pending-previous > svg { animation-direction: reverse; }
+@keyframes spotify-control-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spotify-playback-controls button { transition: none; }
+  .spotify-playback-controls button.is-pending > svg { animation: none; }
+}
 .spotify-playback-controls button:disabled,
 .spotify-device-summary:disabled { opacity: .45; cursor: not-allowed; }
 .spotify-playback-controls .spotify-primary-control { width: 68px; height: 68px; min-height: 68px; justify-self: center; border: 0; border-radius: 50%; color: #092114; background: #52df91; font-size: 25px; }

@@ -165,7 +165,13 @@ export const copy = {
     invalidDevices: 'Spotify returnerade en ogiltig enhetslista.',
     unavailable: 'Spotify-spelaren är inte tillgänglig.',
     commandFailed: 'Spotify-kommandot misslyckades. Kontrollera anslutningen och försök igen.',
+    commandTimedOut: 'Spotify svarade inte inom tidsgränsen. Uppspelningen kan ändå ha ändrats.',
     unreachable: 'Det gick inte att nå Spotify. Kontrollera anslutningen och försök igen.',
+    pendingCommands: {
+      previous: 'Byter till föregående spår…',
+      next: 'Byter till nästa spår…',
+      playback: 'Uppdaterar uppspelningen…',
+    },
     commandMessages: {
       pause: 'Uppspelningen pausades.',
       resume: 'Uppspelningen återupptogs.',

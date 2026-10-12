@@ -13,6 +13,9 @@ import {
   faPause,
   faPlay,
   faRepeat,
+  faRotateLeft,
+  faRotateRight,
+  faSpinner,
   faShuffle,
   faTv,
   faVolumeHigh,
@@ -80,6 +83,7 @@ type SpotifyPlayback = {
 }
 type LibraryKind = 'playlists' | 'spoken'
 type CommandPath = 'pause' | 'resume' | 'previous' | 'next' | 'transfer' | 'volume' | 'shuffle' | 'repeat' | 'seek' | 'play'
+type TransportAction = 'previous' | 'next' | 'playback'
 type PlaylistPage = { items: SpotifyPlaylist[] }
 type SpokenPage = { episodes: SpotifyEpisode[]; audiobooks: SpotifyAudiobook[] }
 
@@ -201,6 +205,18 @@ function durationLabel(milliseconds: number | null | undefined): string {
   return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0')
 }
 
+function withOptimisticPlaybackState(playback: SpotifyPlayback, isPlaying: boolean): SpotifyPlayback {
+  const allowedAction = isPlaying ? 'resuming' : 'pausing'
+  return {
+    ...playback,
+    is_playing: isPlaying,
+    actions: {
+      ...playback.actions,
+      disallows: { ...playback.actions?.disallows, [allowedAction]: false },
+    },
+  }
+}
+
 function deviceIcon(device: SpotifyDevice | null): IconDefinition {
   const type = device?.type.toLowerCase() ?? ''
   if (type.includes('phone') || type.includes('mobile')) return faMobileScreenButton
@@ -261,9 +277,8 @@ export default function SpotifyPanel() {
   const [positionMs, setPositionMs] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [refreshToken, setRefreshToken] = useState(0)
+  const [pendingTransport, setPendingTransport] = useState<{ id: number; action: TransportAction } | null>(null)
   const [libraryKind, setLibraryKind] = useState<LibraryKind>('playlists')
   const [library, setLibrary] = useState<PlaylistPage & SpokenPage>({
     items: [],
@@ -276,8 +291,19 @@ export default function SpotifyPanel() {
   const [spokenAvailability, setSpokenAvailability] = useState({ episodes: true, audiobooks: true })
   const volumeTimer = useRef<number | null>(null)
   const libraryCache = useRef(new Set<LibraryKind>())
+  const refreshInFlight = useRef(false)
+  const selectedDeviceIdRef = useRef('')
+  const transportRequestId = useRef(0)
+  const volumeRef = useRef(50)
+  const queueVolumeCommandRef = useRef<(deviceId: string, value: number, quiet?: boolean) => void>(() => {})
+  const volumeCommandQueue = useRef<Promise<void>>(Promise.resolve())
+  const optimisticVolume = useRef<{ deviceId: string; value: number; since: number } | null>(null)
+  const optimisticPlayback = useRef<{ isPlaying: boolean; since: number } | null>(null)
+  const pendingVolumeRestore = useRef<string | null>(null)
 
   const refresh = useCallback(async () => {
+    if (refreshInFlight.current) return
+    refreshInFlight.current = true
     setLoading(true)
     try {
       const [playbackResponse, devicesResponse] = await Promise.all([
@@ -292,18 +318,62 @@ export default function SpotifyPanel() {
       const deviceList = isRecord(devicesResult) ? devicesResult.devices : null
       if (!Array.isArray(deviceList) || !deviceList.every(isDevice)) throw new Error(copy.spotify.invalidDevices)
       const activeId = playbackResult?.device?.id || deviceList.find((device) => device.is_active)?.id
-      setPlayback(playbackResult)
+      const currentSelectedId = selectedDeviceIdRef.current
+      const nextSelectedId = deviceList.some((device) => device.id === currentSelectedId)
+        ? currentSelectedId
+        : activeId || deviceList[0]?.id || ''
+      selectedDeviceIdRef.current = nextSelectedId
+      setSelectedDeviceId(nextSelectedId)
+      const playbackOverride = optimisticPlayback.current
+      let nextPlayback = playbackResult
+      if (playbackOverride) {
+        if (playbackResult?.is_playing === playbackOverride.isPlaying) {
+          optimisticPlayback.current = null
+        } else if (Date.now() - playbackOverride.since < 12_000) {
+          nextPlayback = playbackResult
+            ? withOptimisticPlaybackState(playbackResult, playbackOverride.isPlaying)
+            : null
+        } else {
+          optimisticPlayback.current = null
+        }
+      }
+      setPlayback((current) => nextPlayback ?? (playbackOverride && Date.now() - playbackOverride.since < 12_000
+        ? current ? withOptimisticPlaybackState(current, playbackOverride.isPlaying) : null
+        : null))
       setDevices(deviceList)
-      setSelectedDeviceId((current) => activeId || current || deviceList[0]?.id || '')
-      const activeDevice = deviceList.find((device) => device.id === (activeId || selectedDeviceId))
-      if (activeDevice?.volume_percent != null) setVolume(activeDevice.volume_percent)
+      const selectedDevice = deviceList.find((device) => device.id === nextSelectedId)
+      if (optimisticVolume.current && Date.now() - optimisticVolume.current.since >= 30_000) {
+        optimisticVolume.current = null
+      }
+      const volumeOverride = optimisticVolume.current?.deviceId === nextSelectedId
+        ? optimisticVolume.current
+        : null
+      if (volumeOverride && selectedDevice?.volume_percent === volumeOverride.value) {
+        volumeRef.current = volumeOverride.value
+        setVolume(selectedDevice.volume_percent)
+        optimisticVolume.current = null
+      } else if (volumeOverride) {
+        volumeRef.current = volumeOverride.value
+        setVolume(volumeOverride.value)
+      } else if (selectedDevice?.volume_percent != null) {
+        volumeRef.current = selectedDevice.volume_percent
+        setVolume(selectedDevice.volume_percent)
+      }
+      const volumeRestoreDeviceId = pendingVolumeRestore.current
+      if (playbackResult?.is_playing && volumeRestoreDeviceId && activeId === volumeRestoreDeviceId) {
+        pendingVolumeRestore.current = null
+        const desiredVolume = volumeRef.current
+        optimisticVolume.current = { deviceId: volumeRestoreDeviceId, value: desiredVolume, since: Date.now() }
+        queueVolumeCommandRef.current(volumeRestoreDeviceId, desiredVolume, true)
+      }
       setError(null)
     } catch {
       setError(copy.spotify.unavailable)
     } finally {
+      refreshInFlight.current = false
       setLoading(false)
     }
-  }, [selectedDeviceId])
+  }, [])
 
   const loadLibrary = useCallback(async (kind: LibraryKind, force = false) => {
     if (!force && libraryCache.current.has(kind)) return
@@ -348,7 +418,7 @@ export default function SpotifyPanel() {
     void refresh()
     const interval = window.setInterval(() => void refresh(), 15_000)
     return () => window.clearInterval(interval)
-  }, [autoFetch.ready, autoFetch.enabled, refresh, refreshToken])
+  }, [autoFetch.ready, autoFetch.enabled, refresh])
 
   useEffect(() => {
     if (autoFetch.ready && autoFetch.enabled) void loadLibrary(libraryKind)
@@ -371,36 +441,75 @@ export default function SpotifyPanel() {
     return () => window.clearInterval(interval)
   }, [playback?.is_playing, playback?.item?.duration_ms])
 
-  async function sendCommand(path: CommandPath, payload: Record<string, unknown>, successMessage?: string): Promise<boolean> {
-    if (busy) return false
-    setBusy(true)
-    setMessage(null)
+  function queueVolumeCommand(deviceId: string, value: number, quiet = false) {
+    volumeCommandQueue.current = volumeCommandQueue.current.then(async () => {
+      await sendCommand('volume', { deviceId, volumePercent: value }, quiet ? undefined : copy.spotify.volumeUpdated, undefined, quiet)
+    })
+  }
+  queueVolumeCommandRef.current = queueVolumeCommand
+
+  function restoreVolumeAfterPlayback(deviceId: string) {
+    if (devices.find((device) => device.id === deviceId)?.supports_volume === false) return
+    pendingVolumeRestore.current = deviceId
+  }
+
+  async function sendCommand(
+    path: CommandPath,
+    payload: Record<string, unknown>,
+    successMessage?: string,
+    transportAction?: TransportAction,
+    quiet = false,
+  ): Promise<boolean> {
+    const requestId = transportAction ? ++transportRequestId.current : null
+    if (transportAction && requestId !== null) {
+      setPendingTransport({ id: requestId, action: transportAction })
+      setMessage(copy.spotify.pendingCommands[transportAction])
+    } else if (!quiet) {
+      setMessage(null)
+    }
+    const startsPlayback = path === 'resume' || path === 'play'
+    const targetDeviceId = typeof payload.deviceId === 'string' ? payload.deviceId : selectedDeviceIdRef.current
     try {
       const response = await fetch('/api/spotify/player/' + path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+      window.setTimeout(() => void refresh(), 1000)
       if (!response.ok) {
-        setMessage(response.status === 403 ? copy.spotify.premiumRequired : copy.spotify.commandFailed)
+        if ((path === 'pause' || path === 'resume') && response.status < 500) {
+          optimisticPlayback.current = null
+        }
+        if (startsPlayback && response.status >= 500 && targetDeviceId) restoreVolumeAfterPlayback(targetDeviceId)
+        if (!quiet) {
+          if (response.status === 504) setMessage(copy.spotify.commandTimedOut)
+          else setMessage(response.status === 403 ? copy.spotify.premiumRequired : copy.spotify.commandFailed)
+        }
         return false
       }
-      setMessage(successMessage ?? copy.spotify.commandSent)
-      window.setTimeout(() => setRefreshToken((value) => value + 1), 350)
+      if (startsPlayback && targetDeviceId) restoreVolumeAfterPlayback(targetDeviceId)
+      if (!quiet) setMessage(successMessage ?? copy.spotify.commandSent)
       return true
     } catch {
-      setMessage(copy.spotify.unreachable)
+      if (!quiet) setMessage(copy.spotify.unreachable)
+      window.setTimeout(() => void refresh(), 1000)
+      if (startsPlayback && targetDeviceId) restoreVolumeAfterPlayback(targetDeviceId)
       return false
     } finally {
-      setBusy(false)
+      if (requestId !== null) {
+        setPendingTransport((current) => current?.id === requestId ? null : current)
+      }
     }
   }
 
   function updateVolume(value: number) {
+    volumeRef.current = value
     setVolume(value)
+    optimisticVolume.current = { deviceId: selectedDeviceId, value, since: Date.now() }
     if (volumeTimer.current !== null) window.clearTimeout(volumeTimer.current)
     volumeTimer.current = window.setTimeout(() => {
-      void sendCommand('volume', { deviceId: selectedDeviceId, volumePercent: value }, copy.spotify.volumeUpdated)
+      const deviceId = selectedDeviceId
+      queueVolumeCommand(deviceId, value)
     }, 220)
   }
 
@@ -412,14 +521,35 @@ export default function SpotifyPanel() {
     void sendCommand('play', { deviceId: selectedDeviceId, uri: episode.uri }, copy.spotify.playContent)
   }
 
+  function togglePlayback() {
+    if (!playback) return
+    const isPlaying = !playback.is_playing
+    const pausePositionMs = positionMs
+    const deviceId = playbackDeviceId
+    optimisticPlayback.current = { isPlaying, since: Date.now() }
+    setPlayback((current) => current ? withOptimisticPlaybackState(current, isPlaying) : current)
+    const command = sendCommand(
+      isPlaying ? 'resume' : 'pause',
+      deviceId ? { deviceId } : {},
+      copy.spotify.commandMessages[isPlaying ? 'resume' : 'pause'],
+      'playback',
+    )
+    if (!isPlaying && deviceId) {
+      void command.then((succeeded) => {
+        if (succeeded) {
+          void sendCommand('seek', { deviceId, positionMs: pausePositionMs }, undefined, undefined, true)
+        }
+      })
+    }
+  }
+
   const selectedDevice = devices.find((device) => device.id === selectedDeviceId) ?? null
   const track = playback?.item ?? null
   const albumImage = track?.album?.images?.[0]?.url ?? track?.images?.[0]?.url
   const artistNames = track?.artists?.map((artist) => artist.name).join(', ') ||
     (track?.type === 'episode' ? track.show?.name : undefined)
   const duration = track?.duration_ms ?? 0
-  const controlsDisabled = busy || loading
-  const volumeDisabled = controlsDisabled || !selectedDeviceId || selectedDevice?.supports_volume === false
+  const volumeDisabled = !selectedDeviceId || selectedDevice?.supports_volume === false
   const disallowed = playback?.actions?.disallows ?? {}
   const playbackDeviceId = playback?.device?.id || selectedDeviceId
   const repeatState = playback?.repeat_state ?? 'off'
@@ -435,7 +565,7 @@ export default function SpotifyPanel() {
       <CoverCard
         key={playlist.id}
         onClick={() => playPlaylist(playlist)}
-        disabled={controlsDisabled || !selectedDeviceId}
+        disabled={!selectedDeviceId}
         image={playlist.images[0]?.url}
         title={playlist.name}
         subtitle={playlist.totalTracks === null ? copy.spotify.playlists : String(playlist.totalTracks) + ' spår'}
@@ -452,7 +582,7 @@ export default function SpotifyPanel() {
         title={episode.name}
         subtitle={episode.showName}
       >
-        <button className="spotify-card-play" type="button" onClick={() => playEpisode(episode)} disabled={controlsDisabled || !selectedDeviceId || !episode.playable}>
+        <button className="spotify-card-play" type="button" onClick={() => playEpisode(episode)} disabled={!selectedDeviceId || !episode.playable}>
           <FontAwesomeIcon icon={faPlay} aria-hidden="true" /> {copy.spotify.playContent}
         </button>
       </CoverCard>
@@ -499,7 +629,7 @@ export default function SpotifyPanel() {
                 onChange={(event) => setPositionMs(Number(event.target.value))}
                 onPointerUp={commitSeek}
                 onKeyUp={commitSeek}
-                disabled={controlsDisabled || duration <= 0 || !playbackDeviceId || disallowed.seeking === true}
+                disabled={duration <= 0 || !playbackDeviceId || disallowed.seeking === true}
                 aria-label={copy.spotify.progress}
               />
               <span>{durationLabel(duration)}</span>
@@ -541,11 +671,15 @@ export default function SpotifyPanel() {
                           type="button"
                           key={device.id}
                           onClick={() => {
+                            selectedDeviceIdRef.current = device.id
                             setSelectedDeviceId(device.id)
-                            if (device.volume_percent != null) setVolume(device.volume_percent)
+                            if (device.volume_percent != null) {
+                              volumeRef.current = device.volume_percent
+                              setVolume(device.volume_percent)
+                            }
                             if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
                           }}
-                          disabled={controlsDisabled || device.is_restricted === true}
+                          disabled={device.is_restricted === true}
                           aria-pressed={active}
                         >
                           <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
@@ -567,36 +701,39 @@ export default function SpotifyPanel() {
           className={'spotify-secondary-control' + (playback?.shuffle_state ? ' is-active' : '')}
           type="button"
           onClick={() => void sendCommand('shuffle', { deviceId: playbackDeviceId, state: !playback?.shuffle_state }, playback?.shuffle_state ? copy.spotify.shuffleDisabled : copy.spotify.shuffleEnabled)}
-          disabled={controlsDisabled || !playbackDeviceId || disallowed.toggling_shuffle === true}
+          disabled={!playbackDeviceId || disallowed.toggling_shuffle === true}
           aria-label={copy.spotify.shuffle}
           aria-pressed={Boolean(playback?.shuffle_state)}
         ><FontAwesomeIcon icon={faShuffle} aria-hidden="true" /></button>
         <button
-          className="spotify-secondary-control"
+          className={'spotify-secondary-control' + (pendingTransport?.action === 'previous' ? ' is-pending is-pending-previous' : '')}
           type="button"
-          onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {})}
-          disabled={controlsDisabled || !playback || disallowed.skipping_prev === true}
+          onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.previous, 'previous')}
+          disabled={!playback || disallowed.skipping_prev === true}
           aria-label={copy.spotify.previous}
-        ><FontAwesomeIcon icon={faBackward} aria-hidden="true" /></button>
+          aria-busy={pendingTransport?.action === 'previous'}
+        ><FontAwesomeIcon icon={pendingTransport?.action === 'previous' ? faRotateLeft : faBackward} aria-hidden="true" /></button>
         <button
-          className="spotify-primary-control"
+          className={'spotify-primary-control' + (pendingTransport?.action === 'playback' ? ' is-pending' : '')}
           type="button"
-          onClick={() => void sendCommand(playback?.is_playing ? 'pause' : 'resume', playbackDeviceId ? { deviceId: playbackDeviceId } : {})}
-          disabled={controlsDisabled || !playback || disallowed[playback?.is_playing ? 'pausing' : 'resuming'] === true}
+          onClick={togglePlayback}
+          disabled={!playback || disallowed[playback?.is_playing ? 'pausing' : 'resuming'] === true}
           aria-label={playback?.is_playing ? copy.spotify.pause : copy.spotify.resume}
-        ><FontAwesomeIcon icon={playback?.is_playing ? faPause : faPlay} aria-hidden="true" /></button>
+          aria-busy={pendingTransport?.action === 'playback'}
+        ><FontAwesomeIcon icon={pendingTransport?.action === 'playback' ? faSpinner : playback?.is_playing ? faPause : faPlay} aria-hidden="true" /></button>
         <button
-          className="spotify-secondary-control"
+          className={'spotify-secondary-control' + (pendingTransport?.action === 'next' ? ' is-pending' : '')}
           type="button"
-          onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {})}
-          disabled={controlsDisabled || !playback || disallowed.skipping_next === true}
+          onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.next, 'next')}
+          disabled={!playback || disallowed.skipping_next === true}
           aria-label={copy.spotify.next}
-        ><FontAwesomeIcon icon={faBackward} className="spotify-next-icon" aria-hidden="true" /></button>
+          aria-busy={pendingTransport?.action === 'next'}
+        ><FontAwesomeIcon icon={pendingTransport?.action === 'next' ? faRotateRight : faBackward} className={pendingTransport?.action === 'next' ? undefined : 'spotify-next-icon'} aria-hidden="true" /></button>
         <button
           className={'spotify-secondary-control' + (repeatState !== 'off' ? ' is-active' : '')}
           type="button"
           onClick={() => void sendCommand('repeat', { deviceId: playbackDeviceId, state: repeatNext }, copy.spotify.repeatUpdated)}
-          disabled={controlsDisabled || !playbackDeviceId || disallowed.toggling_repeat_track === true}
+          disabled={!playbackDeviceId || disallowed.toggling_repeat_track === true}
           aria-label={repeatState === 'off' ? copy.spotify.repeatOff : repeatState === 'context' ? copy.spotify.repeatContext : copy.spotify.repeatTrack}
           aria-pressed={repeatState !== 'off'}
         ><FontAwesomeIcon icon={faRepeat} aria-hidden="true" />{repeatState === 'track' && <span className="spotify-repeat-one">1</span>}</button>

@@ -15,7 +15,7 @@ export class SpotifyPlayerError extends Error {
 
   constructor(
     status = 502,
-    stage: 'token_refresh' | 'player_api' | 'player_network' = 'player_api',
+    stage: 'token_refresh' | 'player_api' | 'player_network' | 'player_timeout' | 'player_response' = 'player_api',
     providerMessage?: string,
   ) {
     const safeErrors: Record<number, string> = {
@@ -26,6 +26,10 @@ export class SpotifyPlayerError extends Error {
     };
     const fallback = stage === 'token_refresh'
       ? 'Spotify access token refresh failed'
+      : stage === 'player_timeout'
+        ? 'Spotify player API request timed out'
+        : stage === 'player_response'
+          ? 'Spotify player API returned an invalid success response'
       : stage === 'player_network'
         ? 'Spotify player API request failed due to a network or timeout error'
         : status >= 400 && status <= 599
@@ -36,7 +40,7 @@ export class SpotifyPlayerError extends Error {
       ? `Spotify player API returned HTTP ${status}: ${safeProviderMessage}`
       : fallback));
     this.name = 'SpotifyPlayerError';
-    this.status = safeErrors[status] ? status : 502;
+    this.status = stage === 'player_timeout' ? 504 : safeErrors[status] ? status : 502;
   }
 }
 
@@ -70,6 +74,8 @@ async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, op
     throw new SpotifyPlayerError(502, 'token_refresh');
   }
 
+  const requestStartedAt = Date.now();
+  const timeoutSignal = AbortSignal.timeout(10_000);
   try {
     const response = await fetch(`${spotifyApiBase}${withQuery(endpoint, options.query ?? {})}`, {
       method,
@@ -79,7 +85,7 @@ async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, op
       },
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(10_000),
+      signal: timeoutSignal,
     });
 
     if (!response.ok) {
@@ -97,11 +103,37 @@ async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, op
       }
       throw new SpotifyPlayerError(response.status, 'player_api', providerMessage);
     }
-    if (response.status === 204) return null;
-    return await response.json();
+    if (response.status === 204 || method !== 'GET') return null;
+    const responseBody = await response.text();
+    if (responseBody.trim().length === 0) return null;
+    try {
+      return JSON.parse(responseBody) as unknown;
+    } catch (error) {
+      console.error('[spotify-player] invalid success response body', {
+        method,
+        endpoint,
+        status: response.status,
+        elapsedMs: Date.now() - requestStartedAt,
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+      });
+      throw new SpotifyPlayerError(502, 'player_response');
+    }
   } catch (error) {
     if (error instanceof SpotifyPlayerError) throw error;
-    throw new SpotifyPlayerError(502, 'player_network');
+    const timedOut = timeoutSignal.aborted || (error instanceof Error &&
+      (error.name === 'TimeoutError' || error.name === 'AbortError'));
+    const cause = error instanceof Error ? error.cause : undefined;
+    const errorCode = typeof cause === 'object' && cause !== null && 'code' in cause &&
+      typeof cause.code === 'string' ? cause.code : undefined;
+    console.error('[spotify-player] outbound request failed', {
+      method,
+      endpoint,
+      elapsedMs: Date.now() - requestStartedAt,
+      kind: timedOut ? 'timeout' : 'network',
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+      ...(errorCode ? { errorCode } : {}),
+    });
+    throw new SpotifyPlayerError(502, timedOut ? 'player_timeout' : 'player_network');
   }
 }
 
