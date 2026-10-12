@@ -3,13 +3,20 @@ import 'server-only';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute } from 'node:path';
-import { copy } from '@/app/copy';
+import { airMetricDefinitions } from '@/app/lib/air-metrics';
+import type { TelemetryRecord } from '@/app/lib/telemetry';
 
 const apiBase = 'https://api.developer.electrolux.one';
 type Config = { apiKey: string; encryptionKey: Buffer; tokenStorePath: string; initialRefreshToken?: string; applianceId?: string };
 type Appliance = { id: string; name: string };
 export type ElectroluxMetric = { label: string; value: string };
-export type ElectroluxStatus = { appliance: string; metrics: ElectroluxMetric[]; updatedAt: string };
+export type ElectroluxStatus = {
+  appliance: string;
+  metrics: ElectroluxMetric[];
+  updatedAt: string;
+  sourceId: string;
+  readings: TelemetryRecord[];
+};
 
 export class ElectroluxConfigError extends Error {
   constructor() {
@@ -19,8 +26,10 @@ export class ElectroluxConfigError extends Error {
 }
 
 export class ElectroluxApiError extends Error {
-  constructor(message = 'Electrolux service is unavailable', readonly status = 502) {
+  readonly status: number;
+  constructor(message = 'Electrolux service is unavailable', status = 502) {
     super(message);
+    this.status = status;
     this.name = 'ElectroluxApiError';
   }
 }
@@ -153,7 +162,7 @@ async function request(path: string, config: Config, accessToken?: string, init?
       // Some unsuccessful Electrolux responses have no JSON body.
     }
     const detail = message ? `: ${message}` : '';
-    throw new ElectroluxApiError(`Electrolux ${label} returned HTTP ${response.status}${detail}`, response.status === 429 ? 429 : 502);
+    throw new ElectroluxApiError(`Electrolux ${label} returned HTTP ${response.status}${detail}`, response.status === 429 ? 429 : response.status === 401 ? 401 : 502);
   }
   try {
     return await response.json();
@@ -186,16 +195,21 @@ function tokenExpiry(accessToken: string, response: Record<string, unknown>): nu
 }
 
 async function refreshAccessToken(config: Config): Promise<string> {
-  const refreshToken = await loadRefreshToken(config);
-  const result = await request('/api/v1/token/refresh', config, undefined, {
-    method: 'POST',
-    body: JSON.stringify({ refreshToken }),
-  });
+  let refreshToken = await loadRefreshToken(config);
+  let result: unknown;
+  try {
+    result = await request('/api/v1/token/refresh', config, undefined, { method: 'POST', body: JSON.stringify({ refreshToken }) });
+  } catch (error) {
+    const configured = config.initialRefreshToken;
+    if (!(error instanceof ElectroluxApiError) || error.status !== 401 || !configured || configured === refreshToken) throw error;
+    refreshToken = configured;
+    result = await request('/api/v1/token/refresh', config, undefined, { method: 'POST', body: JSON.stringify({ refreshToken }) });
+  }
   if (!isRecord(result)) throw new ElectroluxApiError('Electrolux returned an invalid token response');
   const accessToken = result.accessToken ?? result.access_token;
   const rotatedRefreshToken = result.refreshToken ?? result.refresh_token;
   if (typeof accessToken !== 'string' || !accessToken) throw new ElectroluxApiError('Electrolux returned an invalid token response');
-  if (typeof rotatedRefreshToken === 'string' && rotatedRefreshToken) await saveRefreshToken(rotatedRefreshToken, config);
+  await saveRefreshToken(typeof rotatedRefreshToken === 'string' && rotatedRefreshToken ? rotatedRefreshToken : refreshToken, config);
   accessTokenCache = {
     apiKey: config.apiKey,
     tokenStorePath: config.tokenStorePath,
@@ -237,17 +251,6 @@ function appliancesFrom(value: unknown): Appliance[] {
   });
 }
 
-const metricDefinitions: Array<{ label: string; keys: string[]; unit: string }> = [
-  { label: copy.electroluxMetrics.pm1, keys: ['pm1', 'pm1_0', 'pm1.0', 'pm1value'], unit: 'µg/m³' },
-  { label: copy.electroluxMetrics.pm25, keys: ['pm25', 'pm2_5', 'pm2.5', 'pm2_5value'], unit: 'µg/m³' },
-  { label: copy.electroluxMetrics.pm10, keys: ['pm10', 'pm10value'], unit: 'µg/m³' },
-  { label: copy.electroluxMetrics.tvoc, keys: ['tvoc', 'tvocvalue'], unit: 'ppb' },
-  { label: copy.electroluxMetrics.temperature, keys: ['temperature', 'roomtemperature'], unit: '°C' },
-  { label: copy.electroluxMetrics.humidity, keys: ['humidity', 'relativehumidity'], unit: '%' },
-  { label: copy.electroluxMetrics.filterLife, keys: ['filterlife', 'filterremaining', 'filterremaininglife'], unit: '%' },
-  { label: copy.electroluxMetrics.fanSpeed, keys: ['fanspeed', 'fanlevel'], unit: '' },
-];
-
 function normalizeKey(value: string): string {
   return value.toLowerCase().replace(/[\s-]/g, '');
 }
@@ -276,6 +279,14 @@ function displayValue(value: unknown, unit: string): string | undefined {
   return shown.slice(0, 64);
 }
 
+function numericValue(value: unknown): number | undefined {
+  const raw = isRecord(value) && 'value' in value ? value.value : value;
+  if (typeof raw !== 'number' && typeof raw !== 'string') return undefined;
+  if (typeof raw === 'string' && !raw.trim()) return undefined;
+  const numeric = typeof raw === 'number' ? raw : Number(raw);
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
 export async function getElectroluxStatus(): Promise<ElectroluxStatus> {
   const config = getConfig();
   const accessToken = await getAccessToken(config);
@@ -286,9 +297,20 @@ export async function getElectroluxStatus(): Promise<ElectroluxStatus> {
   if (!appliance) throw new ElectroluxApiError('No Electrolux appliance is available', 404);
 
   const state = await request(`/api/v1/appliances/${encodeURIComponent(appliance.id)}/state`, config, accessToken);
-  const metrics = metricDefinitions.flatMap(({ label, keys, unit }) => {
+  const observedAt = new Date().toISOString();
+  const metrics = airMetricDefinitions.flatMap(({ label, keys, unit }) => {
     const value = displayValue(findValue(state, keys), unit);
     return value ? [{ label, value }] : [];
   });
-  return { appliance: appliance.name.slice(0, 80), metrics, updatedAt: new Date().toISOString() };
+  const readings: TelemetryRecord[] = airMetricDefinitions.flatMap<TelemetryRecord>(({ id, keys, unit, kind }) => {
+    const rawValue = findValue(state, keys);
+    if (rawValue === undefined || rawValue === null) return [];
+    if (kind === 'state') {
+      const stateValue = displayValue(rawValue, '');
+      return stateValue ? [{ kind: 'event' as const, sourceId: appliance.id, eventType: `${id}-state`, eventValue: stateValue, observedAt }] : [];
+    }
+    const value = numericValue(rawValue);
+    return value === undefined ? [] : [{ kind: 'measurement' as const, sourceId: appliance.id, metricId: id, value, unit, observedAt }];
+  });
+  return { appliance: appliance.name.slice(0, 80), metrics, updatedAt: observedAt, sourceId: appliance.id, readings };
 }

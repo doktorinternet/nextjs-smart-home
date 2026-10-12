@@ -1,0 +1,271 @@
+.shell {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: auto;
+  padding: clamp(16px, 3vw, 36px);
+  color: #f7f5f2;
+  background:
+    radial-gradient(ellipse at 90% 0%, rgba(82, 129, 112, .16), transparent 34%),
+    #101522;
+}
+
+.frame {
+  width: min(100%, 1120px);
+  min-height: calc(100dvh - 72px);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: #c8ceda;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.backLink:hover { color: #fff; }
+.backLink:focus-visible,
+.navigationButton:focus-visible,
+.secondaryButton:focus-visible,
+.primaryButton:focus-visible {
+  outline: 2px solid #f4bd84;
+  outline-offset: 3px;
+}
+
+.layout {
+  display: grid;
+  min-height: calc(100dvh - 150px);
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 48px);
+  padding-top: 28px;
+}
+
+.navigation {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, .12);
+}
+
+.navigationButton {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(29, 185, 84, .42);
+  border-radius: 10px;
+  color: #1ed760;
+  background: rgba(29, 185, 84, .11);
+  font-size: 23px;
+  cursor: default;
+}
+
+.panel {
+  width: min(100%, 850px);
+  padding: 8px 0 40px;
+}
+
+.panelHeader {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 0 0 24px;
+}
+
+.spotifyMark {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(29, 185, 84, .3);
+  border-radius: 14px;
+  color: #1ed760;
+  background: rgba(29, 185, 84, .09);
+  font-size: 30px;
+}
+
+.titleGroup { min-width: 0; }
+.eyebrow {
+  margin: 0 0 5px;
+  color: #8f9aab;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.titleGroup h2 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 620;
+  line-height: 1.25;
+}
+
+.description {
+  max-width: 620px;
+  margin: 7px 0 0;
+  color: #aeb6c5;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.connection {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 7px;
+  color: #bec5d0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.connection > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8992a1;
+}
+
+.connection.isConnected > span { background: #1ed760; }
+
+.notice {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-left: 3px solid #1ed760;
+  color: #c8f1d5;
+  background: rgba(29, 185, 84, .09);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.statusBlock {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+.statusIcon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 10px;
+  color: #e4c788;
+  background: rgba(228, 199, 136, .1);
+  font-size: 18px;
+}
+
+.statusIcon.isComplete { color: #1ed760; background: rgba(29, 185, 84, .1); }
+.statusIcon.hasMissing { color: #ff9a86; background: rgba(255, 125, 104, .1); }
+.statusCopy { min-width: 0; }
+.statusCopy strong { font-size: 15px; font-weight: 600; line-height: 1.45; }
+.statusCopy p { margin: 4px 0 0; color: #c2aab0; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px 0;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.primaryButton { color: #08140b; background: #1ed760; }
+.primaryButton:hover { background: #36e274; }
+.secondaryButton { border-color: rgba(255, 255, 255, .18); color: #e5e8ef; background: rgba(255, 255, 255, .055); }
+.secondaryButton:hover:not(:disabled) { background: rgba(255, 255, 255, .11); }
+.secondaryButton:disabled { cursor: wait; opacity: .65; }
+
+.scopeSection { padding-top: 8px; }
+.scopeSection h3 { margin: 0 0 12px; color: #c4cad5; font-size: 13px; font-weight: 650; }
+.scopeList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 22px; margin: 0; padding: 0; list-style: none; }
+.scopeList li { display: flex; min-width: 0; align-items: center; gap: 9px; color: #aab2c0; font-size: 12px; }
+.scopeList li svg { flex: 0 0 auto; color: #7f8999; }
+.scopeList li.scopeGranted svg { color: #1ed760; }
+.scopeList li.scopeMissing { color: #ffad9d; }
+.scopeList li.scopeMissing svg { color: #ff8d79; }
+.scopeList code { overflow-wrap: anywhere; font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+@media (max-width: 640px) {
+  .shell { padding: 14px 14px 24px; }
+  .frame { min-height: calc(100dvh - 38px); }
+  .header { align-items: flex-start; padding-bottom: 14px; }
+  .header h1 { font-size: 21px; }
+  .backLink { gap: 7px; font-size: 13px; }
+  .layout { min-height: calc(100dvh - 112px); grid-template-columns: 48px minmax(0, 1fr); gap: 14px; padding-top: 20px; }
+  .navigation { justify-content: flex-start; }
+  .navigationButton { width: 40px; height: 40px; }
+  .panel { padding-top: 2px; }
+  .panelHeader { grid-template-columns: 46px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .spotifyMark { width: 44px; height: 44px; border-radius: 11px; font-size: 24px; }
+  .titleGroup h2 { font-size: 19px; }
+  .description { font-size: 13px; }
+  .connection { grid-column: 2; justify-self: start; }
+  .actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .primaryButton, .secondaryButton { width: 100%; box-sizing: border-box; }
+  .scopeList { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 360px) {
+  .shell { padding: 10px; }
+  .header { gap: 8px; }
+  .header h1 { font-size: 18px; }
+  .backLink { min-width: 0; gap: 6px; font-size: 12px; }
+  .layout { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; padding-top: 16px; }
+  .navigationButton { width: 32px; height: 36px; font-size: 19px; }
+  .panelHeader { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+  .spotifyMark { width: 36px; height: 36px; font-size: 20px; }
+  .titleGroup h2 { font-size: 17px; }
+  .description { font-size: 12px; }
+  .statusBlock { gap: 9px; }
+  .statusIcon { width: 32px; height: 32px; flex-basis: 32px; font-size: 15px; }
+  .statusCopy strong { font-size: 13px; }
+  .actions { gap: 8px; }
+  .primaryButton, .secondaryButton { gap: 7px; padding: 0 9px; font-size: 12px; }
+  .scopeList li { gap: 7px; font-size: 11px; }
+  .scopeList code { font-size: 11px; }
+}

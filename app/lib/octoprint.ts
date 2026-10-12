@@ -65,7 +65,7 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
   }
 
   if (!response.ok) {
-    throw new OctoPrintError('OctoPrint request failed', 502);
+    throw new OctoPrintError('OctoPrint request failed', response.status);
   }
 
   if (response.status === 204) {
@@ -85,6 +85,11 @@ export function getOctoPrintConnection(): Promise<unknown> {
 
 export function getOctoPrintJob(): Promise<unknown> {
   return request('job');
+}
+
+/** Reads the current printer state and actual tool/bed temperatures. */
+export function getOctoPrintPrinter(): Promise<unknown> {
+  return request('printer');
 }
 
 /** Sends only the documented pause/resume/cancel job commands. */

@@ -17,9 +17,9 @@ type PageDefinition = {
 }
 
 const pages: PageDefinition[] = [
-  { label: 'Travel', panelIds: ['transit', 'air'] },
-  { label: 'Home', panelIds: ['printer', 'speed'] },
-  { label: 'Media', panelIds: ['cast', 'spotify'] },
+  { label: 'Travel', panelIds: ['transit', 'spotify'] },
+  { label: 'Environment', panelIds: ['printer', 'air'] },
+  { label: 'Home', panelIds: ['speed', 'cast'] },
 ]
 
 export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[] }) {
