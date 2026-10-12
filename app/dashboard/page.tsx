@@ -143,7 +143,7 @@ function PrinterCard() {
           <p className="dashboard-eyebrow">{copy.printer.eyebrow}</p>
           <h2 id="printer-heading">{copy.printer.title}</h2>
         </div>
-        {!loading && !error && (
+        {printer && !error && (
           <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
             <span aria-hidden="true" />{disconnected ? copy.printer.disconnected : printerStateLabel(connection)}
           </span>
@@ -158,9 +158,7 @@ function PrinterCard() {
         />
       </div>
 
-      {loading ? (
-        <p className="dashboard-live-message" role="status">{copy.printer.loading}</p>
-      ) : error ? (
+      {loading && !printer ? null : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
         null
@@ -262,9 +260,7 @@ function SpeedCard() {
         />
       </div>
 
-      {loading ? (
-        <p className="dashboard-live-message" role="status">{copy.speed.loading}</p>
-      ) : error ? (
+      {loading && !history ? null : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !history ? (
         null

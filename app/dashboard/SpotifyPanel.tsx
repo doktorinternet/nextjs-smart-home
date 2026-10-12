@@ -17,6 +17,7 @@ import {
   faVolumeHigh,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import Image from 'next/image'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 import { copy } from '@/app/copy'
 
@@ -223,7 +224,7 @@ function CoverCard({
   return (
     <article className="spotify-content-card">
       <a className="spotify-content-link" href={href} target="_blank" rel="noreferrer">
-        {image ? <img className="spotify-content-art" src={image} alt="" loading="lazy" /> : (
+        {image ? <Image className="spotify-content-art" src={image} alt="" width={640} height={640} sizes="(max-width: 560px) 112px, 132px" /> : (
           <span className="spotify-content-placeholder" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
         )}
         <span className="spotify-content-title">{title}</span>
@@ -466,12 +467,11 @@ export default function SpotifyPanel() {
         />
       </div>
 
-      {loading && !playback && <p className="dashboard-live-message">{copy.spotify.loading}</p>}
       {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
 
       <div className="spotify-now-playing">
         {albumImage
-          ? <img className="spotify-current-art" src={albumImage} alt="" />
+          ? <Image className="spotify-current-art" src={albumImage} alt="" width={640} height={640} sizes="(max-width: 560px) 68px, 96px" />
           : <div className="spotify-current-art spotify-current-art-empty" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></div>}
         <div className="spotify-current-info" aria-live="polite">
           <h3>{track?.name ?? copy.spotify.nothingPlaying}</h3>
@@ -595,7 +595,7 @@ export default function SpotifyPanel() {
       )}
       {selectedDevice?.supports_volume === false && <p className="spotify-hint">{copy.spotify.volumeUnsupported}</p>}
 
-      {!loading && !error && !track && playback?.is_playing && (
+      {!error && !track && playback?.is_playing && (
         <p className="spotify-hint">{copy.spotify.activeWithoutTrack}</p>
       )}
 
@@ -617,7 +617,6 @@ export default function SpotifyPanel() {
           ><FontAwesomeIcon icon={faBookOpen} aria-hidden="true" />{copy.spotify.spoken}</button>
         </div>
 
-        {libraryLoading === libraryKind && <p className="spotify-hint">{copy.spotify.libraryLoading}</p>}
         {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
 
         {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (

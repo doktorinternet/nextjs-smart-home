@@ -9,33 +9,30 @@ export default function TimeString({
 }) {
 
   const [date, setDate] = useState<string>();
-  const [update, setUpdate] = useState<boolean>();
 
   useEffect(() => {
-    refreshTime(timestamp)
-  }, [timestamp]);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
 
-  useEffect(() => {
-    if (shouldUpdate) {
-      setUpdate(true);
-      refreshTime();
-    }
-  }, [shouldUpdate])
+    const refreshTime = () => {
+      const currentDate = new Date(timestamp ? Date.parse(timestamp) : new Date());
+      const formattedTime = currentDate.toLocaleTimeString(locale, {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+      setDate(seconds ? formattedTime : formattedTime.replace(":00", ""));
 
-  const refreshTime = (timestamp?: string) => {
-    let tmp = new Date(timestamp ? Date.parse(timestamp) : new Date()).toLocaleTimeString(locale, { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false });
-    if (!seconds) {
-      setDate(tmp.replace(":00", ""));
-    } else {
-      setDate(tmp);
-    }
-    if (update) {
-      console.log("refreshtime");
-      setTimeout(() => {
-        refreshTime();
-      }, 300);
-    }
-  }
+      if (shouldUpdate) {
+        timeout = setTimeout(refreshTime, 300);
+      }
+    };
+
+    refreshTime();
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [seconds, shouldUpdate, timestamp]);
 
   return (
     <span>{date}</span>

@@ -174,7 +174,6 @@ export default function ElectroluxPanel() {
         />
       </div>
       <div className="dashboard-live-content" aria-live="polite">
-        {loading && !status ? <p>{copy.electrolux.connecting}</p> : null}
         {error && !status ? <p>{error}</p> : null}
         <div className="air-history-layout">
           <div className="air-history-chart">

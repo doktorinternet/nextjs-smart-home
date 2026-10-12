@@ -109,9 +109,7 @@ export default function CastPanel() {
         />
       </div>
 
-      {loading ? (
-        <p className="dashboard-live-message" role="status">{copy.cast.searching}</p>
-      ) : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
+      {loading && devices.length === 0 && !error ? null : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
         null
       ) : error ? (
         <p className="dashboard-live-message is-error" role="status">{error} {copy.cast.bridgeHelp}</p>

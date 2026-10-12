@@ -491,7 +491,19 @@ body {
   outline-offset: 2px;
 }
 
-.dashboard-header-refresh:disabled { cursor: wait; opacity: .55; }
+.dashboard-refresh-icons { position: relative; display: inline-grid; width: 1em; height: 1em; place-items: center; }
+.dashboard-refresh-icon { position: absolute; width: 1em; height: 1em; transition: opacity .24s ease, transform .28s ease; }
+.dashboard-refresh-icon.is-rotate { opacity: 1; }
+.dashboard-refresh-icon.is-check { opacity: 0; transform: scale(.7) rotate(-25deg); }
+.dashboard-refresh-icons.is-refreshing .dashboard-refresh-icon.is-rotate { animation: dashboard-refresh-turn 2s linear infinite; }
+.dashboard-refresh-icons.is-complete .dashboard-refresh-icon.is-rotate { opacity: 0; transform: scale(.7) rotate(25deg); }
+.dashboard-refresh-icons.is-complete .dashboard-refresh-icon.is-check { opacity: 1; transform: scale(1) rotate(0); }
+
+@keyframes dashboard-refresh-turn {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-header-refresh:disabled { cursor: wait }
 
 .dashboard-panel-actions {
   display: flex;

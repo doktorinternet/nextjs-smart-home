@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { copy, formatCopy } from '@/app/copy'
 
 export function useAutoFetch(storageKey: string) {
@@ -51,10 +51,34 @@ export function AutoRefreshControl({
   refreshError?: boolean
   refreshDisabled?: boolean
 }) {
+  const [iconState, setIconState] = useState<'idle' | 'refreshing' | 'complete'>('idle')
+  const refreshStartedAt = useRef<number | null>(null)
   const id = `auto-fetch-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   const actionLabel = refreshError
     ? formatCopy(copy.refresh.retry, { label: refreshLabel })
     : refreshing ? formatCopy(copy.refresh.updating, { label }) : refreshLabel
+
+  useEffect(() => {
+    let completionTimer: ReturnType<typeof setTimeout> | undefined
+    let resetTimer: ReturnType<typeof setTimeout> | undefined
+
+    if (refreshing) {
+      refreshStartedAt.current = Date.now()
+      setIconState('refreshing')
+    } else if (refreshStartedAt.current !== null) {
+      const remainingRotation = Math.max(0, 1000 - (Date.now() - refreshStartedAt.current))
+      refreshStartedAt.current = null
+      completionTimer = setTimeout(() => {
+        setIconState('complete')
+        resetTimer = setTimeout(() => setIconState('idle'), 1000)
+      }, remainingRotation)
+    }
+
+    return () => {
+      if (completionTimer) clearTimeout(completionTimer)
+      if (resetTimer) clearTimeout(resetTimer)
+    }
+  }, [refreshing])
 
   return (
     <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={formatCopy(copy.refresh.updateControls, { label })}>
@@ -71,14 +95,17 @@ export function AutoRefreshControl({
         />
       </label>
       <button
-        className={`dashboard-header-refresh${refreshError ? ' is-error' : ''}`}
+        className={`dashboard-header-refresh${refreshError ? ' is-error' : ''}${iconState === 'refreshing' ? ' is-refreshing' : ''}`}
         type="button"
         onClick={onRefresh}
         disabled={refreshing || refreshDisabled}
         aria-label={actionLabel}
         title={actionLabel}
       >
-        <FontAwesomeIcon icon={faRotate} aria-hidden="true" />
+        <span className={`dashboard-refresh-icons is-${iconState}`} aria-hidden="true">
+          <FontAwesomeIcon className="dashboard-refresh-icon is-rotate" icon={faRotate} />
+          <FontAwesomeIcon className="dashboard-refresh-icon is-check" icon={faCheck} />
+        </span>
       </button>
     </div>
   )
