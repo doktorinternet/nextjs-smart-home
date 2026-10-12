@@ -792,6 +792,7 @@ export default function SpotifyPanel() {
         <AnimatePresence initial={false}>
           {!devicePickerExpanded && (
             <motion.div
+              className="spotify-library-content"
               key="spotify-library-content"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}

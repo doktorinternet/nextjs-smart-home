@@ -76,9 +76,6 @@ export default function Page() {
         </header>
 
         <div className="dashboard-layout-stage" aria-live="off">{selectedLayout}</div>
-
-        <footer className="dashboard-footer">
-        </footer>
       </div>
     </main>
   )
