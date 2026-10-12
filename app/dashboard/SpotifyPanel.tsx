@@ -210,12 +210,16 @@ function deviceIcon(device: SpotifyDevice | null): IconDefinition {
 
 function CoverCard({
   href,
+  onClick,
+  disabled,
   image,
   title,
   subtitle,
   children,
 }: {
-  href: string
+  href?: string
+  onClick?: () => void
+  disabled?: boolean
   image?: string
   title: string
   subtitle: string
@@ -223,13 +227,23 @@ function CoverCard({
 }) {
   return (
     <article className="spotify-content-card">
-      <a className="spotify-content-link" href={href} target="_blank" rel="noreferrer">
-        {image ? <Image className="spotify-content-art" src={image} alt="" width={640} height={640} sizes="(max-width: 560px) 112px, 132px" /> : (
-          <span className="spotify-content-placeholder" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
-        )}
-        <span className="spotify-content-title">{title}</span>
-        <span className="spotify-content-subtitle">{subtitle}</span>
-      </a>
+      {onClick ? (
+        <button className="spotify-content-link spotify-playlist-action" type="button" onClick={onClick} disabled={disabled}>
+          {image ? <Image className="spotify-content-art" src={image} alt="" width={640} height={640} sizes="(max-width: 560px) 112px, 132px" /> : (
+            <span className="spotify-content-placeholder" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
+          )}
+          <span className="spotify-content-title">{title}</span>
+          <span className="spotify-content-subtitle">{subtitle}</span>
+        </button>
+      ) : (
+        <a className="spotify-content-link" href={href} target="_blank" rel="noreferrer">
+          {image ? <Image className="spotify-content-art" src={image} alt="" width={640} height={640} sizes="(max-width: 560px) 112px, 132px" /> : (
+            <span className="spotify-content-placeholder" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
+          )}
+          <span className="spotify-content-title">{title}</span>
+          <span className="spotify-content-subtitle">{subtitle}</span>
+        </a>
+      )}
       {children}
     </article>
   )
@@ -418,15 +432,12 @@ export default function SpotifyPanel() {
     return (
       <CoverCard
         key={playlist.id}
-        href={playlist.externalUrl}
+        onClick={() => playPlaylist(playlist)}
+        disabled={controlsDisabled || !selectedDeviceId}
         image={playlist.images[0]?.url}
         title={playlist.name}
         subtitle={playlist.totalTracks === null ? copy.spotify.playlists : String(playlist.totalTracks) + ' spår'}
-      >
-        <button className="spotify-card-play" type="button" onClick={() => playPlaylist(playlist)} disabled={controlsDisabled || !selectedDeviceId}>
-          <FontAwesomeIcon icon={faPlay} aria-hidden="true" /> {copy.spotify.playContent}
-        </button>
-      </CoverCard>
+      />
     )
   }
 
@@ -467,9 +478,8 @@ export default function SpotifyPanel() {
         />
       </div>
 
-      {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
-
-      <div className="spotify-now-playing">
+      <div className="spotify-player">
+      <div className={'spotify-now-playing' + (devicePickerExpanded ? ' is-device-expanded' : '')}>
         {albumImage
           ? <Image className="spotify-current-art" src={albumImage} alt="" width={640} height={640} sizes="(max-width: 560px) 68px, 96px" />
           : <div className="spotify-current-art spotify-current-art-empty" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></div>}
@@ -494,48 +504,49 @@ export default function SpotifyPanel() {
             </div>
           )}
         </div>
-        <button
-          className="spotify-device-summary"
-          type="button"
-          onClick={() => setDevicePickerExpanded((expanded) => !expanded)}
-          aria-expanded={devicePickerExpanded}
-          aria-controls="spotify-device-list"
-          disabled={devices.length === 0}
-        >
-          <FontAwesomeIcon icon={deviceIcon(selectedDevice)} aria-hidden="true" />
-          <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
-          <span className="spotify-chevron" aria-hidden="true">⌄</span>
-        </button>
-      </div>
-
-      {devicePickerExpanded && devices.length > 0 && (
-        <div className="spotify-device-picker" id="spotify-device-list">
-          <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
-          <div className="spotify-device-grid">
-            {devices.map((device) => {
-              const active = device.id === playback?.device?.id
-              return (
-                <button
-                  className={'spotify-device-tile' + (active ? ' is-active' : '')}
-                  type="button"
-                  key={device.id}
-                  onClick={() => {
-                    setSelectedDeviceId(device.id)
-                    if (device.volume_percent != null) setVolume(device.volume_percent)
-                    if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
-                  }}
-                  disabled={controlsDisabled || device.is_restricted === true}
-                  aria-pressed={active}
-                >
-                  <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
-                  <span>{device.name}</span>
-                  <small>{active ? copy.spotify.active : device.type}</small>
-                </button>
-              )
-            })}
-          </div>
+        <div className="spotify-device-switcher">
+          <button
+            className="spotify-device-summary"
+            type="button"
+            onClick={() => setDevicePickerExpanded((expanded) => !expanded)}
+            aria-expanded={devicePickerExpanded}
+            aria-controls="spotify-device-list"
+            disabled={devices.length === 0}
+          >
+            <FontAwesomeIcon icon={deviceIcon(selectedDevice)} aria-hidden="true" />
+            <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
+            <span className="spotify-chevron" aria-hidden="true">⌄</span>
+          </button>
+          {devicePickerExpanded && devices.length > 0 && (
+            <div className="spotify-device-picker" id="spotify-device-list">
+              <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
+              <div className="spotify-device-grid">
+                {devices.map((device) => {
+                  const active = device.id === playback?.device?.id
+                  return (
+                    <button
+                      className={'spotify-device-tile' + (active ? ' is-active' : '')}
+                      type="button"
+                      key={device.id}
+                      onClick={() => {
+                        setSelectedDeviceId(device.id)
+                        if (device.volume_percent != null) setVolume(device.volume_percent)
+                        if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
+                      }}
+                      disabled={controlsDisabled || device.is_restricted === true}
+                      aria-pressed={active}
+                    >
+                      <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
+                      <span>{device.name}</span>
+                      <small>{active ? copy.spotify.active : device.type}</small>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="spotify-playback-controls" role="group" aria-label={copy.spotify.title}>
         <button
@@ -598,25 +609,36 @@ export default function SpotifyPanel() {
       {!error && !track && playback?.is_playing && (
         <p className="spotify-hint">{copy.spotify.activeWithoutTrack}</p>
       )}
+      </div>
+
+      <div className="dashboard-panel-content spotify-panel-content">
+      {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
 
       <section className="spotify-library" aria-label={copy.spotify.title}>
         <div className="spotify-library-tabs" role="tablist" aria-label={copy.spotify.title}>
           <button
-            className={libraryKind === 'playlists' ? 'is-active' : ''}
+            className={!devicePickerExpanded && libraryKind === 'playlists' ? 'is-active' : ''}
             type="button"
             role="tab"
-            aria-selected={libraryKind === 'playlists'}
-            onClick={() => setLibraryKind('playlists')}
+            aria-selected={!devicePickerExpanded && libraryKind === 'playlists'}
+            onClick={() => {
+              setDevicePickerExpanded(false)
+              setLibraryKind('playlists')
+            }}
           ><FontAwesomeIcon icon={faMusic} aria-hidden="true" />{copy.spotify.playlists}</button>
           <button
-            className={libraryKind === 'spoken' ? 'is-active' : ''}
+            className={!devicePickerExpanded && libraryKind === 'spoken' ? 'is-active' : ''}
             type="button"
             role="tab"
-            aria-selected={libraryKind === 'spoken'}
-            onClick={() => setLibraryKind('spoken')}
+            aria-selected={!devicePickerExpanded && libraryKind === 'spoken'}
+            onClick={() => {
+              setDevicePickerExpanded(false)
+              setLibraryKind('spoken')
+            }}
           ><FontAwesomeIcon icon={faBookOpen} aria-hidden="true" />{copy.spotify.spoken}</button>
         </div>
 
+        {!devicePickerExpanded && <>
         {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
 
         {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (
@@ -654,9 +676,11 @@ export default function SpotifyPanel() {
               <p className="spotify-hint">{copy.spotify.noAudiobooks}</p>}
           </div>
         )}
+        </>}
       </section>
 
       <p className="spotify-status" role="status" aria-live="polite">{message}</p>
+      </div>
     </section>
   )
 }

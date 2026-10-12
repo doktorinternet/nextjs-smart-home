@@ -78,6 +78,7 @@ export default function SpeedPanel() {
         />
       </div>
 
+      <div className="dashboard-panel-content">
       {loading && !history ? null : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !history ? (
@@ -103,6 +104,7 @@ export default function SpeedPanel() {
           <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString(locale)}</p>
         </div>
       )}
+      </div>
     </section>
   )
 }

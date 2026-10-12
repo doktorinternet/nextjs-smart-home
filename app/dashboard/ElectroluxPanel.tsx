@@ -173,6 +173,7 @@ export default function ElectroluxPanel() {
           refreshing={loading}
         />
       </div>
+      <div className="dashboard-panel-content">
       <div className="dashboard-live-content" aria-live="polite">
         {error && !status ? <p>{error}</p> : null}
         <div className="air-history-layout">
@@ -208,6 +209,7 @@ export default function ElectroluxPanel() {
             </> : null}
           </aside>
         </div>
+      </div>
       </div>
     </section>
   );

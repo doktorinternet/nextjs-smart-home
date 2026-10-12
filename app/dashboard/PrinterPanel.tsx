@@ -126,6 +126,7 @@ export default function PrinterPanel() {
         />
       </div>
 
+      <div className="dashboard-panel-content">
       {loading && !printer ? null : error ? (
         <p className="dashboard-live-message is-error" role="status">{error}</p>
       ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
@@ -164,6 +165,7 @@ export default function PrinterPanel() {
           </div>
         </div>
         <p className="dashboard-control-message" role="status" aria-live="polite">{controlMessage}</p>
+      </div>
       </div>
     </section>
   )

@@ -109,6 +109,7 @@ export default function CastPanel() {
         />
       </div>
 
+      <div className="dashboard-panel-content">
       {loading && devices.length === 0 && !error ? null : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
         null
       ) : error ? (
@@ -144,6 +145,7 @@ export default function CastPanel() {
       <p className="dashboard-control-message" role="status" aria-live="polite">
         {message}
       </p>
+      </div>
     </section>
   )
 }

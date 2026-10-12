@@ -34,12 +34,14 @@ export default function TransitPanel() {
           refreshDisabled={!refreshDepartures}
         />
       </div>
+      <div className="dashboard-panel-content">
       <div className="dashboard-transit-content">
         <CustomTimeTable
           autoFetch={autoFetch}
           onRefreshReady={handleRefreshReady}
           onFetchStateChange={handleFetchStateChange}
         />
+      </div>
       </div>
     </section>
   )
