@@ -12,7 +12,7 @@ const { airMetricDefinitions, printerMetricDefinitions } = await import('../app/
 const printerFixture = JSON.parse(readFileSync(new URL('./fixtures/octoprint-status.json', import.meta.url), 'utf8'));
 
 try {
-  assert.deepEqual(airMetricDefinitions.map(({ id }) => id), ['air.pm1', 'air.pm25', 'air.pm10', 'air.tvoc', 'air.temperature', 'air.humidity', 'air.filter_life', 'air.fan_speed', 'air.filter_status', 'air.mode', 'air.air_quality', 'air.power_state']);
+  assert.deepEqual(airMetricDefinitions.map(({ id }) => id), ['air.pm1', 'air.pm25', 'air.pm10', 'air.tvoc', 'air.temperature', 'air.humidity', 'air.filter_life', 'air.fan_speed', 'air.mode']);
   assert.deepEqual(printerMetricDefinitions.map(({ id }) => id), ['printer.tool0.actual', 'printer.bed.actual', 'printer.job-state', 'printer.connection-state']);
   const inserted = saveTelemetryRecords([
     { kind: 'measurement', sourceId: 'pure-a9-1', metricId: 'air.pm25', value: 4.25, unit: 'µg/m³', observedAt: '2026-10-10T12:00:00.000Z' },
@@ -42,6 +42,20 @@ try {
   assert.equal(downsampled.length, 1300);
   assert.equal(downsampled.find(({ observedAt }) => observedAt === '2026-10-09T12:00:00.000Z')?.value, 210);
   assert.equal(getTelemetryHistory({ sourceId: 'dense-printer', metricId: 'printer.tool0.actual', limit: 1500 }).length, 1000);
+
+  saveTelemetryRecords([
+    { kind: 'measurement', sourceId: 'bucket-test', metricId: 'air.pm25', value: 2, unit: 'µg/m³', observedAt: '2026-10-10T10:01:00.000Z' },
+    { kind: 'measurement', sourceId: 'bucket-test', metricId: 'air.pm25', value: 4, unit: 'µg/m³', observedAt: '2026-10-10T10:08:00.000Z' },
+    { kind: 'measurement', sourceId: 'bucket-test', metricId: 'air.pm25', value: 8, unit: 'µg/m³', observedAt: '2026-10-10T10:12:00.000Z' },
+    { kind: 'measurement', sourceId: 'bucket-test', metricId: 'air.pm25', value: 10, unit: 'µg/m³', observedAt: '2026-10-10T11:05:00.000Z' },
+    { kind: 'measurement', sourceId: 'bucket-test', metricId: 'air.pm25', value: 12, unit: 'µg/m³', observedAt: '2026-10-11T12:00:00.000Z' },
+  ]);
+  const tenMinuteBuckets = getTelemetryHistory({ sourceId: 'bucket-test', metricId: 'air.pm25', bucket: 'ten-minute', limit: 1500 });
+  assert.deepEqual(tenMinuteBuckets.map(({ value }) => value), [12, 10, 8, 3]);
+  const hourBuckets = getTelemetryHistory({ sourceId: 'bucket-test', metricId: 'air.pm25', bucket: 'hour', limit: 1500 });
+  assert.deepEqual(hourBuckets.map(({ value }) => value), [12, 10, 14 / 3]);
+  const dayBuckets = getTelemetryHistory({ sourceId: 'bucket-test', metricId: 'air.pm25', bucket: 'day', limit: 1500 });
+  assert.deepEqual(dayBuckets.map(({ value }) => value), [12, 6]);
 
   saveTelemetryRecords([
     { kind: 'event', sourceId: 'boundary-printer', eventType: 'started', observedAt: '2026-10-09T23:00:00.000Z' },

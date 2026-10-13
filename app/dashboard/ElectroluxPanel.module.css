@@ -1,0 +1,182 @@
+.historyChart {
+  min-width: 0;
+  gap: 8px;
+}
+
+.historyChart h3 {
+  margin: 0 0 10px;
+  color: var(--dashboard-ink);
+  font-size: 14px;
+}
+
+.historyRangeTabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.historyRangeTabs button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 1px solid rgba(166,181,205,.12);
+  border-radius: 11px;
+  color: #bac3d1;
+  background: rgba(255,255,255,.04);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.historyRangeTabs .isActive {
+  border-color: rgba(82,223,145,.65);
+  color: #72e3a2;
+  background: rgba(50,205,112,.11);
+}
+
+.historyRangeTabs button:focus-visible,
+.historyLegend button:focus-visible {
+  outline: 2px solid #52df91;
+  outline-offset: 2px;
+}
+
+.historyRecharts {
+  display: block;
+  width: 100%;
+  height: clamp(220px, 28vh, 340px);
+}
+
+.historySeriesGroups {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.historySeriesGroup + .historySeriesGroup {
+  padding-top: 9px;
+  border-top: 1px solid rgba(255,255,255,.1);
+}
+
+.historySeriesGroup h4 {
+  margin: 0 0 7px;
+  color: #aeb8c8;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.historyLegend {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  color: #bac2ce;
+  font-size: 11px;
+}
+
+.historyLegend button {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  grid-template-columns: 9px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+  background: rgba(10,14,23,.24);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.historyLegend .isSelected {
+  border-color: rgba(82,223,145,.4);
+  color: #c9f6d9;
+  background: rgba(50,205,112,.08);
+}
+
+.historyLegend button:not(.isSelected) {
+  color: #8992a1;
+  background: rgba(10,14,23,.16);
+}
+
+.historySeriesDot {
+  width: 9px;
+  height: 9px;
+  margin-top: 2px;
+  border-radius: 50%;
+}
+
+.historySeriesLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyLegend strong {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: var(--dashboard-ink);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyLegend button:not(.isSelected) strong {
+  color: #9aa2af;
+}
+
+.seriesContextMenu {
+  position: fixed;
+  z-index: 1000;
+  min-width: min(184px, calc(100vw - 16px));
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: #111827;
+  box-shadow: 0 10px 28px rgba(0,0,0,.4);
+}
+
+.menuAction {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #f7f5f2;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.menuAction:hover,
+.menuAction:focus-visible {
+  outline: none;
+  background: rgba(82,223,145,.14);
+}
+
+@media (max-width: 560px) {
+  .historyLegend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .historyRecharts {
+    height: 220px;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 850px) {
+  .historyLegend {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}

@@ -44,6 +44,10 @@
   grid-template-rows: minmax(0, 1.9fr) minmax(0, 3.1fr);
 }
 
+.panels[data-page='1'] {
+  grid-template-rows: minmax(0, 4fr) minmax(0, 1fr);
+}
+
 .panel {
   box-sizing: border-box;
   display: flex;
@@ -141,5 +145,6 @@
   .viewport { padding: 8px; }
   .panels { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
   .panels[data-page='0'] { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .panels[data-page='1'] { grid-template-rows: minmax(0, 3fr) minmax(0, 1fr); }
   .navigation { gap: 7px; }
 }

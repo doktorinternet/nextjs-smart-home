@@ -20,8 +20,8 @@ export async function GET(request: Request) {
   const from = params.get('from') || undefined;
   const to = params.get('to') || undefined;
   const rawBucket = params.get('bucket');
-  if (rawBucket && rawBucket !== 'minute') {
-    return NextResponse.json({ error: 'bucket must be minute' }, { status: 400, headers: noStore });
+  if (rawBucket && !['minute', 'ten-minute', 'hour', 'day'].includes(rawBucket)) {
+    return NextResponse.json({ error: 'bucket must be minute, ten-minute, hour, or day' }, { status: 400, headers: noStore });
   }
   const rawIncludeActiveAt = params.get('includeActiveAt');
   if (rawIncludeActiveAt && !Number.isFinite(Date.parse(rawIncludeActiveAt))) {
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    return NextResponse.json({ records: getTelemetryHistory({ sourceId, metricId, kind: kind ?? undefined, eventType, from, to, limit, bucket: rawBucket as 'minute' | undefined, includeActiveAt: rawIncludeActiveAt ?? undefined }) }, { headers: noStore });
+    return NextResponse.json({ records: getTelemetryHistory({ sourceId, metricId, kind: kind ?? undefined, eventType, from, to, limit, bucket: rawBucket as 'minute' | 'ten-minute' | 'hour' | 'day' | undefined, includeActiveAt: rawIncludeActiveAt ?? undefined }) }, { headers: noStore });
   } catch (error) {
     console.error('Failed to read telemetry history', error);
     return NextResponse.json({ error: 'Telemetry history is unavailable' }, { status: 503, headers: noStore });

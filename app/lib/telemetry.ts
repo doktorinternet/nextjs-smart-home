@@ -29,7 +29,7 @@ export type TelemetryHistoryQuery = {
   from?: string;
   to?: string;
   limit?: number;
-  bucket?: 'minute';
+  bucket?: 'minute' | 'ten-minute' | 'hour' | 'day';
   includeActiveAt?: string;
 };
 
@@ -175,13 +175,20 @@ export function getTelemetryHistory(query: TelemetryHistoryQuery = {}): StoredTe
   if (query.eventType) { clauses.push('event_type = ?'); values.push(query.eventType); }
   if (query.from && validTimestamp(query.from)) { clauses.push('observed_at >= ?'); values.push(new Date(query.from).toISOString()); }
   if (query.to && validTimestamp(query.to)) { clauses.push('observed_at <= ?'); values.push(new Date(query.to).toISOString()); }
-  const downsample = query.bucket === 'minute' && (query.kind === undefined || query.kind === 'measurement');
+  const downsample = query.bucket !== undefined && (query.kind === undefined || query.kind === 'measurement');
   values.push(boundedLimit(query.limit, downsample ? 1500 : maxHistoryLimit));
+  const bucketExpressions = {
+    minute: "strftime('%Y-%m-%dT%H:%M:00.000Z', observed_at)",
+    'ten-minute': "strftime('%Y-%m-%dT%H:', observed_at) || printf('%02d:00.000Z', (CAST(strftime('%M', observed_at) AS INTEGER) / 10) * 10)",
+    hour: "strftime('%Y-%m-%dT%H:00:00.000Z', observed_at)",
+    day: "strftime('%Y-%m-%dT00:00:00.000Z', observed_at)",
+  } as const;
+  const bucketExpression = query.bucket ? bucketExpressions[query.bucket] : undefined;
   const rows = getDatabase().prepare(downsample ? `
     SELECT MIN(id) AS id, kind, source_id, metric_id, AVG(value) AS value, unit, NULL AS event_type, NULL AS event_value,
-      strftime('%Y-%m-%dT%H:%M:00.000Z', observed_at) AS observed_at
+      ${bucketExpression} AS observed_at
     FROM telemetry_records ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
-    GROUP BY source_id, metric_id, unit, strftime('%Y-%m-%dT%H:%M', observed_at)
+    GROUP BY source_id, metric_id, unit, ${bucketExpression}
     ORDER BY observed_at DESC, id DESC LIMIT ?
   ` : `
     SELECT id, kind, source_id, metric_id, value, unit, event_type, event_value, observed_at
