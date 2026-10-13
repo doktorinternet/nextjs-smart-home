@@ -41,7 +41,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
 
   function handlePointerDown(event: PointerEvent<HTMLDivElement>, zoneId: string) {
     if (event.pointerType !== 'touch' || !event.isPrimary) return
-    if ((event.target as HTMLElement).closest('button, a, input, select, textarea')) return
+    if (event.target instanceof Element && event.target.closest('a, button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="slider"], [role="spinbutton"], [role="scrollbar"], [data-page-swipe-ignore]')) return
     touchStarts.current[zoneId] = { x: event.clientX, y: event.clientY }
   }
 

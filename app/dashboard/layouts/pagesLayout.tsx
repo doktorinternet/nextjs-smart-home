@@ -42,6 +42,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
 
   const handleTouchStart = (event: PointerEvent<HTMLElement>) => {
     if (event.pointerType !== 'touch' || !event.isPrimary) return
+    if (event.target instanceof Element && event.target.closest('a, button, input, select, textarea, summary, [contenteditable="true"], [role="button"], [role="slider"], [role="spinbutton"], [role="scrollbar"], [data-page-swipe-ignore]')) return
     touchStart.current = { x: event.clientX, y: event.clientY }
   }
 
