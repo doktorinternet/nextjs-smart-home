@@ -123,7 +123,7 @@
   touch-action: manipulation;
 }
 
-.arrow span { font-size: 30px; line-height: 1; }
+.arrow svg { display: block; width: 14px; height: 14px; }
 .arrow:disabled { opacity: .38; cursor: default; }
 .indicators { display: flex; gap: 4px; }
 .indicator { border-color: transparent; background: transparent; }

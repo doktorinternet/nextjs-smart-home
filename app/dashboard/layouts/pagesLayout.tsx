@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { copy, formatCopy } from '@/app/copy'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './pagesLayout.module.css'
@@ -104,7 +106,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
             onClick={() => movePage(-1)}
             disabled={activePage === 0}
           >
-            <span aria-hidden="true">‹</span>
+            <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
           </button>
           <div className={styles.indicators} role="group" aria-label={copy.dashboard.layoutText.choosePage}>
             {pages.map((page, index) => (
@@ -128,7 +130,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
             onClick={() => movePage(1)}
             disabled={activePage === pages.length - 1}
           >
-            <span aria-hidden="true">›</span>
+            <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
           </button>
         </nav>
       </section>

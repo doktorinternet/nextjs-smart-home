@@ -7,6 +7,7 @@ import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import {
   faBackward,
   faBookOpen,
+  faChevronDown,
   faHeadphonesAlt,
   faMobileScreenButton,
   faMusic,
@@ -596,7 +597,7 @@ export default function SpotifyPanel() {
   }
 
   return (
-    <section className="dashboard-module dashboard-live-card spotify-panel" aria-labelledby="spotify-heading">
+    <section className={'dashboard-module dashboard-live-card spotify-panel' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '')} aria-labelledby="spotify-heading">
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon spotify-heading-icon" aria-hidden="true"><FontAwesomeIcon icon={faSpotify} /></span>
         <div>
@@ -653,7 +654,7 @@ export default function SpotifyPanel() {
           >
             <FontAwesomeIcon icon={deviceIcon(selectedDevice)} aria-hidden="true" />
             <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
-            <span className="spotify-chevron" aria-hidden="true">⌄</span>
+            <span className="spotify-chevron" aria-hidden="true"><FontAwesomeIcon icon={faChevronDown} /></span>
           </button>
           <AnimatePresence initial={false}>
             {devicePickerExpanded && devices.length > 0 && (
@@ -771,7 +772,7 @@ export default function SpotifyPanel() {
       <div className="dashboard-panel-content spotify-panel-content">
       {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
 
-      <section className="spotify-library" aria-label={copy.spotify.title}>
+      <section className={'spotify-library' + (selectedDevice?.supports_volume === false ? ' is-volume-unsupported' : '')} aria-label={copy.spotify.title}>
         <div className="spotify-library-tabs" role="tablist" aria-label={copy.spotify.title}>
           <button
             className={libraryKind === 'playlists' ? 'is-active' : ''}

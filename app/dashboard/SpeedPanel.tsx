@@ -134,10 +134,6 @@ export default function SpeedPanel() {
         <p className="dashboard-live-message">{historyRangeId === 'month' ? copy.speed.empty : copy.speed.historyRangeEmpty}</p>
       ) : (
         <div className="dashboard-speed-content">
-          <div className="dashboard-speed-values" aria-live="polite">
-            <div><span className="dashboard-speed-dot is-download" /><span className="dashboard-live-label">{copy.speed.download}</span><strong>{formatMetricValue(latest.downloadMbps, copy.speed.units.mbps)}</strong></div>
-            <div><span className="dashboard-speed-dot is-upload" /><span className="dashboard-live-label">{copy.speed.upload}</span><strong>{formatMetricValue(latest.uploadMbps, copy.speed.units.mbps)}</strong></div>
-          </div>
           <HistoryChart
             data={chartData}
             series={speedMetrics}
