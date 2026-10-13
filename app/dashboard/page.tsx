@@ -61,7 +61,7 @@ export default function Page() {
   }[layoutMode]
 
   return (
-    <main className="dashboard-shell">
+    <main className="dashboard-shell" onContextMenu={(event) => event.preventDefault()}>
       <div className="dashboard-frame">
         <header className="dashboard-header">
           <div className="dashboard-brand">

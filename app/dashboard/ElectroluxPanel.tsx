@@ -181,9 +181,6 @@ export default function ElectroluxPanel() {
             <h3>Historik · luft och skrivare</h3>
             {history.length ? <>
               <p className="dashboard-live-note">Senaste 24 timmarna</p>
-              <div className="air-history-legend" aria-label="Diagramförklaring">
-                {series.map((item) => <label key={item.id}><input type="checkbox" checked={visibleSeries.includes(item.id)} onChange={() => setVisibleSeries((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])} /><span style={{ backgroundColor: item.color }} />{item.label}</label>)}
-              </div>
               <ChartContainer className="air-history-recharts" config={chartConfig}>
                 <LineChart data={chartData} margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)" />
@@ -193,6 +190,9 @@ export default function ElectroluxPanel() {
                   {series.filter((item) => visibleSeries.includes(item.id)).map((item) => <Line key={item.id} type={item.kind === 'state' ? 'stepAfter' : 'monotone'} dataKey={item.id} name={item.id} yAxisId={item.id} stroke={item.color} dot={item.kind === 'state'} connectNulls isAnimationActive={false} />)}
                 </LineChart>
               </ChartContainer>
+               <div className="air-history-legend" aria-label="Diagramförklaring">
+                {series.map((item) => <label key={item.id}><input type="checkbox" checked={visibleSeries.includes(item.id)} onChange={() => setVisibleSeries((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])} /><span style={{ backgroundColor: item.color }} />{item.label}</label>)}
+              </div>
               <p className="dashboard-live-note">{history.length} mätningar och händelser · varje mätserie har en egen skala.</p>
             </> : <p className="dashboard-live-note">{historyError ? 'Historiken kunde inte hämtas.' : 'Historik visas när insamlingen har körts.'}</p>}
           </div>
