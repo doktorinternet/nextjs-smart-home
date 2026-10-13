@@ -93,6 +93,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+function isPlayed(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  if (value.is_played === true) return true
+  const resumePoint = isRecord(value.resume_point) ? value.resume_point : null
+  return resumePoint?.fully_played === true
+}
+
 function imagesFrom(value: unknown): SpotifyImage[] {
   if (!Array.isArray(value)) return []
   return value.filter((image): image is SpotifyImage =>
@@ -186,17 +193,21 @@ function parseEpisode(value: unknown): SpotifyEpisode | null {
 
 function parseAudiobook(value: unknown): SpotifyAudiobook | null {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.uri !== 'string' ||
-    !value.uri.startsWith('spotify:audiobook:') || typeof value.name !== 'string') return null
+    typeof value.name !== 'string') return null
+  const hasAudiobookUri = value.uri.startsWith('spotify:audiobook:') ||
+    (value.type === 'audiobook' && value.uri.startsWith('spotify:show:'))
+  if (!hasAudiobookUri) return null
   const authors = Array.isArray(value.authors)
     ? value.authors.filter((author) => isRecord(author) && typeof author.name === 'string')
       .map((author) => (author as { name: string }).name).join(', ')
     : ''
+  const spotifyPath = value.uri.startsWith('spotify:show:') ? 'show' : 'audiobook'
   return {
     id: value.id,
     uri: value.uri,
     name: value.name,
     images: imagesFrom(value.images),
-    externalUrl: spotifyUrl(value, 'https://open.spotify.com/audiobook/' + encodeURIComponent(value.id)),
+    externalUrl: spotifyUrl(value, 'https://open.spotify.com/' + spotifyPath + '/' + encodeURIComponent(value.id)),
     authors,
   }
 }
@@ -394,9 +405,12 @@ export default function SpotifyPanel() {
         const audiobookResult = isRecord(result) && isRecord(result.audiobooks) ? result.audiobooks : null
         const episodeValues = episodeResult && Array.isArray(episodeResult.items) ? episodeResult.items : []
         const audiobookValues = audiobookResult && Array.isArray(audiobookResult.items) ? audiobookResult.items : []
-        const episodes = episodeValues.map((saved) => parseEpisode(isRecord(saved) ? saved.episode : null))
+        const episodes = episodeValues
+          .filter((saved) => isRecord(saved) && !isPlayed(saved) && !isPlayed(saved.episode))
+          .map((saved) => parseEpisode(isRecord(saved) ? saved.episode : null))
           .filter((item): item is SpotifyEpisode => item !== null)
-        const audiobooks = audiobookValues.map(parseAudiobook).filter((item): item is SpotifyAudiobook => item !== null)
+        const audiobooks = audiobookValues.filter((book) => !isPlayed(book))
+          .map(parseAudiobook).filter((item): item is SpotifyAudiobook => item !== null)
         setLibrary((current) => ({ ...current, episodes, audiobooks }))
         setSpokenAvailability({
           episodes: episodeResult?.available !== false,
@@ -815,8 +829,8 @@ export default function SpotifyPanel() {
                 <div className="spotify-spoken-content">
                   {(library.episodes.length > 0 || library.audiobooks.length > 0) && (
                     <div className="spotify-content-row">
-                      {spokenAvailability.episodes && library.episodes.map(renderEpisode)}
                       {spokenAvailability.audiobooks && library.audiobooks.map(renderAudiobook)}
+                      {spokenAvailability.episodes && library.episodes.map(renderEpisode)}
                     </div>
                   )}
                   {spokenAvailability.audiobooks && library.audiobooks.length > 0 &&

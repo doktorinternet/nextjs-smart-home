@@ -50,6 +50,7 @@ try {
     SpotifyPlayerError,
     getSpotifyCuratedPlaylists,
     getSpotifyPlayback,
+    getSpotifySavedSpokenContent,
     pauseSpotifyPlayback,
   } = await import('../app/lib/spotify-player.ts');
   const { spotifyPlaylistSelection } = await import('../app/lib/spotify-playlist-selection.ts');
@@ -97,6 +98,16 @@ try {
   assert.equal(tokenRequestCount - tokenRequestsBeforeLibrary, 1);
   assert.deepEqual(curatedPlaylists.items.map((playlist) => playlist.id), [selectedIds[1], selectedIds[0]]);
   assert.equal(curatedPlaylists.total, 2);
+
+  spotifyRequest = async (url) => {
+    const endpoint = new URL(String(url)).pathname;
+    if (endpoint === '/v1/me/audiobooks') return Response.json({ items: [{ id: 'saved-book' }] });
+    if (endpoint === '/v1/me/episodes') return Response.json({ items: [{ episode: { id: 'saved-episode' } }] });
+    throw new Error(`Unexpected Spotify endpoint: ${endpoint}`);
+  };
+  const spokenContent = await getSpotifySavedSpokenContent();
+  assert.equal(spokenContent.episodes.items[0].episode.id, 'saved-episode');
+  assert.equal(spokenContent.audiobooks.items[0].id, 'saved-book');
   console.log('Spotify player timeout, network, and response diagnostics passed.');
 } finally {
   rmSync(directory, { recursive: true, force: true });

@@ -280,8 +280,8 @@ async function getSavedItems(endpoint: '/me/episodes' | '/me/audiobooks') {
 
 export async function getSpotifySavedSpokenContent() {
   const [episodes, audiobooks] = await Promise.all([
-    getSavedItems('/me/audiobooks'),
     getSavedItems('/me/episodes'),
+    getSavedItems('/me/audiobooks'),
   ]);
   return { episodes, audiobooks };
 }
