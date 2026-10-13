@@ -180,7 +180,7 @@ export default function HistoryChart({
           >{range.label}</button>
         ))}
       </div>
-      {panelVisible && <ChartContainer className={styles.historyRecharts} config={chartConfig} initialDimension={{ width: 600, height: 220 }}>
+      {panelVisible && <ChartContainer className={styles.historyRecharts} config={chartConfig}>
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 12 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.12)" />
           <XAxis
