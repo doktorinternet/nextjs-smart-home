@@ -17,6 +17,7 @@ import TabsLayout from './layouts/tabsLayout'
 import ExpandableLayout from './layouts/expandableLayout'
 import WidgetsLayout from './layouts/widgetsLayout'
 import { layoutOptions, type LayoutMode } from './layouts/layoutOptions'
+import styles from './page.module.css'
 
 type DashboardPanel = {
   id: 'transit' | 'air' | 'printer' | 'cast' | 'spotify' | 'speed'
@@ -61,7 +62,7 @@ export default function Page() {
   }[layoutMode]
 
   return (
-    <main className="dashboard-shell" onContextMenu={(event) => event.preventDefault()}>
+    <main className={styles.dashboardShell} onContextMenu={(event) => event.preventDefault()}>
       <div className="dashboard-frame">
         <header className="dashboard-header">
           <div className="dashboard-brand">

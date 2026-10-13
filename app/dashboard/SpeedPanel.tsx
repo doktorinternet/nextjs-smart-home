@@ -7,6 +7,7 @@ import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 import { copy, formatCopy, locale } from '@/app/copy'
 import type { SpeedHistoryResult } from '@/app/lib/speed-history'
 import HistoryChart, { type HistoryChartRange, type HistoryChartRow, type HistoryChartSeries } from '@/app/components/ui/HistoryChart'
+import styles from './SpeedPanel.module.css'
 
 type SpeedSample = SpeedHistoryResult
 type SpeedHistory = { status?: string; error?: string; results?: SpeedSample[] }
@@ -107,7 +108,7 @@ export default function SpeedPanel() {
     }
   }
   return (
-    <section className="dashboard-module dashboard-live-card dashboard-speed-card" aria-labelledby="speed-heading">
+    <section className={'dashboard-module dashboard-live-card dashboard-speed-card ' + styles.speedPanel} aria-labelledby="speed-heading">
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faGauge} /></span>
         <div>

@@ -1,0 +1,107 @@
+.timeTable :global(.departures) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timeTable :global(.tram-direction) {
+  min-width: 0;
+}
+
+.timeTable :global(.tram-direction-heading) {
+  margin: 0;
+  padding: 0 4px 9px;
+  color: #d6dbea;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.timeTable :global(.tram-departure-list) {
+  max-height: 260px;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  border-radius: 10px;
+  list-style: none;
+  scrollbar-gutter: stable;
+}
+
+.timeTable :global(.tram-departure-row) {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 60px 76px;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(13, 18, 29, .52);
+  color: #edf0f7;
+  font-size: 16px;
+}
+
+.timeTable :global(.tram-departure-row:nth-child(even)) { background: rgba(21, 27, 41, .68); }
+.timeTable :global(.tram-departure-row:first-child) { border-top: 1px solid rgba(255, 255, 255, .09); }
+
+.timeTable :global(.tram-line-badge) {
+  box-sizing: border-box;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, .24), 0 2px 5px rgba(0, 0, 0, .18);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.timeTable :global(.tram-departure-destination) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeTable :global(.tram-departure-time) {
+  color: #c4cada;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.timeTable :global(.tram-departure-remaining) {
+  color: #d7deec;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.timeTable :global(.tram-departure-row.is-urgent .tram-departure-remaining) { color: #ffbd91; }
+.timeTable :global(.tram-departure-row.is-soon .tram-departure-remaining) { color: #e8cf91; }
+.timeTable :global(.tram-departure-row.is-cancelled) { color: #b2b7c2; }
+.timeTable :global(.tram-departure-row.is-cancelled .tram-departure-remaining) {
+  color: #f2a1a1;
+  font-size: 12px;
+  letter-spacing: -.3px;
+}
+.timeTable :global(.tram-direction-empty) { margin: 10px 4px; color: #8e96a8; font-size: 13px; }
+
+@media (max-width: 560px) {
+  .timeTable :global(.departures) { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .timeTable :global(.tram-departure-row) {
+    grid-template-columns: 40px minmax(0, 1fr) 48px 68px;
+    gap: 6px;
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 14px;
+  }
+  .timeTable :global(.tram-departure-remaining) { font-size: 12px; }
+  .timeTable :global(.tram-departure-row.is-cancelled .tram-departure-remaining) { font-size: 10px; }
+}

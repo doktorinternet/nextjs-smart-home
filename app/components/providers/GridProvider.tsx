@@ -1,6 +1,7 @@
 'use client'
 import { createContext, FC, ReactNode, useEffect, useState } from "react";
 import conf from '@/app/configuration.json';
+import styles from './GridProvider.module.css';
 
 interface ContextProps {
   totalColumns: number,
@@ -22,7 +23,7 @@ const GridProvider: FC<Props> = ({ children }) => {
 
   const getClassNames = () => {
     return `
-    grid-container
+    ${styles.gridContainer}
     grid 
     w-full 
     h-full

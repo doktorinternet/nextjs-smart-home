@@ -1,0 +1,178 @@
+.spotifyPanel:global(.spotify-panel) { gap: 16px; min-width: 0; }
+.spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-player) { gap: 7px; }
+.spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-now-playing) { grid-template-columns: 84px minmax(0, 1fr) minmax(150px, .7fr); }
+.spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-current-art),
+.spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-current-art-empty) { width: 84px; }
+.spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-hint) { margin: 0; }
+.spotifyPanel :global(.spotify-player) { display: flex; min-width: 0; flex: 0 0 auto; flex-direction: column; gap: 16px; }
+.spotifyPanel :global(.spotify-panel-content) { display: flex; flex-direction: column; gap: 16px; }
+.spotifyPanel :global(.spotify-panel-content .spotify-library) { flex: 1 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.spotifyPanel :global(.spotify-library-content) { display: flex; min-height: 180px; flex-direction: column; }
+.spotifyPanel :global(.spotify-library-content > .spotify-content-row),
+.spotifyPanel :global(.spotify-library-content > .spotify-spoken-content) { flex: 1 1 auto; min-height: 0; }
+.spotifyPanel :global(.spotify-heading-icon) { color: #72e3a2; }
+.spotifyPanel :global(.spotify-now-playing) {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(150px, .7fr);
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+.spotifyPanel :global(.spotify-now-playing.is-device-expanded) { align-items: center; row-gap: 8px; }
+.spotifyPanel :global(.spotify-current-art),
+.spotifyPanel :global(.spotify-current-art-empty) {
+  display: grid;
+  width: 96px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(255,255,255,.08);
+  color: #72e3a2;
+  object-fit: contain;
+}
+.spotifyPanel :global(.spotify-current-art-empty) { font-size: 30px; }
+.spotifyPanel :global(.spotify-current-info) { display: grid; min-width: 0; gap: 6px; }
+.spotifyPanel :global(.spotify-current-info h3),
+.spotifyPanel :global(.spotify-current-info p) { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spotifyPanel :global(.spotify-current-info h3) { color: var(--dashboard-ink); font-size: clamp(18px, 2vw, 24px); font-weight: 650; }
+.spotifyPanel :global(.spotify-current-info p) { color: #aeb8c8; font-size: 14px; }
+.spotifyPanel :global(.spotify-progress) { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-top: 6px; color: #aeb8c8; font-size: 12px; }
+.spotifyPanel :global(.spotify-progress input),
+.spotifyPanel :global(.spotify-volume-row input) { width: 100%; min-width: 0; accent-color: #52df91; }
+.spotifyPanel :global(.spotify-device-summary) {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  min-height: 64px;
+  padding: 10px 13px;
+  border: 1px solid rgba(166, 181, 205, .2);
+  border-radius: 16px;
+  color: var(--dashboard-ink);
+  background: rgba(255,255,255,.045);
+  text-align: left;
+  cursor: pointer;
+}
+.spotifyPanel :global(.spotify-device-summary > svg) { flex: 0 0 24px; color: #52df91; font-size: 24px; }
+.spotifyPanel :global(.spotify-device-summary > span:not(.spotify-chevron)) { flex: 1 1 auto; min-width: 0; }
+.spotifyPanel :global(.spotify-device-summary strong),
+.spotifyPanel :global(.spotify-device-summary small) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spotifyPanel :global(.spotify-device-summary strong) { font-size: 15px; }
+.spotifyPanel :global(.spotify-device-summary small) { margin-top: 3px; color: #aeb8c8; font-size: 12px; }
+.spotifyPanel :global(.spotify-chevron) { display: grid; width: 16px; height: 16px; flex: 0 0 16px; place-items: center; color: #bac2ce; }
+.spotifyPanel :global(.spotify-chevron svg) { display: block; width: 12px; height: 12px; }
+.spotifyPanel :global(.spotify-device-switcher) { display: contents; }
+.spotifyPanel :global(.spotify-device-picker) { grid-column: 1 / -1; }
+.spotifyPanel :global(.spotify-device-picker),
+.spotifyPanel :global(.spotify-library) { min-width: 0; padding: 14px; border: 1px solid rgba(166,181,205,.14); border-radius: 16px; background: rgba(10,14,23,.3); }
+.spotifyPanel :global(.spotify-section-label) { margin: 0 0 10px; color: var(--dashboard-ink); font-size: 14px; font-weight: 650; }
+.spotifyPanel :global(.spotify-device-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
+.spotifyPanel :global(.spotify-device-tile) {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 1px solid rgba(166,181,205,.14);
+  border-radius: 14px;
+  color: #c6cedb;
+  background: rgba(255,255,255,.035);
+  cursor: pointer;
+}
+.spotifyPanel :global(.spotify-device-tile > svg) { color: #c6cedb; font-size: 22px; }
+.spotifyPanel :global(.spotify-device-tile > span) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.spotifyPanel :global(.spotify-device-tile small) { color: #9ca8bb; font-size: 11px; }
+.spotifyPanel :global(.spotify-device-tile.is-active) { border-color: #52df91; color: #e9fff1; background: rgba(50,205,112,.12); }
+.spotifyPanel :global(.spotify-device-tile.is-active > svg),
+.spotifyPanel :global(.spotify-device-tile.is-active small) { color: #52df91; }
+.spotifyPanel :global(.spotify-playback-controls) { display: grid; grid-template-columns: repeat(5, minmax(44px, 1fr)); gap: clamp(7px, 2vw, 16px); align-items: center; }
+.spotifyPanel :global(.spotify-playback-controls button) {
+  position: relative;
+  display: grid;
+  min-width: 44px;
+  min-height: 56px;
+  place-items: center;
+  border: 1px solid rgba(166,181,205,.15);
+  border-radius: 15px;
+  color: #f0f3f8;
+  background: rgba(255,255,255,.045);
+  font-size: 20px;
+  cursor: pointer;
+  transition: opacity .24s ease-in-out;
+}
+.spotifyPanel :global(.spotify-playback-controls button.is-active) { color: #52df91; border-color: rgba(82,223,145,.5); background: rgba(50,205,112,.1); }
+.spotifyPanel :global(.spotify-playback-controls button.is-pending) { opacity: .72; }
+.spotifyPanel :global(.spotify-playback-controls button.is-pending > svg) { animation: spotifyControlSpin .9s linear infinite; }
+.spotifyPanel :global(.spotify-playback-controls button.is-pending-previous > svg) { animation-direction: reverse; }
+@keyframes spotifyControlSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spotifyPanel :global(.spotify-playback-controls button) { transition: none; }
+  .spotifyPanel :global(.spotify-playback-controls button.is-pending > svg) { animation: none; }
+}
+.spotifyPanel :global(.spotify-playback-controls button:disabled),
+.spotifyPanel :global(.spotify-device-summary:disabled) { opacity: .45; cursor: not-allowed; }
+.spotifyPanel :global(.spotify-playback-controls .spotify-primary-control) { width: 68px; height: 68px; min-height: 68px; justify-self: center; border: 0; border-radius: 50%; color: #092114; background: #52df91; font-size: 25px; }
+.spotifyPanel :global(.spotify-playback-controls button:focus-visible),
+.spotifyPanel :global(.spotify-device-summary:focus-visible),
+.spotifyPanel :global(.spotify-device-tile:focus-visible),
+.spotifyPanel :global(.spotify-library-tabs button:focus-visible),
+.spotifyPanel :global(.spotify-playlist-action:focus-visible) { outline: 2px solid #52df91; outline-offset: 2px; }
+.spotifyPanel :global(.spotify-next-icon) { transform: rotate(180deg); }
+.spotifyPanel :global(.spotify-repeat-one) { position: absolute; top: 15px; font-size: 9px; font-weight: 700; }
+.spotifyPanel :global(.spotify-volume-row) { display: grid; grid-template-columns: 24px minmax(0,1fr) 44px; gap: 12px; align-items: center; color: #b8c1cf; }
+.spotifyPanel :global(.spotify-volume-row > svg) { font-size: 19px; }
+.spotifyPanel :global(.spotify-volume-row > span) { text-align: right; font-variant-numeric: tabular-nums; }
+.spotifyPanel :global(.spotify-hint) { margin: 4px 0; color: #aeb8c8; font-size: 12px; line-height: 1.45; }
+.spotifyPanel :global(.spotify-library) { display: grid; gap: 14px; }
+.spotifyPanel :global(.spotify-library.is-volume-unsupported) { gap: 8px; padding: 8px; }
+.spotifyPanel :global(.spotify-library-tabs) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.spotifyPanel :global(.spotify-library-tabs button) {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 1px solid rgba(166,181,205,.12);
+  border-radius: 13px;
+  color: #bac3d1;
+  background: rgba(255,255,255,.04);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.spotifyPanel :global(.spotify-library-tabs button.is-active) { border-color: rgba(82,223,145,.65); color: #72e3a2; background: rgba(50,205,112,.11); }
+.spotifyPanel :global(.spotify-content-row) { display: flex; min-width: 0; min-height: 180px; container-type: size; gap: 12px; overflow-x: auto; overflow-y: hidden; padding: 1px 1px 4px; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+.spotifyPanel :global(.spotify-content-card) { display: grid; flex: 0 0 clamp(132px, calc(100cqh - 48px), 260px); align-content: start; gap: 4px; min-width: 0; }
+.spotifyPanel :global(.spotify-content-link) { display: grid; min-width: 0; gap: 3px; color: inherit; text-decoration: none; }
+.spotifyPanel :global(.spotify-content-art),
+.spotifyPanel :global(.spotify-content-placeholder) { display: grid; width: 100%; max-width: 100%; aspect-ratio: 1; place-items: center; border-radius: 12px; background: rgba(255,255,255,.075); color: #72e3a2; object-fit: contain; }
+.spotifyPanel :global(.spotify-content-title) { overflow: hidden; color: var(--dashboard-ink); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.spotifyPanel :global(.spotify-content-subtitle) { overflow: hidden; color: #aeb8c8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.spotifyPanel :global(.spotify-playlist-action) { width: 100%; padding: 0; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.spotifyPanel :global(.spotify-playlist-action:disabled) { opacity: .45; cursor: not-allowed; }
+.spotifyPanel :global(.spotify-spoken-content) { display: grid; gap: 12px; min-width: 0; }
+.spotifyPanel :global(.spotify-status) { min-height: 14px; margin: 0; color: #aeb8c8; font-size: 11px; }
+
+@media (max-width: 560px) {
+  .spotifyPanel :global(.spotify-now-playing) { grid-template-columns: 68px minmax(0, 1fr); gap: 12px; }
+  .spotifyPanel :global(.spotify-current-art),
+  .spotifyPanel :global(.spotify-current-art-empty) { width: 68px; border-radius: 11px; }
+  .spotifyPanel :global(.spotify-device-summary),
+  .spotifyPanel :global(.spotify-device-picker) { grid-column: 1 / -1; }
+  .spotifyPanel :global(.spotify-device-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotifyPanel :global(.spotify-content-card) { flex-basis: 112px; }
+  .spotifyPanel :global(.spotify-content-art),
+  .spotifyPanel :global(.spotify-content-placeholder) { width: 112px; }
+}
+
+.spotifyPanel :global(.spotify-library-content.is-compact) { min-height: 88px; }
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-row) { min-height: 80px; }
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-card) { flex-basis: 72px; gap: 0; }
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-art),
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-placeholder) { width: 100%; border-radius: 9px; }
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-title),
+.spotifyPanel :global(.spotify-library-content.is-compact .spotify-content-subtitle) { display: none; }

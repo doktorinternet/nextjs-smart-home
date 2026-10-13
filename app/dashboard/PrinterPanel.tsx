@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPrint } from '@fortawesome/free-solid-svg-icons'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 import { copy, formatCopy } from '@/app/copy'
+import styles from './PrinterPanel.module.css'
 
 type PrinterStatus = {
   connection?: { state?: string }
@@ -104,7 +105,7 @@ export default function PrinterPanel() {
   }
 
   return (
-    <section className="dashboard-module dashboard-live-card" aria-labelledby="printer-heading">
+    <section className={'dashboard-module dashboard-live-card ' + styles.printerPanel} aria-labelledby="printer-heading">
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faPrint} /></span>
         <div>

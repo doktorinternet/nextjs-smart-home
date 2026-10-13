@@ -1,0 +1,4 @@
+.gridContainer {
+  grid-gap: 12px;
+  grid-template-rows: auto 1fr;
+}

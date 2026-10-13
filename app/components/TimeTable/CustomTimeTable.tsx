@@ -4,6 +4,7 @@ import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { AppJourney, Direction, LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
 import { useAutoFetch } from "@/app/dashboard/useAutoFetch";
 import { copy, formatCopy, locale } from "@/app/copy";
+import styles from "./CustomTimeTable.module.css";
 
 type DeparturesPayload = {
   results: DepartureApiResponse[];
@@ -171,7 +172,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
   }, [error, loading, onFetchStateChange]);
 
   return (
-    <div className="time-table grow" aria-busy={loading}>
+    <div className={`time-table grow ${styles.timeTable}`} aria-busy={loading}>
       <div className="flex items-center justify-between gap-3">
         <div role="status" aria-live="polite">
           {error && <span role="alert">{error}</span>}

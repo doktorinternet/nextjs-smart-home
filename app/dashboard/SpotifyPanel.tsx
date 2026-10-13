@@ -26,6 +26,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import Image from 'next/image'
 import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
 import { copy } from '@/app/copy'
+import styles from './SpotifyPanel.module.css'
 
 type SpotifyDevice = {
   id: string
@@ -612,7 +613,7 @@ export default function SpotifyPanel() {
   }
 
   return (
-    <section className={'dashboard-module dashboard-live-card spotify-panel' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '')} aria-labelledby="spotify-heading">
+    <section className={'dashboard-module dashboard-live-card spotify-panel' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '') + ' ' + styles.spotifyPanel} aria-labelledby="spotify-heading">
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon spotify-heading-icon" aria-hidden="true"><FontAwesomeIcon icon={faSpotify} /></span>
         <div>
