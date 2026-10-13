@@ -191,7 +191,7 @@ export default function CustomTimeTable({ autoFetch, onRefreshReady, onFetchStat
                 <ol className="tram-departure-list">
                   {departures.map((departure) => (
                     <DepartureRow
-                      key={`${departure.line.gid}-${departure.journey.id}`}
+                      key={`${departure.line.gid}-${departure.journey.detailsReference}`}
                       departure={departure}
                       now={now}
                     />

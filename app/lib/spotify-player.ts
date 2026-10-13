@@ -5,6 +5,7 @@ import {
   SpotifyTokenRequestError,
   refreshSpotifyAccessToken,
 } from '@/app/lib/spotify-auth';
+import { spotifyPlaylistSelection } from '@/app/lib/spotify-playlist-selection';
 
 const spotifyApiBase = 'https://api.spotify.com/v1';
 type PlayerEndpoint = '/me' | '/me/player' | '/me/player/devices' | '/me/player/pause' | '/me/player/play' | '/me/player/next' | '/me/player/previous' | '/me/player/volume' | '/me/player/shuffle' | '/me/player/repeat' | '/me/player/seek' | '/me/playlists' | '/me/episodes' | '/me/audiobooks';
@@ -53,13 +54,9 @@ function withQuery(endpoint: PlayerEndpoint, values: Record<string, string | und
   return suffix ? `${endpoint}?${suffix}` : endpoint;
 }
 
-async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, options: {
-  query?: Record<string, string | undefined>;
-  body?: unknown;
-} = {}): Promise<unknown | null> {
-  let accessToken: string;
+async function getSpotifyAccessToken(): Promise<string> {
   try {
-    ({ accessToken } = await refreshSpotifyAccessToken());
+    return (await refreshSpotifyAccessToken()).accessToken;
   } catch (error) {
     console.error(error);
     if (error instanceof SpotifyAuthConfigError) throw error;
@@ -73,6 +70,14 @@ async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, op
     }
     throw new SpotifyPlayerError(502, 'token_refresh');
   }
+}
+
+async function spotifyRequest(endpoint: PlayerEndpoint, method: PlayerMethod, options: {
+  query?: Record<string, string | undefined>;
+  body?: unknown;
+  accessToken?: string;
+} = {}): Promise<unknown | null> {
+  const accessToken = options.accessToken ?? await getSpotifyAccessToken();
 
   const requestStartedAt = Date.now();
   const timeoutSignal = AbortSignal.timeout(10_000);
@@ -208,8 +213,54 @@ export async function startSpotifyPlayback(options: {
   });
 }
 
-export async function getSpotifySavedPlaylists(): Promise<unknown | null> {
-  return spotifyRequest('/me/playlists', 'GET', { query: { limit: '30' } });
+function requestSavedPlaylists(limit: number, offset: number, accessToken?: string): Promise<unknown | null> {
+  return spotifyRequest('/me/playlists', 'GET', {
+    query: { limit: String(limit), offset: String(offset) },
+    accessToken,
+  });
+}
+
+export async function getSpotifySavedPlaylists(limit = 30, offset = 0): Promise<unknown | null> {
+  return requestSavedPlaylists(limit, offset);
+}
+
+export async function getSpotifyCuratedPlaylists(random: () => number = Math.random) {
+  const selectedIds = new Set<string>(spotifyPlaylistSelection);
+  const selected = new Map<string, Record<string, unknown>>();
+  const accessToken = await getSpotifyAccessToken();
+  let total: number | null = null;
+  let offset = 0;
+  let fetched = 0;
+
+  while (total === null || fetched < total) {
+    const page = await requestSavedPlaylists(50, offset, accessToken);
+    if (typeof page !== 'object' || page === null ||
+      !('items' in page) || !Array.isArray(page.items) ||
+      !('total' in page) || typeof page.total !== 'number') {
+      throw new SpotifyPlayerError(502, 'player_response');
+    }
+
+    total = page.total;
+    if (page.items.length === 0) break;
+
+    for (const playlist of page.items) {
+      fetched++;
+      if (typeof playlist !== 'object' || playlist === null ||
+        !('id' in playlist) || typeof playlist.id !== 'string' ||
+        !selectedIds.has(playlist.id) || selected.has(playlist.id)) continue;
+      selected.set(playlist.id, playlist as Record<string, unknown>);
+    }
+    offset += page.items.length;
+  }
+
+  const items = [...selected.values()];
+  for (let index = items.length - 1; index > 0; index--) {
+    const targetIndex = Math.floor(random() * (index + 1));
+    const item = items[index];
+    items[index] = items[targetIndex];
+    items[targetIndex] = item;
+  }
+  return { items, total: items.length };
 }
 
 async function getSavedItems(endpoint: '/me/episodes' | '/me/audiobooks') {
@@ -229,8 +280,8 @@ async function getSavedItems(endpoint: '/me/episodes' | '/me/audiobooks') {
 
 export async function getSpotifySavedSpokenContent() {
   const [episodes, audiobooks] = await Promise.all([
-    getSavedItems('/me/episodes'),
     getSavedItems('/me/audiobooks'),
+    getSavedItems('/me/episodes'),
   ]);
   return { episodes, audiobooks };
 }

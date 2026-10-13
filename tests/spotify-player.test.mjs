@@ -20,8 +20,10 @@ process.env.SPOTIFY_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString('base64u
 process.env.SPOTIFY_TOKEN_STORE_PATH = join(directory, 'token.enc');
 
 let spotifyRequest = async () => new Response(null, { status: 204 });
+let tokenRequestCount = 0;
 globalThis.fetch = async (url, init) => {
   if (String(url) === 'https://accounts.spotify.com/api/token') {
+    tokenRequestCount++;
     return Response.json({
       access_token: 'mock-access-token',
       refresh_token: 'mock-refresh-token',
@@ -44,7 +46,13 @@ try {
   );
   await completeAuthorization(callbackRequest);
 
-  const { SpotifyPlayerError, getSpotifyPlayback, pauseSpotifyPlayback } = await import('../app/lib/spotify-player.ts');
+  const {
+    SpotifyPlayerError,
+    getSpotifyCuratedPlaylists,
+    getSpotifyPlayback,
+    pauseSpotifyPlayback,
+  } = await import('../app/lib/spotify-player.ts');
+  const { spotifyPlaylistSelection } = await import('../app/lib/spotify-playlist-selection.ts');
   const failures = [];
   const originalConsoleError = console.error;
   console.error = (...values) => failures.push(values);
@@ -75,6 +83,20 @@ try {
     'network',
     'invalid_response_body',
   ]);
+
+  const selectedIds = spotifyPlaylistSelection.slice(0, 2);
+  const tokenRequestsBeforeLibrary = tokenRequestCount;
+  spotifyRequest = async (url) => {
+    const offset = Number(new URL(String(url)).searchParams.get('offset'));
+    const items = offset === 0
+      ? [{ id: selectedIds[0] }, { id: 'not-selected' }, { id: selectedIds[1] }]
+      : [{ id: selectedIds[0] }];
+    return Response.json({ items, total: 4, offset });
+  };
+  const curatedPlaylists = await getSpotifyCuratedPlaylists(() => 0);
+  assert.equal(tokenRequestCount - tokenRequestsBeforeLibrary, 1);
+  assert.deepEqual(curatedPlaylists.items.map((playlist) => playlist.id), [selectedIds[1], selectedIds[0]]);
+  assert.equal(curatedPlaylists.total, 2);
   console.log('Spotify player timeout, network, and response diagnostics passed.');
 } finally {
   rmSync(directory, { recursive: true, force: true });

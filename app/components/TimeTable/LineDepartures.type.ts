@@ -50,6 +50,7 @@ export function mapAndMergeByLine(apiResults: DepartureApiResponse[]): LineDepar
     const destination = result.serviceJourney.directionDetails.shortDirection; 
     lineDepartures.journeys.push({
       id: result.serviceJourney.gid,
+      detailsReference: result.detailsReference,
       departureTime: result.estimatedOtherwisePlannedTime,
       destination: destination,
       direction: DestinationDirections.get(destination),
@@ -67,6 +68,7 @@ export function mapAndMergeByLine(apiResults: DepartureApiResponse[]): LineDepar
 
 export type AppJourney = {
   id: string,
+  detailsReference: string,
   destination: string,
   direction: Direction | undefined,
   departureTime: string,

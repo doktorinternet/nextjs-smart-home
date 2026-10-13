@@ -20,6 +20,7 @@ import {
   faShuffle,
   faTv,
   faVolumeHigh,
+  faVolumeOff,
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import Image from 'next/image'
@@ -222,7 +223,7 @@ function deviceIcon(device: SpotifyDevice | null): IconDefinition {
   const type = device?.type.toLowerCase() ?? ''
   if (type.includes('phone') || type.includes('mobile')) return faMobileScreenButton
   if (type.includes('tv')) return faTv
-  if (type.includes('speaker') || type.includes('cast')) return faVolumeHigh
+  if (type.includes('speaker') || type.includes('cast')) return faVolumeOff
   return faHeadphonesAlt
 }
 
