@@ -1,6 +1,8 @@
 'use client'
 
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { copy } from '@/app/copy'
+import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './tabsLayout.module.css'
 
 type DashboardLayoutPanel = {
@@ -34,8 +36,8 @@ export default function TabsLayout({ panels }: TabsLayoutProps) {
   }
 
   return (
-    <section className={styles.layout} aria-label="Dashboard panels">
-      <div className={styles.tabList} role="tablist" aria-label="Dashboard panels">
+    <section className={styles.layout} aria-label={copy.dashboard.layoutText.dashboardPanels}>
+      <div className={styles.tabList} role="tablist" aria-label={copy.dashboard.layoutText.dashboardPanels}>
         {panels.map((panel, index) => {
           const selected = panel.id === activeId
           const tabId = `${id}-tab-${panel.id}`
@@ -73,7 +75,7 @@ export default function TabsLayout({ panels }: TabsLayoutProps) {
               hidden={!selected}
               tabIndex={0}
             >
-              {panel.content}
+              <DashboardPanelVisibilityProvider visible={selected}>{panel.content}</DashboardPanelVisibilityProvider>
             </section>
           )
         })}

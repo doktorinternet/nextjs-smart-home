@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { copy } from '@/app/copy'
+import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import { motion, useReducedMotion } from 'framer-motion'
 import styles from './expandableLayout.module.css'
 
@@ -36,8 +38,8 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
 
   return (
     <div className={styles.layout}>
-      <nav className={styles.controls} aria-label="Choose dashboard panels">
-        <span className={styles.controlsLabel}>Panels</span>
+      <nav className={styles.controls} aria-label={copy.dashboard.layoutText.choosePanels}>
+        <span className={styles.controlsLabel}>{copy.dashboard.layoutText.panels}</span>
         <div className={styles.choices}>
           {panels.map((panel) => {
             const selected = selectedIds.includes(panel.id)
@@ -57,7 +59,7 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
         </div>
       </nav>
 
-      <div className={styles.grid} aria-label="Dashboard panels">
+      <div className={styles.grid} aria-label={copy.dashboard.layoutText.dashboardPanels}>
         {panels.map((panel) => {
           const selected = selectedIds.includes(panel.id)
           return (
@@ -79,7 +81,9 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
                 }
               }}
             >
-              <div className={styles.panelContent}>{panel.content}</div>
+              <div className={styles.panelContent}>
+                <DashboardPanelVisibilityProvider visible={selected}>{panel.content}</DashboardPanelVisibilityProvider>
+              </div>
             </motion.div>
           )
         })}

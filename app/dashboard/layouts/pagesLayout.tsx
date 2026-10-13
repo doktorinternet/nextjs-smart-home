@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
+import { copy, formatCopy } from '@/app/copy'
+import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './pagesLayout.module.css'
 
 type DashboardLayoutPanel = {
@@ -17,9 +19,9 @@ type PageDefinition = {
 }
 
 const pages: PageDefinition[] = [
-  { label: 'Travel', panelIds: ['transit', 'spotify'] },
-  { label: 'Environment', panelIds: ['printer', 'air'] },
-  { label: 'Home', panelIds: ['speed', 'cast'] },
+  { label: copy.dashboard.pageNames.travel, panelIds: ['transit', 'spotify'] },
+  { label: copy.dashboard.pageNames.environment, panelIds: ['printer', 'air'] },
+  { label: copy.dashboard.pageNames.home, panelIds: ['speed', 'cast'] },
 ]
 
 export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[] }) {
@@ -67,14 +69,14 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
   return (
     <div
       className={styles.viewport}
-      aria-label="Dashboard pages"
+      aria-label={copy.dashboard.layoutText.dashboardPages}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       onPointerDown={handleTouchStart}
       onPointerUp={handleTouchEnd}
       onPointerCancel={() => { touchStart.current = null }}
     >
-      <section className={styles.page} aria-label={`${pages[activePage].label} dashboard page`}>
+      <section className={styles.page} aria-label={formatCopy(copy.dashboard.layoutText.page, { panel: pages[activePage].label })}>
         <div className={styles.panels} data-page={activePage} data-direction={pageState.direction > 0 ? 'forward' : 'backward'}>
           {panels.map((panel) => {
             const isVisible = pages[activePage].panelIds.includes(panel.id)
@@ -87,29 +89,29 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
                 hidden={!isVisible}
                 tabIndex={isVisible ? 0 : undefined}
               >
-                {panel.content}
+                <DashboardPanelVisibilityProvider visible={isVisible}>{panel.content}</DashboardPanelVisibilityProvider>
               </div>
             )
           })}
         </div>
 
-        <nav className={styles.navigation} aria-label="Dashboard pages">
+        <nav className={styles.navigation} aria-label={copy.dashboard.layoutText.dashboardPages}>
           <button
             className={styles.arrow}
             type="button"
-            aria-label="Previous page"
+            aria-label={copy.dashboard.layoutText.previousPage}
             onClick={() => movePage(-1)}
             disabled={activePage === 0}
           >
             <span aria-hidden="true">‹</span>
           </button>
-          <div className={styles.indicators} role="group" aria-label="Choose dashboard page">
+          <div className={styles.indicators} role="group" aria-label={copy.dashboard.layoutText.choosePage}>
             {pages.map((page, index) => (
               <button
                 className={styles.indicator}
                 type="button"
                 key={page.label}
-                aria-label={`${page.label} page, ${index + 1} of ${pages.length}`}
+                aria-label={formatCopy(copy.dashboard.layoutText.pageCount, { page: page.label, current: index + 1, total: pages.length })}
                 aria-current={activePage === index ? 'page' : undefined}
                 onClick={() => selectPage(index)}
               >
@@ -121,7 +123,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
           <button
             className={styles.arrow}
             type="button"
-            aria-label="Next page"
+            aria-label={copy.dashboard.layoutText.nextPage}
             onClick={() => movePage(1)}
             disabled={activePage === pages.length - 1}
           >

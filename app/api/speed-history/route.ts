@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 const maxCsvBytes = 5 * 1024 * 1024;
 const defaultLimit = 30;
-const maxLimit = 100;
+const maxLimit = 5000;
 
 function unavailable(message: string, status: number) {
   return NextResponse.json(

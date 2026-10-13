@@ -2,38 +2,7 @@ import { Dir } from "fs";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 
 export type LineDepartures = {
-  journeys: Array<AppJourney
-  /* { 
-    origin: string;
-    direction: string;
-    directionDetails: {
-      fullDirection: string;
-      shortDirection: string;
-      replaces: string;
-      via: string;
-      isFreeService: boolean;
-      isPaidService: boolean;
-      isSwimmingService: boolean;
-      isDirectDestinationBus: boolean;
-      isFrontEntry: boolean;
-      isExtraBus: boolean;
-      isExtraBoat: boolean;
-      isExtraTram: boolean;
-      isSchoolBus: boolean;
-      isExpressBus: boolean;
-      fortifiesLine: string;
-    };
-    plannedTime: string;
-    estimatedTime: string;
-    estimatedOtherwisePlannedTime: string;
-    isCancelled: boolean;
-    isPartCancelled: boolean;
-    occupancy: {
-      level: 'low' | 'medium' | 'high'; // Assuming these are the possible values
-      source: 'prediction' | 'actual'; // Assuming these are the possible values
-    };
-  } */
-  >;
+  journeys: Array<AppJourney>;
 
   line: {
     gid: string;
@@ -88,18 +57,6 @@ export function mapAndMergeByLine(apiResults: DepartureApiResponse[]): LineDepar
     }
     );
   });
-
-  /* {
-    origin: result.serviceJourney.origin,
-    direction: result.serviceJourney.direction,
-    directionDetails: result.serviceJourney.directionDetails,
-    plannedTime: result.plannedTime,
-    estimatedTime: result.estimatedTime,
-    estimatedOtherwisePlannedTime: result.estimatedOtherwisePlannedTime,
-    isCancelled: result.isCancelled,
-    isPartCancelled: result.isPartCancelled,
-    occupancy: result.occupancy
-  } */
 
   // Convert the map to an array of LineDepartures
   const result = Array.from(lineMap.values());

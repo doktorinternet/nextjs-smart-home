@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { copy, formatCopy } from '@/app/copy'
+import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './appsLayout.module.css'
 
 type DashboardLayoutPanel = {
@@ -47,15 +49,15 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
   }
 
   return (
-    <div className={styles.viewport} aria-label="Dashboard apps">
-      <section className={styles.launcher} aria-label="Home" hidden={activePanel !== undefined}>
+    <div className={styles.viewport} aria-label={copy.dashboard.layoutText.dashboardApps}>
+      <section className={styles.launcher} aria-label={copy.dashboard.layoutText.home} hidden={activePanel !== undefined}>
         <header className={styles.header}>
-          <p className={styles.eyebrow}>SMART HOME</p>
-          <h1>Apps</h1>
-          <p className={styles.hint}>Choose a panel to open it full screen.</p>
+          <p className={styles.eyebrow}>{copy.dashboard.layoutText.appsEyebrow}</p>
+          <h1>{copy.dashboard.layoutText.appsTitle}</h1>
+          <p className={styles.hint}>{copy.dashboard.layoutText.appsHint}</p>
         </header>
 
-        <nav className={styles.appGrid} aria-label="Open a dashboard panel">
+        <nav className={styles.appGrid} aria-label={copy.dashboard.layoutText.choosePanels}>
           {panels.map((panel) => (
             <button
               className={styles.appButton}
@@ -66,7 +68,7 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
                 else launcherButtons.current.delete(panel.id)
               }}
               onClick={() => setActivePanelId(panel.id)}
-              aria-label={`Open ${panel.label}`}
+              aria-label={formatCopy(copy.dashboard.layoutText.openPanel, { panel: panel.label })}
             >
               <span className={styles.appIcon} aria-hidden="true">{panel.icon}</span>
               <span className={styles.appLabel}>{panel.label}</span>
@@ -84,19 +86,21 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
             className={styles.panelView}
             key={panel.id}
             id={panelId}
-            aria-label={`${panel.label} panel`}
+            aria-label={formatCopy(copy.dashboard.layoutText.panel, { panel: panel.label })}
             aria-hidden={!isActive}
             hidden={!isActive}
           >
             <header className={styles.panelHeader}>
               <button className={styles.homeButton} type="button" onClick={returnHome}>
                 <span aria-hidden="true">&larr;</span>
-                <span>Home</span>
+                <span>{copy.dashboard.layoutText.home}</span>
               </button>
               <h1 className={styles.panelTitle}>{panel.label}</h1>
               <span className={styles.headerSpacer} aria-hidden="true" />
             </header>
-            <div className={styles.panelContent}>{panel.content}</div>
+            <div className={styles.panelContent}>
+              <DashboardPanelVisibilityProvider visible={isActive}>{panel.content}</DashboardPanelVisibilityProvider>
+            </div>
           </section>
         )
       })}

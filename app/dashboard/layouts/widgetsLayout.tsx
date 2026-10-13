@@ -1,6 +1,8 @@
 ﻿'use client'
 
 import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
+import { copy, formatCopy } from '@/app/copy'
+import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './widgetsLayout.module.css'
 
 type DashboardLayoutPanel = {
@@ -19,9 +21,9 @@ type WidgetsZone = {
 }
 
 export const widgetsLayoutConfig: WidgetsZone[] = [
-  { id: 'travel', label: 'Travel', panelIds: ['transit', 'air'], size: 'feature', rowWeight: .655 },
-  { id: 'home', label: 'Home', panelIds: ['printer', 'speed'], size: 'standard', rowWeight: 1 },
-  { id: 'media', label: 'Media', panelIds: ['spotify', 'cast'], size: 'standard', rowWeight: 1 },
+  { id: 'travel', label: copy.dashboard.widgetZoneNames.travel, panelIds: ['transit', 'air'], size: 'feature', rowWeight: .655 },
+  { id: 'home', label: copy.dashboard.widgetZoneNames.home, panelIds: ['printer', 'speed'], size: 'standard', rowWeight: 1 },
+  { id: 'media', label: copy.dashboard.widgetZoneNames.media, panelIds: ['spotify', 'cast'], size: 'standard', rowWeight: 1 },
 ]
 
 export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel[] }) {
@@ -58,7 +60,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
     <div
       className={styles.viewport}
       style={{ '--feature-weight': `${featureWeight}fr`, '--standard-weight': `${standardWeight}fr` } as CSSProperties}
-      aria-label="Dashboard widgets"
+      aria-label={copy.dashboard.layoutText.dashboardWidgets}
     >
       {widgetsLayoutConfig.map((zone) => {
         const zonePanels = zone.panelIds
@@ -67,14 +69,14 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
         const activeIndex = Math.min(activePages[zone.id]?.index ?? 0, Math.max(0, zonePanels.length - 1))
 
         return (
-          <section className={styles.zone} data-size={zone.size} key={zone.id} aria-label={`${zone.label} widgets`}>
+          <section className={styles.zone} data-size={zone.size} key={zone.id} aria-label={formatCopy(copy.dashboard.layoutText.zoneWidgets, { zone: zone.label })}>
             <header className={styles.zoneHeader}>
               <h2 className={styles.zoneTitle}>{zone.label}</h2>
               <div className={styles.controls}>
                 <button
                   className={styles.arrow}
                   type="button"
-                  aria-label={`Previous ${zone.label} widget`}
+                  aria-label={formatCopy(copy.dashboard.layoutText.previousWidget, { zone: zone.label })}
                   onClick={() => selectPage(zone.id, Math.max(0, activeIndex - 1))}
                   disabled={activeIndex === 0 || zonePanels.length < 2}
                 >
@@ -84,7 +86,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
                 <button
                   className={styles.arrow}
                   type="button"
-                  aria-label={`Next ${zone.label} widget`}
+                  aria-label={formatCopy(copy.dashboard.layoutText.nextWidget, { zone: zone.label })}
                   onClick={() => selectPage(zone.id, Math.min(zonePanels.length - 1, activeIndex + 1))}
                   disabled={activeIndex >= zonePanels.length - 1 || zonePanels.length < 2}
                 >
@@ -109,7 +111,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
                   hidden={index !== activeIndex}
                   tabIndex={index === activeIndex ? 0 : undefined}
                 >
-                  {panel.content}
+                  <DashboardPanelVisibilityProvider visible={index === activeIndex}>{panel.content}</DashboardPanelVisibilityProvider>
                 </div>
               ))}
             </div>

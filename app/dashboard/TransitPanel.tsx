@@ -22,7 +22,7 @@ export default function TransitPanel() {
           <p className="dashboard-eyebrow">{copy.dashboard.travel}</p>
           <h2 id="transit-heading">{copy.dashboard.departures}</h2>
         </div>
-        <span className="dashboard-source">Västtrafik</span>
+        <span className="dashboard-source">{copy.transit.source}</span>
         <AutoRefreshControl
           label={copy.dashboard.transit}
           {...autoFetch}

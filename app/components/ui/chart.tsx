@@ -7,9 +7,14 @@ import styles from './chart.module.css';
 
 type ChartConfig = Record<string, { label: string; color: string; unit?: string }>;
 
-export function ChartContainer({ config, children, className }: { config: ChartConfig; children: ReactNode; className?: string }) {
+export function ChartContainer({ config, children, className, initialDimension }: {
+  config: ChartConfig;
+  children: ReactNode;
+  className?: string;
+  initialDimension?: { width: number; height: number };
+}) {
   const variables = Object.fromEntries(Object.entries(config).map(([key, value]) => [`--color-${key}`, value.color]));
-  return <div className={className} style={variables as CSSProperties}><ResponsiveContainer width="100%" height="100%">{children as ReactElement}</ResponsiveContainer></div>;
+  return <div className={className} style={variables as CSSProperties}><ResponsiveContainer width="100%" height="100%" initialDimension={initialDimension}>{children as ReactElement}</ResponsiveContainer></div>;
 }
 
 export function ChartTooltipContent({ active, payload, label, config }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string; payload?: Record<string, number | string> }>; label?: number | string; config: ChartConfig }) {

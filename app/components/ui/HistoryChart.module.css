@@ -1,12 +1,7 @@
 .historyChart {
+  display: grid;
   min-width: 0;
   gap: 8px;
-}
-
-.historyChart h3 {
-  margin: 0 0 10px;
-  color: var(--dashboard-ink);
-  font-size: 14px;
 }
 
 .historyRangeTabs {
@@ -20,7 +15,7 @@
   min-height: 42px;
   padding: 7px 10px;
   border: 1px solid rgba(166,181,205,.12);
-  border-radius: 11px;
+  border-radius: 9px;
   color: #bac3d1;
   background: rgba(255,255,255,.04);
   font: inherit;
@@ -37,7 +32,7 @@
 }
 
 .historyRangeTabs button:focus-visible,
-.historyLegend button:focus-visible {
+.metricLegend button:focus-visible {
   outline: 2px solid #52df91;
   outline-offset: 2px;
 }
@@ -48,25 +43,25 @@
   height: clamp(220px, 28vh, 340px);
 }
 
-.historySeriesGroups {
+.metricGroups {
   display: grid;
   gap: 10px;
   margin-top: 8px;
 }
 
-.historySeriesGroup + .historySeriesGroup {
+.metricGroup + .metricGroup {
   padding-top: 9px;
   border-top: 1px solid rgba(255,255,255,.1);
 }
 
-.historySeriesGroup h4 {
+.metricGroup h3 {
   margin: 0 0 7px;
   color: #aeb8c8;
   font-size: 11px;
   font-weight: 600;
 }
 
-.historyLegend {
+.metricLegend {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
@@ -74,7 +69,7 @@
   font-size: 11px;
 }
 
-.historyLegend button {
+.metricLegend button {
   display: grid;
   width: 100%;
   min-width: 0;
@@ -85,7 +80,7 @@
   gap: 5px;
   padding: 6px;
   border: 1px solid rgba(255,255,255,.08);
-  border-radius: 9px;
+  border-radius: 8px;
   background: rgba(10,14,23,.24);
   color: inherit;
   font: inherit;
@@ -94,31 +89,31 @@
   touch-action: manipulation;
 }
 
-.historyLegend .isSelected {
+.metricLegend .isSelected {
   border-color: rgba(82,223,145,.4);
   color: #c9f6d9;
   background: rgba(50,205,112,.08);
 }
 
-.historyLegend button:not(.isSelected) {
+.metricLegend button:not(.isSelected) {
   color: #8992a1;
   background: rgba(10,14,23,.16);
 }
 
-.historySeriesDot {
+.metricDot {
   width: 9px;
   height: 9px;
   margin-top: 2px;
   border-radius: 50%;
 }
 
-.historySeriesLabel {
+.metricLabel {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.historyLegend strong {
+.metricLegend strong {
   grid-column: 1 / -1;
   overflow: hidden;
   color: var(--dashboard-ink);
@@ -128,14 +123,14 @@
   white-space: nowrap;
 }
 
-.historyLegend button:not(.isSelected) strong {
+.metricLegend button:not(.isSelected) strong {
   color: #9aa2af;
 }
 
 .seriesContextMenu {
   position: fixed;
   z-index: 1000;
-  min-width: min(184px, calc(100vw - 16px));
+  min-width: min(208px, calc(100vw - 16px));
   padding: 5px;
   border: 1px solid rgba(255,255,255,.16);
   border-radius: 9px;
@@ -166,7 +161,7 @@
 }
 
 @media (max-width: 560px) {
-  .historyLegend {
+  .metricLegend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -176,7 +171,7 @@
 }
 
 @media (min-width: 561px) and (max-width: 850px) {
-  .historyLegend {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+  .metricLegend {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

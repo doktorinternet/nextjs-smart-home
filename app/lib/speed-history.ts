@@ -6,6 +6,8 @@ export type SpeedHistoryResult = {
   uploadMbps: number | null;
   expectedDownloadMbps: number | null;
   expectedUploadMbps: number | null;
+  downloadMegabytesPerSecond: number | null;
+  uploadMegabytesPerSecond: number | null;
   downloadStatus: string | null;
   uploadStatus: string | null;
   durationSeconds: number | null;
@@ -14,11 +16,20 @@ export type SpeedHistoryResult = {
   totalElapsedMs: number | null;
   pingLatencyMs: number | null;
   pingJitterMs: number | null;
+  pingLowMs: number | null;
+  pingHighMs: number | null;
   downloadLatencyMs: number | null;
   downloadLatencyJitterMs: number | null;
+  downloadLatencyLowMs: number | null;
+  downloadLatencyHighMs: number | null;
   uploadLatencyMs: number | null;
   uploadLatencyJitterMs: number | null;
+  uploadLatencyLowMs: number | null;
+  uploadLatencyHighMs: number | null;
   packetLossPercent: number | null;
+  speedtestExitCode: number | null;
+  downloadBytes: number | null;
+  uploadBytes: number | null;
 };
 
 const numericFields = {
@@ -26,17 +37,28 @@ const numericFields = {
   uploadMbps: 'upload_mbps',
   expectedDownloadMbps: 'expected_download_mbps',
   expectedUploadMbps: 'expected_upload_mbps',
+  downloadMegabytesPerSecond: 'download_megabytes_per_second',
+  uploadMegabytesPerSecond: 'upload_megabytes_per_second',
   durationSeconds: 'duration_seconds',
   downloadElapsedMs: 'download_elapsed_ms',
   uploadElapsedMs: 'upload_elapsed_ms',
   totalElapsedMs: 'total_elapsed_ms',
   pingLatencyMs: 'ping_latency_ms',
   pingJitterMs: 'ping_jitter_ms',
+  pingLowMs: 'ping_low_ms',
+  pingHighMs: 'ping_high_ms',
   downloadLatencyMs: 'download_latency_iqm_ms',
   downloadLatencyJitterMs: 'download_latency_jitter_ms',
+  downloadLatencyLowMs: 'download_latency_low_ms',
+  downloadLatencyHighMs: 'download_latency_high_ms',
   uploadLatencyMs: 'upload_latency_iqm_ms',
   uploadLatencyJitterMs: 'upload_latency_jitter_ms',
+  uploadLatencyLowMs: 'upload_latency_low_ms',
+  uploadLatencyHighMs: 'upload_latency_high_ms',
   packetLossPercent: 'packet_loss_percent',
+  speedtestExitCode: 'speedtest_exit_code',
+  downloadBytes: 'download_bytes',
+  uploadBytes: 'upload_bytes',
 } as const;
 
 /** Parse the PowerShell Export-Csv format used by checkNetwork.ps1. */
