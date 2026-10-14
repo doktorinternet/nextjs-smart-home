@@ -841,8 +841,6 @@ export default function SpotifyPanel() {
                   {spokenAvailability.episodes && library.episodes.map(renderEpisode)}
                 </div>
               )}
-              {spokenAvailability.audiobooks && library.audiobooks.length > 0 &&
-                <p className="spotify-hint">{copy.spotify.audiobookOpenOnly}</p>}
               {!spokenAvailability.episodes && !spokenAvailability.audiobooks &&
                 <p className="spotify-hint">{copy.spotify.libraryPermission}</p>}
               {spokenAvailability.episodes && library.episodes.length === 0 &&
