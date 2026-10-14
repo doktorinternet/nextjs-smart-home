@@ -109,7 +109,7 @@ export default function SpeedPanel() {
   }
   return (
     <DashboardPanel
-      className={'dashboard-module dashboard-live-card dashboard-speed-card ' + styles.speedPanel}
+      className={'dashboard-module dashboard-speed-card ' + styles.speedPanel}
       headingId="speed-heading"
       icon={faGauge}
       eyebrow={copy.speed.eyebrow}

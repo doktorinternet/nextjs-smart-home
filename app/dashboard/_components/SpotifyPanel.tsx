@@ -625,7 +625,7 @@ export default function SpotifyPanel() {
 
   return (
     <DashboardPanel
-      className={'dashboard-module dashboard-live-card' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '') + ' ' + styles.spotifyPanel}
+      className={'dashboard-module' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '') + ' ' + styles.spotifyPanel}
       headingId="spotify-heading"
       icon={faSpotify}
       iconClassName="spotify-heading-icon"

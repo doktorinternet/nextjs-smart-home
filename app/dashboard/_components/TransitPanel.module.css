@@ -12,7 +12,7 @@
 
 @media (max-width: 640px) {
   .transitPanel { min-height: 0; }
-  .transitPanel > :global(.dashboard-panel-content) { margin-top: 16px; }
+  .transitPanel > [data-dashboard-panel-content] { margin-top: 16px; }
 }
 
 :global(.panels[data-page='0'] .panel:first-child) .transitPanel :global(.tram-departure-list) {

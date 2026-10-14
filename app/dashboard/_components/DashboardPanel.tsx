@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { AutoRefreshControl, type AutoFetchState, type AutoRefreshStatusType } from './useAutoFetch'
+import styles from './DashboardPanel.module.css'
 
 type DashboardPanelProps = {
   headingId: string
@@ -38,7 +39,7 @@ export default function DashboardPanel({
   onRefresh,
   refreshLabel,
   refreshing,
-  className = 'dashboard-module dashboard-live-card',
+  className = 'dashboard-module',
   headerAddon,
   refreshError,
   refreshDisabled,
@@ -49,14 +50,14 @@ export default function DashboardPanel({
   children,
 }: DashboardPanelProps) {
   return (
-    <section className={className} aria-labelledby={headingId}>
-      <div className="dashboard-module-heading">
-        <span className={`dashboard-module-icon${iconClassName ? ` ${iconClassName}` : ''}`} aria-hidden="true">
+    <section className={`${styles.panel} ${className}`} aria-labelledby={headingId}>
+      <div className={styles.heading} data-dashboard-panel-heading>
+        <span className={`${styles.icon}${iconClassName ? ` ${iconClassName}` : ''}`} data-dashboard-panel-icon aria-hidden="true">
           <FontAwesomeIcon icon={icon} />
         </span>
         <div>
-          <p className="dashboard-eyebrow">{eyebrow}</p>
-          <h2 id={headingId}>{title}</h2>
+          <p className={styles.eyebrow}>{eyebrow}</p>
+          <h2 className={styles.title} data-dashboard-panel-title id={headingId}>{title}</h2>
         </div>
         {headerAddon}
         <AutoRefreshControl
@@ -73,7 +74,7 @@ export default function DashboardPanel({
           statusPosition={statusPosition}
         />
       </div>
-      <div className="dashboard-panel-content" aria-live={contentAriaLive}>
+      <div className={styles.content} data-dashboard-panel-content aria-live={contentAriaLive}>
         {children}
       </div>
     </section>

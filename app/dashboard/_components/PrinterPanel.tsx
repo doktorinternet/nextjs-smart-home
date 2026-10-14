@@ -112,7 +112,7 @@ export default function PrinterPanel() {
 
   return (
     <DashboardPanel
-      className={'dashboard-module dashboard-live-card ' + styles.printerPanel}
+      className={'dashboard-module ' + styles.printerPanel}
       headingId="printer-heading"
       icon={faPrint}
       eyebrow={copy.printer.eyebrow}
