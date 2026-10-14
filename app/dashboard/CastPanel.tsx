@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic } from '@fortawesome/free-solid-svg-icons'
-import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
+import { AutoRefreshControl, useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
 import { copy, formatCopy } from '@/app/copy'
 
 type CastDevice = {
@@ -31,6 +31,7 @@ export default function CastPanel() {
   const [busyDevice, setBusyDevice] = useState<string | null>(null)
   const [volume, setVolume] = useState(35)
   const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<AutoRefreshStatusType>('info')
 
   const loadDevices = useCallback(async () => {
     setLoading(true)
@@ -66,6 +67,7 @@ export default function CastPanel() {
     if (busyDevice) return
     setBusyDevice(device.id)
     setMessage(null)
+    setMessageType('info')
     const payload = command === 'volume' ? { command, level: volume / 100 } : { command }
     try {
       const response = await fetch(`/api/cast/devices/${encodeURIComponent(device.id)}/commands`, {
@@ -75,6 +77,7 @@ export default function CastPanel() {
       })
       if (!response.ok) {
         setMessage(formatCopy(copy.cast.commandFailed, { device: device.name }))
+        setMessageType('error')
       } else {
         const commandMessages = {
           play: copy.cast.started,
@@ -83,9 +86,11 @@ export default function CastPanel() {
           volume: copy.cast.volumeUpdated,
         }
         setMessage(formatCopy(copy.cast.commandSent, { message: commandMessages[command], device: device.name }))
+        setMessageType('success')
       }
     } catch {
       setMessage(formatCopy(copy.cast.reachedError, { device: device.name }))
+      setMessageType('error')
     } finally {
       setBusyDevice(null)
     }
@@ -106,6 +111,9 @@ export default function CastPanel() {
           onRefresh={() => void loadDevices()}
           refreshLabel={copy.cast.refresh}
           refreshing={loading}
+          statusMessage={message}
+          statusType={messageType}
+          statusPosition="before"
         />
       </div>
 
@@ -142,9 +150,6 @@ export default function CastPanel() {
           ))}
         </div>
       )}
-      <p className="dashboard-control-message" role="status" aria-live="polite">
-        {message}
-      </p>
       </div>
     </section>
   )

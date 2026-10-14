@@ -194,7 +194,6 @@ export default function ElectroluxPanel() {
           <p className="dashboard-eyebrow">{copy.electrolux.eyebrow}</p>
           <h2 id="air-quality-heading">{copy.electrolux.title}</h2>
         </div>
-        <span className="dashboard-source">{copy.electrolux.source}</span>
         <AutoRefreshControl
           label={copy.electrolux.label}
           {...autoFetch}

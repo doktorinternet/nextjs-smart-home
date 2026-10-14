@@ -1,0 +1,62 @@
+.control {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.control.hasStatusMessage:not(.statusAbove):not(.statusBelow) { gap: 8px; }
+
+.control.statusAbove,
+.control.statusBelow {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.statusMessage {
+  display: block;
+  max-width: min(40vw, 320px);
+  padding: 7px 10px;
+  border: 1px solid rgba(131, 184, 238, .24);
+  border-radius: 9px;
+  color: #b9d8f7;
+  background: rgba(86, 142, 204, .1);
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  animation: statusMessageEnter .18s ease-out both;
+  transition: opacity .25s ease;
+}
+
+.statusMessage[data-fading='true'] { animation: statusMessageLeave .18s ease-out both; }
+
+.statusMessage[data-status-type='success'] {
+  border-color: rgba(139, 201, 162, .28);
+  color: #a9d7b8;
+  background: rgba(139, 201, 162, .1);
+}
+
+.statusMessage[data-status-type='error'] {
+  border-color: rgba(239, 131, 131, .3);
+  color: #f2aaaa;
+  background: rgba(239, 131, 131, .1);
+}
+
+@keyframes statusMessageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes statusMessageLeave {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusMessage { animation: none; transition: none; }
+}

@@ -155,8 +155,6 @@
 .spotifyPanel :global(.spotify-playlist-action) { width: 100%; padding: 0; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
 .spotifyPanel :global(.spotify-playlist-action:disabled) { opacity: .45; cursor: not-allowed; }
 .spotifyPanel :global(.spotify-spoken-content) { display: grid; gap: 12px; min-width: 0; }
-.spotifyPanel :global(.spotify-status) { min-height: 14px; margin: 0; color: #aeb8c8; font-size: 11px; }
-
 @media (max-width: 560px) {
   .spotifyPanel :global(.spotify-now-playing) { grid-template-columns: 68px minmax(0, 1fr); gap: 12px; }
   .spotifyPanel :global(.spotify-current-art),

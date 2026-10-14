@@ -4,6 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { copy, formatCopy } from '@/app/copy'
+import styles from './AutoRefreshControl.module.css'
+
+export type AutoRefreshStatusType = 'info' | 'success' | 'error'
+export type AutoRefreshStatusPosition = 'before' | 'after' | 'above' | 'below'
+
+const STATUS_MESSAGE_DURATION_MS = 4000
+const STATUS_MESSAGE_FADE_MS = 250
 
 export function useAutoFetch(storageKey: string) {
   const [ready, setReady] = useState(false)
@@ -40,6 +47,9 @@ export function AutoRefreshControl({
   refreshing,
   refreshError = false,
   refreshDisabled = false,
+  statusMessage,
+  statusType = 'info',
+  statusPosition = 'before',
 }: {
   label: string
   ready: boolean
@@ -50,9 +60,14 @@ export function AutoRefreshControl({
   refreshing: boolean
   refreshError?: boolean
   refreshDisabled?: boolean
+  statusMessage?: string | null
+  statusType?: AutoRefreshStatusType
+  statusPosition?: AutoRefreshStatusPosition
 }) {
   const [iconState, setIconState] = useState<'idle' | 'refreshing' | 'complete'>('idle')
   const [showAutoFetchSwitch, setShowAutoFetchSwitch] = useState(false)
+  const [fadingStatusKey, setFadingStatusKey] = useState<string | null>(null)
+  const [dismissedStatusKey, setDismissedStatusKey] = useState<string | null>(null)
   const refreshStartedAt = useRef<number | null>(null)
   const holdTimer = useRef<number | null>(null)
   const hideSwitchTimer = useRef<number | null>(null)
@@ -65,6 +80,33 @@ export function AutoRefreshControl({
   const actionLabel = refreshError
     ? formatCopy(copy.refresh.retry, { label: refreshLabel })
     : refreshing ? formatCopy(copy.refresh.updating, { label }) : refreshLabel
+  const statusKey = statusMessage ? JSON.stringify([statusType, statusMessage]) : null
+
+  useEffect(() => {
+    setFadingStatusKey(null)
+    setDismissedStatusKey(null)
+    if (!statusKey || statusType === 'error') return
+
+    const fadeTimer = window.setTimeout(() => setFadingStatusKey(statusKey), STATUS_MESSAGE_DURATION_MS - STATUS_MESSAGE_FADE_MS)
+    const dismissTimer = window.setTimeout(() => setDismissedStatusKey(statusKey), STATUS_MESSAGE_DURATION_MS)
+    return () => {
+      window.clearTimeout(fadeTimer)
+      window.clearTimeout(dismissTimer)
+    }
+  }, [statusKey, statusType])
+
+  const status = statusMessage && statusKey !== dismissedStatusKey ? (
+    <span
+      key={statusKey}
+      className={styles.statusMessage}
+      data-status-type={statusType}
+      data-fading={statusKey === fadingStatusKey ? 'true' : undefined}
+      role={statusType === 'error' ? 'alert' : 'status'}
+      aria-live={statusType === 'error' ? 'assertive' : 'polite'}
+    >
+      {statusMessage}
+    </span>
+  ) : null
 
   useEffect(() => () => {
     if (holdTimer.current !== null) window.clearTimeout(holdTimer.current)
@@ -144,7 +186,8 @@ export function AutoRefreshControl({
   }
 
   return (
-    <div className="dashboard-header-controls dashboard-refresh-control" role="group" aria-label={formatCopy(copy.refresh.updateControls, { label })}>
+    <div className={`dashboard-refresh-control ${styles.control}${status ? ` ${styles.hasStatusMessage}` : ''}${statusPosition === 'above' ? ` ${styles.statusAbove}` : statusPosition === 'below' ? ` ${styles.statusBelow}` : ''}`} role="group" aria-label={formatCopy(copy.refresh.updateControls, { label })}>
+      {(statusPosition === 'before' || statusPosition === 'above') && status}
       <button
         className={`dashboard-header-refresh${enabled ? ' is-auto-enabled' : ''}${refreshError ? ' is-error' : ''}${iconState === 'refreshing' ? ' is-refreshing' : ''}`}
         type="button"
@@ -184,6 +227,7 @@ export function AutoRefreshControl({
           </span>
         </span>
       </button>
+      {(statusPosition === 'after' || statusPosition === 'below') && status}
     </div>
   )
 }

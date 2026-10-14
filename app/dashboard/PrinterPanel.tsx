@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPrint } from '@fortawesome/free-solid-svg-icons'
-import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
+import { AutoRefreshControl, useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
 import { copy, formatCopy } from '@/app/copy'
 import styles from './PrinterPanel.module.css'
 
@@ -44,6 +44,7 @@ export default function PrinterPanel() {
   const [error, setError] = useState<string | null>(null)
   const [controlBusy, setControlBusy] = useState(false)
   const [controlMessage, setControlMessage] = useState<string | null>(null)
+  const [controlMessageType, setControlMessageType] = useState<AutoRefreshStatusType>('info')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -84,6 +85,7 @@ export default function PrinterPanel() {
     if (command === 'cancel' && !window.confirm(copy.printer.confirmCancel)) return
     setControlBusy(true)
     setControlMessage(null)
+    setControlMessageType('info')
     try {
       const response = await fetch('/api/printer/command', {
         method: 'POST',
@@ -92,13 +94,16 @@ export default function PrinterPanel() {
       })
       if (!response.ok) {
         setControlMessage(copy.printer.commandFailed)
+        setControlMessageType('error')
       } else {
         setControlMessage(command === 'cancel'
           ? copy.printer.cancelSent
           : formatCopy(copy.printer.commandSent, { action: copy.printer.commandActions[command] }))
+        setControlMessageType('success')
       }
     } catch {
       setControlMessage(copy.printer.unreachable)
+      setControlMessageType('error')
     } finally {
       setControlBusy(false)
     }
@@ -124,6 +129,9 @@ export default function PrinterPanel() {
           onRefresh={() => void load()}
           refreshLabel={copy.printer.refresh}
           refreshing={loading}
+          statusMessage={controlMessage}
+          statusType={controlMessageType}
+          statusPosition="before"
         />
       </div>
 
@@ -165,7 +173,6 @@ export default function PrinterPanel() {
             <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</button>
           </div>
         </div>
-        <p className="dashboard-control-message" role="status" aria-live="polite">{controlMessage}</p>
       </div>
       </div>
     </section>

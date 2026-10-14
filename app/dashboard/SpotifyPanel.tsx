@@ -24,7 +24,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import Image from 'next/image'
-import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
+import { AutoRefreshControl, useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
 import { copy } from '@/app/copy'
 import styles from './SpotifyPanel.module.css'
 
@@ -289,6 +289,7 @@ export default function SpotifyPanel() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [messageType, setMessageType] = useState<AutoRefreshStatusType>('info')
   const [pendingTransport, setPendingTransport] = useState<{ id: number; action: TransportAction } | null>(null)
   const [libraryKind, setLibraryKind] = useState<LibraryKind>('playlists')
   const [library, setLibrary] = useState<PlaylistPage & SpokenPage>({
@@ -478,6 +479,7 @@ export default function SpotifyPanel() {
     if (transportAction && requestId !== null) {
       setPendingTransport({ id: requestId, action: transportAction })
       setMessage(copy.spotify.pendingCommands[transportAction])
+      setMessageType('info')
     } else if (!quiet) {
       setMessage(null)
     }
@@ -498,14 +500,21 @@ export default function SpotifyPanel() {
         if (!quiet) {
           if (response.status === 504) setMessage(copy.spotify.commandTimedOut)
           else setMessage(response.status === 403 ? copy.spotify.premiumRequired : copy.spotify.commandFailed)
+          setMessageType('error')
         }
         return false
       }
       if (startsPlayback && targetDeviceId) restoreVolumeAfterPlayback(targetDeviceId)
-      if (!quiet) setMessage(successMessage ?? copy.spotify.commandSent)
+      if (!quiet) {
+        setMessage(successMessage ?? copy.spotify.commandSent)
+        setMessageType('success')
+      }
       return true
     } catch {
-      if (!quiet) setMessage(copy.spotify.unreachable)
+      if (!quiet) {
+        setMessage(copy.spotify.unreachable)
+        setMessageType('error')
+      }
       window.setTimeout(() => void refresh(), 1000)
       if (startsPlayback && targetDeviceId) restoreVolumeAfterPlayback(targetDeviceId)
       return false
@@ -620,18 +629,20 @@ export default function SpotifyPanel() {
           <p className="dashboard-eyebrow">{copy.spotify.eyebrow}</p>
           <h2 id="spotify-heading">{copy.spotify.title}</h2>
         </div>
-          <p className="spotify-status" role="status" aria-live="polite">{message}</p>
-          <AutoRefreshControl
-            label={copy.spotify.title}
-            {...autoFetch}
-            onChange={autoFetch.setEnabled}
-            onRefresh={() => {
-              void refresh()
-              void loadLibrary(libraryKind, true)
-            }}
-            refreshLabel={copy.spotify.refresh}
-            refreshing={loading || libraryLoading !== null}
-          />
+        <AutoRefreshControl
+          label={copy.spotify.title}
+          {...autoFetch}
+          onChange={autoFetch.setEnabled}
+          onRefresh={() => {
+            void refresh()
+            void loadLibrary(libraryKind, true)
+          }}
+          refreshLabel={copy.spotify.refresh}
+          refreshing={loading || libraryLoading !== null}
+          statusMessage={message}
+          statusType={messageType}
+          statusPosition="before"
+        />
       </div>
 
       <div className="spotify-player">

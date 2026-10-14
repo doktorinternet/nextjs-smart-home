@@ -87,7 +87,7 @@ export const copy = {
     loading: 'Hämtar skrivarstatus…',
     loadError: 'Det gick inte att hämta skrivarstatus.',
     disconnected: 'Frånkopplad',
-    disconnectedHelp: 'Skrivaren är frånkopplad. Kontrollera anslutningen till OctoPrint.',
+    disconnectedHelp: 'Skrivaren är frånkopplad. Kontrollera anslutningen i OctoPrint.',
     activeJob: 'Pågående jobb',
     progress: 'Förlopp',
     progressAria: 'Utskriftsförlopp',
@@ -219,7 +219,7 @@ export const copy = {
     podcasts: 'Sparade poddavsnitt',
     audiobooks: 'Sparade ljudböcker',
     openSpotify: 'Öppna i Spotify',
-    playContent: 'Spela upp',
+    playContent: 'Spela innehåll',
     libraryLoading: 'Hämtar ditt innehåll…',
     libraryUnavailable: 'Det gick inte att hämta ditt Spotify-innehåll.',
     libraryPermission: 'Spotify-biblioteket kräver utökad åtkomst. Öppna Spotify-anslutningen igen för att godkänna biblioteket.',
@@ -290,7 +290,6 @@ export const copy = {
     authorizationCompleteFailed: 'Det gick inte att slutföra Spotify-auktoriseringen.',
   },
   electrolux: {
-    source: 'Pure A9',
     ranges: { day: 'Dag', week: 'Vecka', month: 'Månad', sixMonths: '6 månader' },
     historyRangeLabel: 'Välj tidsperiod',
     historyLegend: 'Diagramförklaring',
@@ -311,7 +310,6 @@ export const copy = {
     updated: 'Uppdaterad {time}',
   },
   transit: {
-    source: 'Västtrafik',
     refresh: 'Uppdatera kollektivtrafik',
     requestError: 'Kunde inte hämta avgångarna. Försök igen.',
     invalidResponse: 'Svaret med avgångar var ogiltigt. Försök igen.',
