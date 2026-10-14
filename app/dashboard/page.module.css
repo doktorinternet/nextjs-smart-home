@@ -107,9 +107,8 @@
 
 .dashboardShell :global(.dashboard-module) {
   min-width: 0;
-  min-height: 230px;
+  min-height: 0;
   overflow: hidden;
-  padding: clamp(20px, 2.4vw, 30px);
   border: 1px solid rgba(255, 255, 255, .11);
   border-radius: 22px;
   background: linear-gradient(145deg, rgba(36, 43, 59, .92), rgba(25, 31, 45, .88));
@@ -267,9 +266,15 @@
   .dashboardShell :global(.dashboard-transit) { min-height: 0; grid-row: auto; }
   .dashboardShell :global(.dashboard-transit-content) { min-height: 0; margin-top: 16px; padding: 12px; }
   .dashboardShell :global(.dashboard-transit-content .time-table) { min-height: 0; }
-  .dashboardShell :global(.dashboard-module) { min-height: 215px; padding: 20px; border-radius: 18px; }
+  .dashboardShell :global(.dashboard-module) { padding: 20px; border-radius: 18px; }
   .dashboardShell :global(.dashboard-module-heading) { gap: 10px; }
   .dashboardShell :global(.dashboard-module-icon) { width: 40px; height: 40px; border-radius: 13px; }
   .dashboardShell :global(.dashboard-module h2) { font-size: 18px; }
 }
 
+@media (max-height: 680px) {
+  .dashboardShell :global(.dashboard-module) {
+    padding-block: 8px;
+    overflow-y: auto;
+  }
+}
