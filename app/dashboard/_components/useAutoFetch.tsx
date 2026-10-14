@@ -37,6 +37,8 @@ export function useAutoFetch(storageKey: string) {
   return { ready, enabled, setEnabled }
 }
 
+export type AutoFetchState = ReturnType<typeof useAutoFetch>
+
 export function AutoRefreshControl({
   label,
   ready,

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { copy } from '@/app/copy'
+import RectangularButton from '@/app/components/ui/RectangularButton'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import { motion, useReducedMotion } from 'framer-motion'
 import styles from './expandableLayout.module.css'
@@ -44,7 +45,7 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
           {panels.map((panel) => {
             const selected = selectedIds.includes(panel.id)
             return (
-              <button
+              <RectangularButton
                 key={panel.id}
                 type="button"
                 className={`${styles.choice}${selected ? ` ${styles.selected}` : ''}`}
@@ -53,7 +54,7 @@ export default function ExpandableLayout({ panels }: ExpandableLayoutProps) {
               >
                 <span className={styles.choiceIcon} aria-hidden="true">{panel.icon}</span>
                 <span>{panel.label}</span>
-              </button>
+              </RectangularButton>
             )
           })}
         </div>

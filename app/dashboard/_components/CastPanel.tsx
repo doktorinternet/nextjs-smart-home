@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMusic } from '@fortawesome/free-solid-svg-icons'
-import { AutoRefreshControl, useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
+import RectangularButton from '@/app/components/ui/RectangularButton'
+import DashboardPanel from './DashboardPanel'
+import { useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
 import { copy, formatCopy } from '@/app/copy'
 
 type CastDevice = {
@@ -97,27 +98,20 @@ export default function CastPanel() {
   }
 
   return (
-    <section className="dashboard-module dashboard-live-card" aria-labelledby="cast-heading">
-      <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></span>
-        <div>
-          <p className="dashboard-eyebrow">{copy.cast.eyebrow}</p>
-          <h2 id="cast-heading">{copy.cast.title}</h2>
-        </div>
-        <AutoRefreshControl
-          label={copy.cast.title}
-          {...autoFetch}
-          onChange={autoFetch.setEnabled}
-          onRefresh={() => void loadDevices()}
-          refreshLabel={copy.cast.refresh}
-          refreshing={loading}
-          statusMessage={message}
-          statusType={messageType}
-          statusPosition="before"
-        />
-      </div>
-
-      <div className="dashboard-panel-content">
+    <DashboardPanel
+      headingId="cast-heading"
+      icon={faMusic}
+      eyebrow={copy.cast.eyebrow}
+      title={copy.cast.title}
+      label={copy.cast.title}
+      autoFetch={autoFetch}
+      onRefresh={() => void loadDevices()}
+      refreshLabel={copy.cast.refresh}
+      refreshing={loading}
+      statusMessage={message}
+      statusType={messageType}
+      statusPosition="before"
+    >
       {loading && devices.length === 0 && !error ? null : autoFetch.ready && !autoFetch.enabled && devices.length === 0 && !error ? (
         null
       ) : error ? (
@@ -134,9 +128,9 @@ export default function CastPanel() {
               </div>
               <div className="dashboard-control-actions-row">
                 {(['play', 'pause', 'stop'] as const).map((command) => (
-                  <button key={command} type="button" onClick={() => void sendCommand(device, command)} disabled={busyDevice !== null}>
+                  <RectangularButton key={command} type="button" onClick={() => void sendCommand(device, command)} disabled={busyDevice !== null}>
                     {busyDevice === device.id ? copy.cast.sending : copy.cast.commands[command]}
-                  </button>
+                  </RectangularButton>
                 ))}
               </div>
               <label className="dashboard-live-label" htmlFor={`cast-volume-${device.id}`} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
@@ -144,13 +138,12 @@ export default function CastPanel() {
                 <input id={`cast-volume-${device.id}`} type="range" min="0" max="100" step="1" value={volume} onChange={(event) => setVolume(Number(event.target.value))} disabled={busyDevice !== null} aria-label={formatCopy(copy.cast.volumeFor, { device: device.name })} style={{ gridColumn: '1 / -1', width: '100%', accentColor: '#f4bd84' }} />
               </label>
               <div className="dashboard-control-actions-row" style={{ gridTemplateColumns: '1fr' }}>
-                <button type="button" onClick={() => void sendCommand(device, 'volume')} disabled={busyDevice !== null}>{copy.cast.setVolume}</button>
+                <RectangularButton type="button" onClick={() => void sendCommand(device, 'volume')} disabled={busyDevice !== null}>{copy.cast.setVolume}</RectangularButton>
               </div>
             </article>
           ))}
           </>
       )}
-      </div>
-    </section>
+    </DashboardPanel>
   )
 }

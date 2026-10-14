@@ -1,12 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGauge } from '@fortawesome/free-solid-svg-icons'
-import { AutoRefreshControl, useAutoFetch } from './useAutoFetch'
+import DashboardPanel from './DashboardPanel'
+import { useAutoFetch } from './useAutoFetch'
 import { copy, formatCopy, locale } from '@/app/copy'
 import type { SpeedHistoryResult } from '@/app/lib/speed-history'
-import HistoryChart, { type HistoryChartRange, type HistoryChartRow, type HistoryChartSeries } from '@/app/components/ui/HistoryChart'
+import HistoryChart, { type HistoryChartRange, type HistoryChartRow, type HistoryChartSeries } from './HistoryChart'
 import styles from './SpeedPanel.module.css'
 
 type SpeedSample = SpeedHistoryResult
@@ -108,25 +108,19 @@ export default function SpeedPanel() {
     }
   }
   return (
-    <section className={'dashboard-module dashboard-live-card dashboard-speed-card ' + styles.speedPanel} aria-labelledby="speed-heading">
-      <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faGauge} /></span>
-        <div>
-          <p className="dashboard-eyebrow">{copy.speed.eyebrow}</p>
-          <h2 id="speed-heading">{copy.speed.title}</h2>
-        </div>
-        {latest && <span className="dashboard-speed-time">{copy.speed.latest}</span>}
-        <AutoRefreshControl
-          label={copy.speed.label}
-          {...autoFetch}
-          onChange={autoFetch.setEnabled}
-          onRefresh={() => void load()}
-          refreshLabel={copy.speed.refresh}
-          refreshing={loading}
-        />
-      </div>
-
-      <div className="dashboard-panel-content">
+    <DashboardPanel
+      className={'dashboard-module dashboard-live-card dashboard-speed-card ' + styles.speedPanel}
+      headingId="speed-heading"
+      icon={faGauge}
+      eyebrow={copy.speed.eyebrow}
+      title={copy.speed.title}
+      label={copy.speed.label}
+      autoFetch={autoFetch}
+      onRefresh={() => void load()}
+      refreshLabel={copy.speed.refresh}
+      refreshing={loading}
+      headerAddon={latest && <span className="dashboard-speed-time">{copy.speed.latest}</span>}
+    >
         {loading && !history ? null : error ? (
           <p className="dashboard-live-message is-error" role="status">{error}</p>
         ) : autoFetch.ready && !autoFetch.enabled && !history ? (
@@ -153,7 +147,6 @@ export default function SpeedPanel() {
             <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString(locale)}</p>
           </>
         )}
-      </div>
-    </section>
+    </DashboardPanel>
   )
 }

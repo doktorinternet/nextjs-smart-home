@@ -2,6 +2,7 @@
 
 import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
 import { copy, formatCopy } from '@/app/copy'
+import RectangularButton from '@/app/components/ui/RectangularButton'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './widgetsLayout.module.css'
 
@@ -73,7 +74,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
             <header className={styles.zoneHeader}>
               <h2 className={styles.zoneTitle}>{zone.label}</h2>
               <div className={styles.controls}>
-                <button
+                <RectangularButton
                   className={styles.arrow}
                   type="button"
                   aria-label={formatCopy(copy.dashboard.layoutText.previousWidget, { zone: zone.label })}
@@ -81,9 +82,9 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
                   disabled={activeIndex === 0 || zonePanels.length < 2}
                 >
                   <span aria-hidden="true">‹</span>
-                </button>
+                </RectangularButton>
                 <span className={styles.pageCount} aria-live="polite">{activeIndex + 1} / {zonePanels.length}</span>
-                <button
+                <RectangularButton
                   className={styles.arrow}
                   type="button"
                   aria-label={formatCopy(copy.dashboard.layoutText.nextWidget, { zone: zone.label })}
@@ -91,7 +92,7 @@ export default function WidgetsLayout({ panels }: { panels: DashboardLayoutPanel
                   disabled={activeIndex >= zonePanels.length - 1 || zonePanels.length < 2}
                 >
                   <span aria-hidden="true">›</span>
-                </button>
+                </RectangularButton>
               </div>
             </header>
 

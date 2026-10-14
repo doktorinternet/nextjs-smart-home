@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { copy, formatCopy } from '@/app/copy'
+import RectangularButton from '@/app/components/ui/RectangularButton'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './appsLayout.module.css'
 
@@ -59,7 +60,7 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
 
         <nav className={styles.appGrid} aria-label={copy.dashboard.layoutText.choosePanels}>
           {panels.map((panel) => (
-            <button
+            <RectangularButton
               className={styles.appButton}
               key={panel.id}
               type="button"
@@ -72,7 +73,7 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
             >
               <span className={styles.appIcon} aria-hidden="true">{panel.icon}</span>
               <span className={styles.appLabel}>{panel.label}</span>
-            </button>
+            </RectangularButton>
           ))}
         </nav>
       </section>
@@ -91,10 +92,10 @@ export default function AppsLayout({ panels }: { panels: DashboardLayoutPanel[] 
             hidden={!isActive}
           >
             <header className={styles.panelHeader}>
-              <button className={styles.homeButton} type="button" onClick={returnHome}>
+              <RectangularButton className={styles.homeButton} type="button" onClick={returnHome}>
                 <span aria-hidden="true">&larr;</span>
                 <span>{copy.dashboard.layoutText.home}</span>
-              </button>
+              </RectangularButton>
               <h1 className={styles.panelTitle}>{panel.label}</h1>
               <span className={styles.headerSpacer} aria-hidden="true" />
             </header>

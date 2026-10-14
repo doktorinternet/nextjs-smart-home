@@ -5,6 +5,7 @@ import type { KeyboardEvent, PointerEvent, ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { copy, formatCopy } from '@/app/copy'
+import RectangularButton from '@/app/components/ui/RectangularButton'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './pagesLayout.module.css'
 
@@ -99,7 +100,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
         </div>
 
         <nav className={styles.navigation} aria-label={copy.dashboard.layoutText.dashboardPages}>
-          <button
+          <RectangularButton
             className={styles.arrow}
             type="button"
             aria-label={copy.dashboard.layoutText.previousPage}
@@ -107,10 +108,10 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
             disabled={activePage === 0}
           >
             <FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" />
-          </button>
+          </RectangularButton>
           <div className={styles.indicators} role="group" aria-label={copy.dashboard.layoutText.choosePage}>
             {pages.map((page, index) => (
-              <button
+              <RectangularButton
                 className={styles.indicator}
                 type="button"
                 key={page.label}
@@ -119,11 +120,11 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
                 onClick={() => selectPage(index)}
               >
                 <span className={styles.dot} aria-hidden="true" />
-              </button>
+              </RectangularButton>
             ))}
           </div>
           <span className={styles.pageCount} aria-live="polite">{activePage + 1} / {pages.length}</span>
-          <button
+          <RectangularButton
             className={styles.arrow}
             type="button"
             aria-label={copy.dashboard.layoutText.nextPage}
@@ -131,7 +132,7 @@ export default function PagesLayout({ panels }: { panels: DashboardLayoutPanel[]
             disabled={activePage === pages.length - 1}
           >
             <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" />
-          </button>
+          </RectangularButton>
         </nav>
       </section>
     </div>

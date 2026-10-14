@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { copy } from '@/app/copy'
+import RectangularButton from '@/app/components/ui/RectangularButton'
 import { DashboardPanelVisibilityProvider } from '../DashboardPanelVisibility'
 import styles from './tabsLayout.module.css'
 
@@ -42,7 +43,7 @@ export default function TabsLayout({ panels }: TabsLayoutProps) {
           const selected = panel.id === activeId
           const tabId = `${id}-tab-${panel.id}`
           return (
-            <button
+            <RectangularButton
               key={panel.id}
               ref={(element) => { tabsRef.current[index] = element }}
               className={styles.tab}
@@ -57,7 +58,7 @@ export default function TabsLayout({ panels }: TabsLayoutProps) {
             >
               <span className={styles.icon} aria-hidden="true">{panel.icon}</span>
               <span className={styles.label}>{panel.label}</span>
-            </button>
+            </RectangularButton>
           )
         })}
       </div>

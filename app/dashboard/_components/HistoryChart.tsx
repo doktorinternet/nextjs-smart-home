@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, typ
 import { createPortal } from 'react-dom';
 import { copy, formatCopy, locale } from '@/app/copy';
 import { ChartContainer, ChartTooltipContent } from '@/app/components/ui/chart';
-import { useDashboardPanelVisibility } from '@/app/dashboard/DashboardPanelVisibility';
+import RectangularButton from '@/app/components/ui/RectangularButton';
+import { useDashboardPanelVisibility } from './DashboardPanelVisibility';
 import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from 'recharts';
 import styles from './HistoryChart.module.css';
 
@@ -171,13 +172,13 @@ export default function HistoryChart({
     <div className={styles.historyChart}>
       <div className={styles.historyRangeTabs} role="group" aria-label={rangeLabel}>
         {ranges.map((range) => (
-          <button
+          <RectangularButton
             className={selectedRangeId === range.id ? styles.isActive : ''}
             type="button"
             key={range.id}
             aria-pressed={selectedRangeId === range.id}
             onClick={() => onRangeChange(range.id)}
-          >{range.label}</button>
+          >{range.label}</RectangularButton>
         ))}
       </div>
       {panelVisible && <ChartContainer className={styles.historyRecharts} config={chartConfig}>
@@ -240,7 +241,7 @@ export default function HistoryChart({
               {series.filter((item) => item.groupId === groupId).map((item) => {
                 const isVisible = visibleSeries.includes(item.id);
                 return (
-                  <button
+                  <RectangularButton
                     className={isVisible ? styles.isSelected : ''}
                     type="button"
                     key={item.id}
@@ -295,7 +296,7 @@ export default function HistoryChart({
                     <span className={styles.metricDot} style={{ backgroundColor: isVisible ? item.color : '#737b89' }} />
                     <span className={styles.metricLabel}>{item.label}</span>
                     <strong>{formatLegendValue(currentValues.get(item.id), item.unit)}</strong>
-                  </button>
+                  </RectangularButton>
                 );
               })}
             </div>
@@ -314,10 +315,10 @@ export default function HistoryChart({
           style={{ left: seriesContextMenu.left, top: seriesContextMenu.top }}
           onContextMenu={(event) => event.preventDefault()}
         >
-          <button ref={contextMenuActionRef} className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('isolate')}>{copy.historyChart.isolateSeries}</button>
-          <button className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('showAll')}>{copy.historyChart.showAllSeries}</button>
-          <button className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('hideGroup')}>{copy.historyChart.hideGroup}</button>
-          <button className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('showGroup')}>{copy.historyChart.showGroup}</button>
+          <RectangularButton ref={contextMenuActionRef} className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('isolate')}>{copy.historyChart.isolateSeries}</RectangularButton>
+          <RectangularButton className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('showAll')}>{copy.historyChart.showAllSeries}</RectangularButton>
+          <RectangularButton className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('hideGroup')}>{copy.historyChart.hideGroup}</RectangularButton>
+          <RectangularButton className={styles.menuAction} type="button" role="menuitem" onClick={() => applyMenuAction('showGroup')}>{copy.historyChart.showGroup}</RectangularButton>
         </div>,
         document.body,
       )}

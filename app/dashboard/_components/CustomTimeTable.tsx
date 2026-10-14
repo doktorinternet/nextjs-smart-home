@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import conf from "@/app/configuration.json";
 import { DepartureApiResponse } from "./DepartureApiResponse.type";
 import { AppJourney, Direction, LineDepartures, mapAndMergeByLine } from "./LineDepartures.type";
-import { useAutoFetch } from "@/app/dashboard/useAutoFetch";
+import { useAutoFetch } from "./useAutoFetch";
 import { copy, formatCopy, locale } from "@/app/copy";
 import styles from "./CustomTimeTable.module.css";
 

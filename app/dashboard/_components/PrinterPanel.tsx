@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPrint } from '@fortawesome/free-solid-svg-icons'
-import { AutoRefreshControl, useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
+import RectangularButton from '@/app/components/ui/RectangularButton'
+import DashboardPanel from './DashboardPanel'
+import { useAutoFetch, type AutoRefreshStatusType } from './useAutoFetch'
 import { copy, formatCopy } from '@/app/copy'
 import styles from './PrinterPanel.module.css'
 
@@ -110,32 +111,26 @@ export default function PrinterPanel() {
   }
 
   return (
-    <section className={'dashboard-module dashboard-live-card ' + styles.printerPanel} aria-labelledby="printer-heading">
-      <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faPrint} /></span>
-        <div>
-          <p className="dashboard-eyebrow">{copy.printer.eyebrow}</p>
-          <h2 id="printer-heading">{copy.printer.title}</h2>
-        </div>
-        {printer && !error && (
+    <DashboardPanel
+      className={'dashboard-module dashboard-live-card ' + styles.printerPanel}
+      headingId="printer-heading"
+      icon={faPrint}
+      eyebrow={copy.printer.eyebrow}
+      title={copy.printer.title}
+      label={copy.printer.label}
+      autoFetch={autoFetch}
+      onRefresh={() => void load()}
+      refreshLabel={copy.printer.refresh}
+      refreshing={loading}
+      headerAddon={printer && !error && (
           <span className={`dashboard-live-status${disconnected ? ' is-offline' : ''}`}>
             <span aria-hidden="true" />{disconnected ? copy.printer.disconnected : printerStateLabel(connection)}
           </span>
-        )}
-        <AutoRefreshControl
-          label={copy.printer.label}
-          {...autoFetch}
-          onChange={autoFetch.setEnabled}
-          onRefresh={() => void load()}
-          refreshLabel={copy.printer.refresh}
-          refreshing={loading}
-          statusMessage={controlMessage}
-          statusType={controlMessageType}
-          statusPosition="before"
-        />
-      </div>
-
-      <div className="dashboard-panel-content">
+      )}
+      statusMessage={controlMessage}
+      statusType={controlMessageType}
+      statusPosition="before"
+    >
         {loading && !printer ? null : error ? (
           <p className="dashboard-live-message is-error" role="status">{error}</p>
         ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
@@ -168,13 +163,12 @@ export default function PrinterPanel() {
         <div className="dashboard-printer-controls">
           <div className="dashboard-control-actions">
             <div className="dashboard-control-actions-row">
-              <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>{copy.printer.pause}</button>
-              <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>{copy.printer.resume}</button>
-              <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</button>
+              <RectangularButton type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>{copy.printer.pause}</RectangularButton>
+              <RectangularButton type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>{copy.printer.resume}</RectangularButton>
+              <RectangularButton className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</RectangularButton>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+    </DashboardPanel>
   )
 }

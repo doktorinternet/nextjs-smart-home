@@ -6,7 +6,7 @@ import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import Link from 'next/link'
 import { copy } from '@/app/copy'
-import { layoutOptions, type LayoutMode } from '@/app/dashboard/layouts/layoutOptions'
+import { layoutOptions, type LayoutMode } from '@/app/lib/dashboard-layout'
 import styles from './settings.module.css'
 
 type PermissionStatus = {

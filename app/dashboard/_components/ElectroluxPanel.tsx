@@ -1,12 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWind } from '@fortawesome/free-solid-svg-icons';
-import { AutoRefreshControl, useAutoFetch } from './useAutoFetch';
+import DashboardPanel from './DashboardPanel';
+import { useAutoFetch } from './useAutoFetch';
 import { copy, formatCopy, locale } from '@/app/copy';
 import { airMetricDefinitions, printerMetricDefinitions } from '@/app/lib/air-metrics';
-import HistoryChart, { type HistoryChartRange, type HistoryChartRow, type HistoryChartSeries } from '@/app/components/ui/HistoryChart';
+import HistoryChart, { type HistoryChartRange, type HistoryChartRow, type HistoryChartSeries } from './HistoryChart';
 
 type Status = { appliance: string; updatedAt: string; metrics: Array<{ label: string; value: string }> };
 type Measurement = { id: number; kind: 'measurement'; sourceId: string; metricId: string; value: number; unit: string; observedAt: string };
@@ -187,23 +187,17 @@ export default function ElectroluxPanel() {
   }
 
   return (
-    <section className="dashboard-module dashboard-live-card" aria-labelledby="air-quality-heading">
-      <div className="dashboard-module-heading">
-        <span className="dashboard-module-icon" aria-hidden="true"><FontAwesomeIcon icon={faWind} /></span>
-        <div>
-          <p className="dashboard-eyebrow">{copy.electrolux.eyebrow}</p>
-          <h2 id="air-quality-heading">{copy.electrolux.title}</h2>
-        </div>
-        <AutoRefreshControl
-          label={copy.electrolux.label}
-          {...autoFetch}
-          onChange={autoFetch.setEnabled}
-          onRefresh={refreshAndLoadHistory}
-          refreshLabel={copy.electrolux.refresh}
-          refreshing={loading}
-        />
-      </div>
-      <div className="dashboard-panel-content">
+    <DashboardPanel
+      headingId="air-quality-heading"
+      icon={faWind}
+      eyebrow={copy.electrolux.eyebrow}
+      title={copy.electrolux.title}
+      label={copy.electrolux.label}
+      autoFetch={autoFetch}
+      onRefresh={refreshAndLoadHistory}
+      refreshLabel={copy.electrolux.refresh}
+      refreshing={loading}
+    >
         {error && !status ? <p>{error}</p> : null}
         {history.length ? (
           <HistoryChart
@@ -222,7 +216,6 @@ export default function ElectroluxPanel() {
             footer={formatCopy(copy.electrolux.historyCount, { count: history.length })}
           />
         ) : <p className="dashboard-live-note">{historyError ? copy.electrolux.historyError : copy.electrolux.historyEmpty}</p>}
-      </div>
-    </section>
+    </DashboardPanel>
   );
 }

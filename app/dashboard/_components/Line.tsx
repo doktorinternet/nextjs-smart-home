@@ -1,5 +1,5 @@
 import conf from '@/app/configuration.json'
-import TimeString from '../TimeString';
+import TimeString from '@/app/components/TimeString';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowDown, faArrowLeft, faArrowRight, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { LineDepartures, DestinationDirections, Direction, AppJourney } from './LineDepartures.type';

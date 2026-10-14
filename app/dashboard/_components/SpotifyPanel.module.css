@@ -5,8 +5,7 @@
 .spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-current-art-empty) { width: 84px; }
 .spotifyPanel:global(.spotify-panel.has-unsupported-volume) :global(.spotify-hint) { margin: 0; }
 .spotifyPanel :global(.spotify-player) { display: flex; min-width: 0; flex: 0 0 auto; flex-direction: column; gap: inherit; }
-.spotifyPanel :global(.spotify-panel-content) { display: flex; flex-direction: column; gap: 8px; }
-.spotifyPanel :global(.spotify-panel-content .spotify-library) { flex: 1 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.spotifyPanel :global(.spotify-library) { flex: 1 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
 .spotifyPanel :global(.spotify-library-content) { display: flex; min-height: 180px; flex-direction: column; }
 .spotifyPanel :global(.spotify-library-content > .spotify-content-row),
 .spotifyPanel :global(.spotify-library-content > .spotify-spoken-content) { flex: 1 1 auto; min-height: 0; }
@@ -112,14 +111,9 @@
   .spotifyPanel :global(.spotify-playback-controls button) { transition: none; }
   .spotifyPanel :global(.spotify-playback-controls button.is-pending > svg) { animation: none; }
 }
-.spotifyPanel :global(.spotify-playback-controls button:disabled),
-.spotifyPanel :global(.spotify-device-summary:disabled) { opacity: .45; cursor: not-allowed; }
+.spotifyPanel :global(.spotify-playback-controls .spotify-primary-control:disabled) { opacity: .45; cursor: not-allowed; }
 .spotifyPanel :global(.spotify-playback-controls .spotify-primary-control) { width: 68px; height: 68px; min-height: 68px; justify-self: center; border: 0; border-radius: 50%; color: #092114; background: #52df91; font-size: 25px; }
-.spotifyPanel :global(.spotify-playback-controls button:focus-visible),
-.spotifyPanel :global(.spotify-device-summary:focus-visible),
-.spotifyPanel :global(.spotify-device-tile:focus-visible),
-.spotifyPanel :global(.spotify-library-tabs button:focus-visible),
-.spotifyPanel :global(.spotify-playlist-action:focus-visible) { outline: 2px solid #52df91; outline-offset: 2px; }
+.spotifyPanel :global(.spotify-playback-controls .spotify-primary-control:focus-visible) { outline: 2px solid #52df91; outline-offset: 2px; }
 .spotifyPanel :global(.spotify-next-icon) { transform: rotate(180deg); }
 .spotifyPanel :global(.spotify-repeat-one) { position: absolute; top: 15px; font-size: 9px; font-weight: 700; }
 .spotifyPanel :global(.spotify-volume-row) { display: grid; grid-template-columns: 24px minmax(0,1fr) 44px; gap: 8px; align-items: center; color: #b8c1cf; }
@@ -154,7 +148,6 @@
 .spotifyPanel :global(.spotify-content-title) { overflow: hidden; color: var(--dashboard-ink); font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .spotifyPanel :global(.spotify-content-subtitle) { overflow: hidden; color: #aeb8c8; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .spotifyPanel :global(.spotify-playlist-action) { width: 100%; padding: 0; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
-.spotifyPanel :global(.spotify-playlist-action:disabled) { opacity: .45; cursor: not-allowed; }
 .spotifyPanel :global(.spotify-spoken-content) { display: grid; gap: 8px; min-width: 0; }
 @media (max-width: 560px) {
   .spotifyPanel :global(.spotify-now-playing) { grid-template-columns: 68px minmax(0, 1fr); gap: 8px; }
