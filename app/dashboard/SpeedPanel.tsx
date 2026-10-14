@@ -127,32 +127,32 @@ export default function SpeedPanel() {
       </div>
 
       <div className="dashboard-panel-content">
-      {loading && !history ? null : error ? (
-        <p className="dashboard-live-message is-error" role="status">{error}</p>
-      ) : autoFetch.ready && !autoFetch.enabled && !history ? (
-        null
-      ) : !latest ? (
-        <p className="dashboard-live-message">{historyRangeId === 'month' ? copy.speed.empty : copy.speed.historyRangeEmpty}</p>
-      ) : (
-        <div className="dashboard-speed-content">
-          <HistoryChart
-            data={chartData}
-            series={speedMetrics}
-            ranges={historyRangeOptions}
-            selectedRangeId={historyRangeId}
-            onRangeChange={(id) => setHistoryRangeId(id as HistoryRangeId)}
-            xDomain={[from, now]}
-            xTickFormatter={(value) => historyRangeId === 'day'
-              ? new Date(value).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
-              : new Date(value).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
-            rangeLabel={copy.speed.historyRangeLabel}
-            legendLabel={copy.speed.historyLegend}
-            latestValues={latestValues}
-            footer={formatCopy(copy.speed.historyCount, { count: samples.length })}
-          />
-          <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString(locale)}</p>
-        </div>
-      )}
+        {loading && !history ? null : error ? (
+          <p className="dashboard-live-message is-error" role="status">{error}</p>
+        ) : autoFetch.ready && !autoFetch.enabled && !history ? (
+          null
+        ) : !latest ? (
+          <p className="dashboard-live-message">{historyRangeId === 'month' ? copy.speed.empty : copy.speed.historyRangeEmpty}</p>
+        ) : (
+          <>
+            <HistoryChart
+              data={chartData}
+              series={speedMetrics}
+              ranges={historyRangeOptions}
+              selectedRangeId={historyRangeId}
+              onRangeChange={(id) => setHistoryRangeId(id as HistoryRangeId)}
+              xDomain={[from, now]}
+              xTickFormatter={(value) => historyRangeId === 'day'
+                ? new Date(value).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+                : new Date(value).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
+              rangeLabel={copy.speed.historyRangeLabel}
+              legendLabel={copy.speed.historyLegend}
+              latestValues={latestValues}
+              footer={formatCopy(copy.speed.historyCount, { count: samples.length })}
+            />
+            <p className="dashboard-speed-updated">{new Date(latest.timestamp).toLocaleString(locale)}</p>
+          </>
+        )}
       </div>
     </section>
   )

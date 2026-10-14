@@ -1,0 +1,20 @@
+.transitPanel {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 820px) {
+  .transitPanel { grid-row: auto; }
+}
+
+@media (max-width: 640px) {
+  .transitPanel { min-height: 0; }
+  .transitPanel > :global(.dashboard-panel-content) { margin-top: 16px; }
+}
+
+:global(.panels[data-page='0'] .panel:first-child) .transitPanel :global(.tram-departure-list) {
+  max-height: min(32vh, 260px);
+}

@@ -1,14 +1,6 @@
-.printerPanel :global(.dashboard-printer-content) {
-  display: grid;
-  gap: 20px;
-  margin-top: 28px;
-}
-
 .printerPanel :global(.dashboard-printer-controls) {
   display: grid;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: 22px;
+  gap: 8px;
 }
 
 .printerPanel :global(.dashboard-printer-job) {
@@ -36,7 +28,7 @@
   text-align: right;
 }
 
-.printerPanel :global(.dashboard-progress-wrap) { display: grid; gap: 9px; }
+.printerPanel :global(.dashboard-progress-wrap) { display: grid; gap: 8px; }
 
 .printerPanel :global(.dashboard-progress-label) {
   display: flex;

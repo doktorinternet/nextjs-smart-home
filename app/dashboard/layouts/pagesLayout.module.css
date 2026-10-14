@@ -6,7 +6,6 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: clamp(10px, 2vw, 24px);
   color: var(--dashboard-ink);
   background:
     radial-gradient(ellipse at 82% 2%, rgba(95, 112, 166, .28), transparent 36%),
@@ -84,20 +83,6 @@
   padding: clamp(12px, 2vw, 24px);
   border-radius: 18px;
   overscroll-behavior: contain;
-}
-
-.panels[data-page='0'] .panel:first-child > :global(.dashboard-module) {
-  display: flex;
-  flex-direction: column;
-}
-
-.panels[data-page='0'] .panel:first-child :global(.dashboard-transit-content) {
-  flex: 1;
-  min-height: 0;
-}
-
-.panels[data-page='0'] .panel:first-child :global(.tram-departure-list) {
-  max-height: min(32vh, 260px);
 }
 
 .navigation {

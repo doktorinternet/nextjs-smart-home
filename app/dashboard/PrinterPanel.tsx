@@ -136,44 +136,44 @@ export default function PrinterPanel() {
       </div>
 
       <div className="dashboard-panel-content">
-      {loading && !printer ? null : error ? (
-        <p className="dashboard-live-message is-error" role="status">{error}</p>
-      ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
-        null
-      ) : disconnected ? (
-        <p className="dashboard-live-message">{copy.printer.disconnectedHelp}</p>
-      ) : (
-        <div className="dashboard-printer-content" aria-live="polite">
-          <div className="dashboard-printer-job">
-            <span className="dashboard-live-label">{copy.printer.activeJob}</span>
-            <strong>{fileName || (jobState === 'Operational' ? copy.printer.noActivePrint : printerStateLabel(jobState))}</strong>
-            <span className="dashboard-job-state">{printerStateLabel(jobState)}</span>
-          </div>
-          {hasProgress ? (
-            <div className="dashboard-progress-wrap">
-              <div className="dashboard-progress-label">
-                <span>{copy.printer.progress}</span><strong>{Math.round(progress)}%</strong>
-              </div>
-              <div className="dashboard-progress-track" role="progressbar" aria-label={copy.printer.progressAria} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0, Math.min(100, progress))}>
-                <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
-              </div>
-              {remaining && <span className="dashboard-remaining">{formatCopy(copy.printer.remaining, { duration: remaining })}</span>}
+        {loading && !printer ? null : error ? (
+          <p className="dashboard-live-message is-error" role="status">{error}</p>
+        ) : autoFetch.ready && !autoFetch.enabled && !printer ? (
+          null
+        ) : disconnected ? (
+          <p className="dashboard-live-message">{copy.printer.disconnectedHelp}</p>
+        ) : (
+          <>
+            <div className="dashboard-printer-job">
+              <span className="dashboard-live-label">{copy.printer.activeJob}</span>
+              <strong>{fileName || (jobState === 'Operational' ? copy.printer.noActivePrint : printerStateLabel(jobState))}</strong>
+              <span className="dashboard-job-state">{printerStateLabel(jobState)}</span>
             </div>
-          ) : (
-            <p className="dashboard-printer-idle">{jobState === 'Operational' ? copy.printer.ready : copy.printer.progressUnavailable}</p>
-          )}
-        </div>
-      )}
+            {hasProgress ? (
+              <div className="dashboard-progress-wrap">
+                <div className="dashboard-progress-label">
+                  <span>{copy.printer.progress}</span><strong>{Math.round(progress)}%</strong>
+                </div>
+                <div className="dashboard-progress-track" role="progressbar" aria-label={copy.printer.progressAria} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0, Math.min(100, progress))}>
+                  <span style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
+                </div>
+                {remaining && <span className="dashboard-remaining">{formatCopy(copy.printer.remaining, { duration: remaining })}</span>}
+              </div>
+            ) : (
+              <p className="dashboard-printer-idle">{jobState === 'Operational' ? copy.printer.ready : copy.printer.progressUnavailable}</p>
+            )}
+          </>
+        )}
 
-      <div className="dashboard-printer-controls">
-        <div className="dashboard-control-actions">
-          <div className="dashboard-control-actions-row">
-            <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>{copy.printer.pause}</button>
-            <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>{copy.printer.resume}</button>
-            <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</button>
+        <div className="dashboard-printer-controls">
+          <div className="dashboard-control-actions">
+            <div className="dashboard-control-actions-row">
+              <button type="button" onClick={() => void runPrinterCommand('pause')} disabled={controlBusy || !canPause}>{copy.printer.pause}</button>
+              <button type="button" onClick={() => void runPrinterCommand('resume')} disabled={controlBusy || !canResume}>{copy.printer.resume}</button>
+              <button className="is-danger" type="button" onClick={() => void runPrinterCommand('cancel')} disabled={controlBusy || !canCancel}>{copy.printer.cancel}</button>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </section>
   )

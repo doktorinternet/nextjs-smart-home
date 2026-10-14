@@ -622,7 +622,7 @@ export default function SpotifyPanel() {
   }
 
   return (
-    <section className={'dashboard-module dashboard-live-card spotify-panel' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '') + ' ' + styles.spotifyPanel} aria-labelledby="spotify-heading">
+    <section className={'dashboard-module dashboard-live-card' + (selectedDevice?.supports_volume === false ? ' has-unsupported-volume' : '') + ' ' + styles.spotifyPanel} aria-labelledby="spotify-heading">
       <div className="dashboard-module-heading">
         <span className="dashboard-module-icon spotify-heading-icon" aria-hidden="true"><FontAwesomeIcon icon={faSpotify} /></span>
         <div>
@@ -645,220 +645,223 @@ export default function SpotifyPanel() {
         />
       </div>
 
-      <div className="spotify-player">
-        <div className={'spotify-now-playing' + (devicePickerExpanded ? ' is-device-expanded' : '')}>
-          {albumImage
-            ? <Image className="spotify-current-art" src={albumImage} alt="" width={640} height={640} sizes="(max-width: 560px) 68px, 96px" />
-            : <div className="spotify-current-art spotify-current-art-empty" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></div>}
-          <div className="spotify-current-info" aria-live="polite">
-            <h3>{track?.name ?? copy.spotify.nothingPlaying}</h3>
-            <p>{artistNames || (track?.type === 'episode' ? copy.spotify.episode : copy.spotify.title)}</p>
-            {track && (
-              <div className="spotify-progress">
-                <span>{durationLabel(positionMs)}</span>
-                <input
-                  type="range"
-                  min="0"
-                  max={Math.max(duration, 1)}
-                  value={Math.min(positionMs, duration || 0)}
-                  onChange={(event) => setPositionMs(Number(event.target.value))}
-                  onPointerUp={commitSeek}
-                  onKeyUp={commitSeek}
-                  disabled={duration <= 0 || !playbackDeviceId || disallowed.seeking === true}
-                  aria-label={copy.spotify.progress}
-                />
-                <span>{durationLabel(duration)}</span>
-              </div>
-            )}
-          </div>
-          <div className="spotify-device-switcher">
-            <button
-              className="spotify-device-summary"
-              type="button"
-              onClick={() => setDevicePickerExpanded((expanded) => !expanded)}
-              aria-expanded={devicePickerExpanded}
-              aria-controls="spotify-device-list"
-              disabled={devices.length === 0}
-            >
-              <FontAwesomeIcon icon={deviceIcon(selectedDevice)} aria-hidden="true" />
-              <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
-              <span className="spotify-chevron" aria-hidden="true"><FontAwesomeIcon icon={faChevronDown} /></span>
-            </button>
-            <AnimatePresence initial={false}>
-              {devicePickerExpanded && devices.length > 0 && (
-                <motion.div
-                  key="spotify-device-list"
-                  id="spotify-device-list"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={shouldReduceMotion ? { duration: 0 } : { duration: .24, ease: 'easeInOut' }}
-                  style={{ gridColumn: '1 / -1', overflow: 'hidden' }}
-                >
-                  <div className="spotify-device-picker">
-                    <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
-                    <div className="spotify-device-grid">
-                      {devices.map((device) => {
-                        const active = device.id === playback?.device?.id
-                        return (
-                          <button
-                            className={'spotify-device-tile' + (active ? ' is-active' : '')}
-                            type="button"
-                            key={device.id}
-                            onClick={() => {
-                              selectedDeviceIdRef.current = device.id
-                              setSelectedDeviceId(device.id)
-                              if (device.volume_percent != null) {
-                                volumeRef.current = device.volume_percent
-                                setVolume(device.volume_percent)
-                              }
-                              if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
-                            }}
-                            disabled={device.is_restricted === true}
-                            aria-pressed={active}
-                          >
-                            <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
-                            <span>{device.name}</span>
-                            <small>{active ? copy.spotify.active : device.type}</small>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </motion.div>
+      <div className="dashboard-panel-content" aria-live="polite">
+        <div className="spotify-player">
+          <div className={'spotify-now-playing' + (devicePickerExpanded ? ' is-device-expanded' : '')}>
+            {albumImage
+              ? <Image className="spotify-current-art" src={albumImage} alt="" width={640} height={640} sizes="(max-width: 560px) 68px, 96px" />
+              : <div className="spotify-current-art spotify-current-art-empty" aria-hidden="true"><FontAwesomeIcon icon={faMusic} /></div>}
+            <div className="spotify-current-info" aria-live="polite">
+              <h3>{track?.name ?? copy.spotify.nothingPlaying}</h3>
+              <p>{artistNames || (track?.type === 'episode' ? copy.spotify.episode : copy.spotify.title)}</p>
+              {track && (
+                <div className="spotify-progress">
+                  <span>{durationLabel(positionMs)}</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max={Math.max(duration, 1)}
+                    value={Math.min(positionMs, duration || 0)}
+                    onChange={(event) => setPositionMs(Number(event.target.value))}
+                    onPointerUp={commitSeek}
+                    onKeyUp={commitSeek}
+                    disabled={duration <= 0 || !playbackDeviceId || disallowed.seeking === true}
+                    aria-label={copy.spotify.progress}
+                  />
+                  <span>{durationLabel(duration)}</span>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        <div className="spotify-playback-controls" role="group" aria-label={copy.spotify.title}>
-          <button
-            className={'spotify-secondary-control' + (playback?.shuffle_state ? ' is-active' : '')}
-            type="button"
-            onClick={() => void sendCommand('shuffle', { deviceId: playbackDeviceId, state: !playback?.shuffle_state }, playback?.shuffle_state ? copy.spotify.shuffleDisabled : copy.spotify.shuffleEnabled)}
-            disabled={!playbackDeviceId || disallowed.toggling_shuffle === true}
-            aria-label={copy.spotify.shuffle}
-            aria-pressed={Boolean(playback?.shuffle_state)}
-          ><FontAwesomeIcon icon={faShuffle} aria-hidden="true" /></button>
-          <button
-            className={'spotify-secondary-control' + (pendingTransport?.action === 'previous' ? ' is-pending is-pending-previous' : '')}
-            type="button"
-            onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.previous, 'previous')}
-            disabled={!playback || disallowed.skipping_prev === true}
-            aria-label={copy.spotify.previous}
-            aria-busy={pendingTransport?.action === 'previous'}
-          ><FontAwesomeIcon icon={pendingTransport?.action === 'previous' ? faRotateLeft : faBackward} aria-hidden="true" /></button>
-          <button
-            className={'spotify-primary-control' + (pendingTransport?.action === 'playback' ? ' is-pending' : '')}
-            type="button"
-            onClick={togglePlayback}
-            disabled={!playback || disallowed[playback?.is_playing ? 'pausing' : 'resuming'] === true}
-            aria-label={playback?.is_playing ? copy.spotify.pause : copy.spotify.resume}
-            aria-busy={pendingTransport?.action === 'playback'}
-          ><FontAwesomeIcon icon={pendingTransport?.action === 'playback' ? faSpinner : playback?.is_playing ? faPause : faPlay} aria-hidden="true" /></button>
-          <button
-            className={'spotify-secondary-control' + (pendingTransport?.action === 'next' ? ' is-pending' : '')}
-            type="button"
-            onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.next, 'next')}
-            disabled={!playback || disallowed.skipping_next === true}
-            aria-label={copy.spotify.next}
-            aria-busy={pendingTransport?.action === 'next'}
-          ><FontAwesomeIcon icon={pendingTransport?.action === 'next' ? faRotateRight : faBackward} className={pendingTransport?.action === 'next' ? undefined : 'spotify-next-icon'} aria-hidden="true" /></button>
-          <button
-            className={'spotify-secondary-control' + (repeatState !== 'off' ? ' is-active' : '')}
-            type="button"
-            onClick={() => void sendCommand('repeat', { deviceId: playbackDeviceId, state: repeatNext }, copy.spotify.repeatUpdated)}
-            disabled={!playbackDeviceId || disallowed.toggling_repeat_track === true}
-            aria-label={repeatState === 'off' ? copy.spotify.repeatOff : repeatState === 'context' ? copy.spotify.repeatContext : copy.spotify.repeatTrack}
-            aria-pressed={repeatState !== 'off'}
-          ><FontAwesomeIcon icon={faRepeat} aria-hidden="true" />{repeatState === 'track' && <span className="spotify-repeat-one">1</span>}</button>
-        </div>
-
-        {selectedDevice && (
-          <label className="spotify-volume-row">
-            <FontAwesomeIcon icon={faVolumeHigh} aria-hidden="true" />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              value={volume}
-              onChange={(event) => updateVolume(Number(event.target.value))}
-              disabled={volumeDisabled}
-              aria-label={copy.spotify.volumeAria}
-            />
-            <span>{volume}%</span>
-          </label>
-        )}
-        {selectedDevice?.supports_volume === false && <p className="spotify-hint">{copy.spotify.volumeUnsupported}</p>}
-
-        {!error && !track && playback?.is_playing && (
-          <p className="spotify-hint">{copy.spotify.activeWithoutTrack}</p>
-        )}
-      </div>
-
-      <div className="dashboard-panel-content spotify-panel-content">
-        {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
-
-        <section className={'spotify-library' + (selectedDevice?.supports_volume === false ? ' is-volume-unsupported' : '')} aria-label={copy.spotify.title}>
-          <div className="spotify-library-tabs" role="tablist" aria-label={copy.spotify.title}>
-            <button
-              className={libraryKind === 'playlists' ? 'is-active' : ''}
-              type="button"
-              role="tab"
-              aria-selected={libraryKind === 'playlists'}
-              onClick={() => {
-                setLibraryKind('playlists')
-              }}
-            ><FontAwesomeIcon icon={faMusic} aria-hidden="true" />{copy.spotify.playlists}</button>
-            <button
-              className={libraryKind === 'spoken' ? 'is-active' : ''}
-              type="button"
-              role="tab"
-              aria-selected={libraryKind === 'spoken'}
-              onClick={() => {
-                setLibraryKind('spoken')
-              }}
-            ><FontAwesomeIcon icon={faBookOpen} aria-hidden="true" />{copy.spotify.spoken}</button>
-          </div>
-
-          <motion.div
-            className={'spotify-library-content' + (devicePickerExpanded ? ' is-compact' : '')}
-            key="spotify-library-content"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            transition={shouldReduceMotion ? { duration: 0 } : { duration: .2, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-            {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
-
-            {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (
-              library.items.length > 0
-                ? <div className="spotify-content-row">{library.items.map(renderPlaylist)}</div>
-                : <p className="spotify-hint">{copy.spotify.noPlaylists}</p>
-            )}
-
-            {!libraryError && libraryKind === 'spoken' && loadedLibrary.has('spoken') && (
-              <div className="spotify-spoken-content">
-                {(library.episodes.length > 0 || library.audiobooks.length > 0) && (
-                  <div className="spotify-content-row">
-                    {spokenAvailability.audiobooks && library.audiobooks.map(renderAudiobook)}
-                    {spokenAvailability.episodes && library.episodes.map(renderEpisode)}
-                  </div>
+            </div>
+            <div className="spotify-device-switcher">
+              <button
+                className="spotify-device-summary"
+                type="button"
+                onClick={() => setDevicePickerExpanded((expanded) => !expanded)}
+                aria-expanded={devicePickerExpanded}
+                aria-controls="spotify-device-list"
+                disabled={devices.length === 0}
+              >
+                <FontAwesomeIcon icon={deviceIcon(selectedDevice)} aria-hidden="true" />
+                <span><strong>{selectedDevice?.name ?? copy.spotify.chooseDevice}</strong><small>{selectedDevice?.id === playback?.device?.id ? copy.spotify.active : copy.spotify.switchDevice}</small></span>
+                <span className="spotify-chevron" aria-hidden="true"><FontAwesomeIcon icon={faChevronDown} /></span>
+              </button>
+              <AnimatePresence initial={false}>
+                {devicePickerExpanded && devices.length > 0 && (
+                  <motion.div
+                    key="spotify-device-list"
+                    id="spotify-device-list"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { duration: .24, ease: 'easeInOut' }}
+                    style={{ gridColumn: '1 / -1', overflow: 'hidden' }}
+                  >
+                    <div className="spotify-device-picker">
+                      <p className="spotify-section-label">{copy.spotify.chooseDevice}</p>
+                      <div className="spotify-device-grid">
+                        {devices.map((device) => {
+                          const active = device.id === playback?.device?.id
+                          return (
+                            <button
+                              className={'spotify-device-tile' + (active ? ' is-active' : '')}
+                              type="button"
+                              key={device.id}
+                              onClick={() => {
+                                selectedDeviceIdRef.current = device.id
+                                setSelectedDeviceId(device.id)
+                                if (device.volume_percent != null) {
+                                  volumeRef.current = device.volume_percent
+                                  setVolume(device.volume_percent)
+                                }
+                                if (!active) void sendCommand('transfer', { deviceId: device.id, play: Boolean(playback?.is_playing) }, copy.spotify.commandMessages.transfer)
+                              }}
+                              disabled={device.is_restricted === true}
+                              aria-pressed={active}
+                            >
+                              <FontAwesomeIcon icon={deviceIcon(device)} aria-hidden="true" />
+                              <span>{device.name}</span>
+                              <small>{active ? copy.spotify.active : device.type}</small>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
-                {spokenAvailability.audiobooks && library.audiobooks.length > 0 &&
-                  <p className="spotify-hint">{copy.spotify.audiobookOpenOnly}</p>}
-                {!spokenAvailability.episodes && !spokenAvailability.audiobooks &&
-                  <p className="spotify-hint">{copy.spotify.libraryPermission}</p>}
-                {spokenAvailability.episodes && library.episodes.length === 0 &&
-                  <p className="spotify-hint">{copy.spotify.noEpisodes}</p>}
-                {spokenAvailability.audiobooks && library.audiobooks.length === 0 &&
-                  <p className="spotify-hint">{copy.spotify.noAudiobooks}</p>}
-              </div>
-            )}
-          </motion.div>
-        </section>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="spotify-playback-controls" role="group" aria-label={copy.spotify.title}>
+            <button
+              className={'spotify-secondary-control' + (playback?.shuffle_state ? ' is-active' : '')}
+              type="button"
+              onClick={() => void sendCommand('shuffle', { deviceId: playbackDeviceId, state: !playback?.shuffle_state }, playback?.shuffle_state ? copy.spotify.shuffleDisabled : copy.spotify.shuffleEnabled)}
+              disabled={!playbackDeviceId || disallowed.toggling_shuffle === true}
+              aria-label={copy.spotify.shuffle}
+              aria-pressed={Boolean(playback?.shuffle_state)}
+            ><FontAwesomeIcon icon={faShuffle} aria-hidden="true" /></button>
+            <button
+              className={'spotify-secondary-control' + (pendingTransport?.action === 'previous' ? ' is-pending is-pending-previous' : '')}
+              type="button"
+              onClick={() => void sendCommand('previous', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.previous, 'previous')}
+              disabled={!playback || disallowed.skipping_prev === true}
+              aria-label={copy.spotify.previous}
+              aria-busy={pendingTransport?.action === 'previous'}
+            ><FontAwesomeIcon icon={pendingTransport?.action === 'previous' ? faRotateLeft : faBackward} aria-hidden="true" /></button>
+            <button
+              className={'spotify-primary-control' + (pendingTransport?.action === 'playback' ? ' is-pending' : '')}
+              type="button"
+              onClick={togglePlayback}
+              disabled={!playback || disallowed[playback?.is_playing ? 'pausing' : 'resuming'] === true}
+              aria-label={playback?.is_playing ? copy.spotify.pause : copy.spotify.resume}
+              aria-busy={pendingTransport?.action === 'playback'}
+            ><FontAwesomeIcon icon={pendingTransport?.action === 'playback' ? faSpinner : playback?.is_playing ? faPause : faPlay} aria-hidden="true" /></button>
+            <button
+              className={'spotify-secondary-control' + (pendingTransport?.action === 'next' ? ' is-pending' : '')}
+              type="button"
+              onClick={() => void sendCommand('next', playbackDeviceId ? { deviceId: playbackDeviceId } : {}, copy.spotify.commandMessages.next, 'next')}
+              disabled={!playback || disallowed.skipping_next === true}
+              aria-label={copy.spotify.next}
+              aria-busy={pendingTransport?.action === 'next'}
+            ><FontAwesomeIcon icon={pendingTransport?.action === 'next' ? faRotateRight : faBackward} className={pendingTransport?.action === 'next' ? undefined : 'spotify-next-icon'} aria-hidden="true" /></button>
+            <button
+              className={'spotify-secondary-control' + (repeatState !== 'off' ? ' is-active' : '')}
+              type="button"
+              onClick={() => void sendCommand('repeat', { deviceId: playbackDeviceId, state: repeatNext }, copy.spotify.repeatUpdated)}
+              disabled={!playbackDeviceId || disallowed.toggling_repeat_track === true}
+              aria-label={repeatState === 'off' ? copy.spotify.repeatOff : repeatState === 'context' ? copy.spotify.repeatContext : copy.spotify.repeatTrack}
+              aria-pressed={repeatState !== 'off'}
+            ><FontAwesomeIcon icon={faRepeat} aria-hidden="true" />{repeatState === 'track' && <span className="spotify-repeat-one">1</span>}</button>
+          </div>
+
+          {selectedDevice && (
+            <label className="spotify-volume-row">
+              <FontAwesomeIcon icon={faVolumeHigh} aria-hidden="true" />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={volume}
+                onChange={(event) => updateVolume(Number(event.target.value))}
+                disabled={volumeDisabled}
+                aria-label={copy.spotify.volumeAria}
+              />
+              <span>{volume}%</span>
+            </label>
+          )}
+          {selectedDevice?.supports_volume === false && <p className="spotify-hint">{copy.spotify.volumeUnsupported}</p>}
+
+          {!error && !track && playback?.is_playing && (
+            <p className="spotify-hint">{copy.spotify.activeWithoutTrack}</p>
+          )}
+        </div>
+
+        <div className="dashboard-panel-content spotify-panel-content">
+          {error && <p className="dashboard-live-message is-error" role="status">{error}</p>}
+
+          <section className={'spotify-library' + (selectedDevice?.supports_volume === false ? ' is-volume-unsupported' : '')} aria-label={copy.spotify.title}>
+            <div className="spotify-library-tabs" role="tablist" aria-label={copy.spotify.title}>
+              <button
+                className={libraryKind === 'playlists' ? 'is-active' : ''}
+                type="button"
+                role="tab"
+                aria-selected={libraryKind === 'playlists'}
+                onClick={() => {
+                  setLibraryKind('playlists')
+                }}
+              ><FontAwesomeIcon icon={faMusic} aria-hidden="true" />{copy.spotify.playlists}</button>
+              <button
+                className={libraryKind === 'spoken' ? 'is-active' : ''}
+                type="button"
+                role="tab"
+                aria-selected={libraryKind === 'spoken'}
+                onClick={() => {
+                  setLibraryKind('spoken')
+                }}
+              ><FontAwesomeIcon icon={faBookOpen} aria-hidden="true" />{copy.spotify.spoken}</button>
+            </div>
+
+            <motion.div
+              className={'spotify-library-content' + (devicePickerExpanded ? ' is-compact' : '')}
+              key="spotify-library-content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={shouldReduceMotion ? { duration: 0 } : { duration: .2, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              {libraryError && <p className="spotify-hint" role="status">{libraryError}</p>}
+
+              {!libraryError && libraryKind === 'playlists' && loadedLibrary.has('playlists') && (
+                library.items.length > 0
+                  ? <div className="spotify-content-row">{library.items.map(renderPlaylist)}</div>
+                  : <p className="spotify-hint">{copy.spotify.noPlaylists}</p>
+              )}
+
+              {!libraryError && libraryKind === 'spoken' && loadedLibrary.has('spoken') && (
+                <div className="spotify-spoken-content">
+                  {(library.episodes.length > 0 || library.audiobooks.length > 0) && (
+                    <div className="spotify-content-row">
+                      {spokenAvailability.audiobooks && library.audiobooks.map(renderAudiobook)}
+                      {spokenAvailability.episodes && library.episodes.map(renderEpisode)}
+                    </div>
+                  )}
+                  {spokenAvailability.audiobooks && library.audiobooks.length > 0 &&
+                    <p className="spotify-hint">{copy.spotify.audiobookOpenOnly}</p>}
+                  {!spokenAvailability.episodes && !spokenAvailability.audiobooks &&
+                    <p className="spotify-hint">{copy.spotify.libraryPermission}</p>}
+                  {spokenAvailability.episodes && library.episodes.length === 0 &&
+                    <p className="spotify-hint">{copy.spotify.noEpisodes}</p>}
+                  {spokenAvailability.audiobooks && library.audiobooks.length === 0 &&
+                    <p className="spotify-hint">{copy.spotify.noAudiobooks}</p>}
+                </div>
+              )}
+            </motion.div>
+          </section>
+        </div>
       </div>
+
     </section>
   )
 }

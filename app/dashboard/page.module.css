@@ -106,6 +106,7 @@
 }
 
 .dashboardShell :global(.dashboard-module) {
+  gap: 8px;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -217,12 +218,8 @@
 .dashboardShell :global(.dashboard-header-refresh:disabled) { cursor: wait; }
 .dashboardShell :global(.dashboard-module-icon) { display: grid; width: 46px; height: 46px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(244, 189, 132, .2); border-radius: 15px; color: var(--dashboard-accent); background: rgba(244, 189, 132, .09); font-size: 24px; }
 .dashboardShell :global(.dashboard-module h2) { margin: 0; color: var(--dashboard-ink); font-size: 21px; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; }
-.dashboardShell :global(.dashboard-transit) { display: flex; flex-direction: column; min-width: 0; min-height: 0; grid-column: 1 / -1; }
-.dashboardShell :global(.dashboard-transit-content) { flex: 1 1 auto; min-height: 0; margin-top: 6px; padding: 8px; border: 1px solid rgba(255, 255, 255, .08); border-radius: 16px; background: rgba(10, 14, 23, .34); }
-.dashboardShell :global(.dashboard-transit > .dashboard-panel-content) { overflow: hidden; }
-.dashboardShell :global(.dashboard-transit-content .time-table) { min-height: 0; }
 .dashboardShell :global(.dashboard-live-card) { display: flex; flex-direction: column; }
-.dashboardShell :global(.dashboard-panel-content) { min-width: 0; min-height: 0; flex: 1 1 auto; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.dashboardShell :global(.dashboard-panel-content) { display: flex; min-width: 0; min-height: 0; flex: 1 1 auto; flex-direction: column; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; gap: inherit; }
 .dashboardShell :global(.dashboard-live-content) { flex: 1; margin-top: 20px; color: #c5cad4; font-size: 14px; }
 .dashboardShell :global(.dashboard-live-note) { margin: 10px 0 0; color: #98a2b3; font-size: 11px; }
 .dashboardShell :global(.dashboard-live-status),
@@ -241,16 +238,9 @@
 .dashboardShell :global(.dashboard-control-actions button:disabled) { opacity: .45; cursor: not-allowed; }
 .dashboardShell :global(.dashboard-live-label) { color: var(--dashboard-muted); font-size: 12px; }
 
-@media (max-width: 820px) {
-  .dashboardShell :global(.dashboard-transit) { grid-row: auto; }
-}
-
 @media (max-width: 640px) {
   .dashboardShell { padding: 20px 16px 26px; }
   .dashboardShell :global(.dashboard-header) { align-items: flex-start; }
-  .dashboardShell :global(.dashboard-transit) { min-height: 0; grid-row: auto; }
-  .dashboardShell :global(.dashboard-transit-content) { min-height: 0; margin-top: 16px; padding: 12px; }
-  .dashboardShell :global(.dashboard-transit-content .time-table) { min-height: 0; }
   .dashboardShell :global(.dashboard-module) { padding: 20px; border-radius: 18px; }
   .dashboardShell :global(.dashboard-module-heading) { gap: 10px; }
   .dashboardShell :global(.dashboard-module-icon) { width: 40px; height: 40px; border-radius: 13px; }

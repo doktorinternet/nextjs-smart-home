@@ -1,3 +1,12 @@
+.timeTable {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  background: rgba(10, 14, 23, .34);
+}
+
 .timeTable :global(.departures) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -42,8 +51,13 @@
   font-size: 16px;
 }
 
-.timeTable :global(.tram-departure-row:nth-child(even)) { background: rgba(21, 27, 41, .68); }
-.timeTable :global(.tram-departure-row:first-child) { border-top: 1px solid rgba(255, 255, 255, .09); }
+.timeTable :global(.tram-departure-row:nth-child(even)) {
+  background: rgba(21, 27, 41, .68);
+}
+
+.timeTable :global(.tram-departure-row:first-child) {
+  border-top: 1px solid rgba(255, 255, 255, .09);
+}
 
 .timeTable :global(.tram-line-badge) {
   box-sizing: border-box;
@@ -83,18 +97,36 @@
   white-space: nowrap;
 }
 
-.timeTable :global(.tram-departure-row.is-urgent .tram-departure-remaining) { color: #ffbd91; }
-.timeTable :global(.tram-departure-row.is-soon .tram-departure-remaining) { color: #e8cf91; }
-.timeTable :global(.tram-departure-row.is-cancelled) { color: #b2b7c2; }
+.timeTable :global(.tram-departure-row.is-urgent .tram-departure-remaining) {
+  color: #ffbd91;
+}
+
+.timeTable :global(.tram-departure-row.is-soon .tram-departure-remaining) {
+  color: #e8cf91;
+}
+
+.timeTable :global(.tram-departure-row.is-cancelled) {
+  color: #b2b7c2;
+}
+
 .timeTable :global(.tram-departure-row.is-cancelled .tram-departure-remaining) {
   color: #f2a1a1;
   font-size: 12px;
   letter-spacing: -.3px;
 }
-.timeTable :global(.tram-direction-empty) { margin: 10px 4px; color: #8e96a8; font-size: 13px; }
+
+.timeTable :global(.tram-direction-empty) {
+  margin: 10px 4px;
+  color: #8e96a8;
+  font-size: 13px;
+}
 
 @media (max-width: 560px) {
-  .timeTable :global(.departures) { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .timeTable :global(.departures) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
   .timeTable :global(.tram-departure-row) {
     grid-template-columns: 40px minmax(0, 1fr) 48px 68px;
     gap: 6px;
@@ -102,6 +134,12 @@
     padding-left: 5px;
     font-size: 14px;
   }
-  .timeTable :global(.tram-departure-remaining) { font-size: 12px; }
-  .timeTable :global(.tram-departure-row.is-cancelled .tram-departure-remaining) { font-size: 10px; }
+
+  .timeTable :global(.tram-departure-remaining) {
+    font-size: 12px;
+  }
+
+  .timeTable :global(.tram-departure-row.is-cancelled .tram-departure-remaining) {
+    font-size: 10px;
+  }
 }

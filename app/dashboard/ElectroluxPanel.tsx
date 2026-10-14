@@ -204,7 +204,6 @@ export default function ElectroluxPanel() {
         />
       </div>
       <div className="dashboard-panel-content">
-      <div className="dashboard-live-content" aria-live="polite">
         {error && !status ? <p>{error}</p> : null}
         {history.length ? (
           <HistoryChart
@@ -223,7 +222,6 @@ export default function ElectroluxPanel() {
             footer={formatCopy(copy.electrolux.historyCount, { count: history.length })}
           />
         ) : <p className="dashboard-live-note">{historyError ? copy.electrolux.historyError : copy.electrolux.historyEmpty}</p>}
-      </div>
       </div>
     </section>
   );

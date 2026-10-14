@@ -125,9 +125,9 @@ export default function CastPanel() {
       ) : devices.length === 0 ? (
         <p className="dashboard-live-message" role="status">{copy.cast.empty}</p>
       ) : (
-        <div style={{ display: 'grid', gap: 16, marginTop: 20 }}>
+          <>
           {devices.map((device) => (
-            <article key={device.id} style={{ display: 'grid', gap: 10, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+            <article key={device.id} style={{ display: 'grid', gap: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,.08)' }}>
               <div style={{ display: 'grid', gap: 3, minWidth: 0 }}>
                 <strong style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{device.name}</strong>
                 <span className="dashboard-live-label">{[device.model, device.type].filter(Boolean).join(' · ') || copy.cast.title}</span>
@@ -148,7 +148,7 @@ export default function CastPanel() {
               </div>
             </article>
           ))}
-        </div>
+          </>
       )}
       </div>
     </section>
